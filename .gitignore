@@ -8,6 +8,7 @@ dist
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts
-# doc
+mydoc
+docs
 .worktrees/
 package-lock.json
