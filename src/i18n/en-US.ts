@@ -12,12 +12,20 @@ const enUS = {
   'chat.you': 'You',
   'chat.selectBot': 'Select bot',
   'chat.selectModel': 'Select model',
+  'chat.inUse': 'In Use',
+  'chat.api': 'API',
+  'chat.configure': 'Configure',
   'locale.toggle': '中',
   'layout.1': 'Single',
   'layout.2v': 'Split Vertical',
   'layout.2h': 'Split Horizontal',
   'layout.3': 'Three Columns',
   'layout.4': 'Grid',
+  'config.title': 'API Configuration',
+  'config.apiKey': 'API Key',
+  'config.modelName': 'Runtime Model',
+  'config.cancel': 'Cancel',
+  'config.save': 'Save',
 } as const;
 
 export default enUS;

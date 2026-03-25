@@ -4,12 +4,14 @@ import { ChatPanelHeader } from './ChatPanelHeader';
 import { MessageList } from './MessageList';
 
 interface ChatPanelProps {
-  availableBotDefinitions: BotDefinition[];
+  allBotDefinitions: BotDefinition[];
   botDefinition: BotDefinition;
+  inUseBotIds: string[];
   isReadonly: boolean;
   messages: ChatMessage[];
   onBotChange: (botId: string) => void;
   onModelChange: (modelId: string) => void;
+  onSaveApiConfig?: (config: { apiKey: string; modelName: string }) => void;
   selectedModelId: string;
   t: (key: string) => string;
 }
@@ -23,23 +25,27 @@ function filterMessagesForBot(messages: ChatMessage[], botId: string): ChatMessa
 }
 
 export function ChatPanel({
-  availableBotDefinitions,
+  allBotDefinitions,
   botDefinition,
+  inUseBotIds,
   isReadonly,
   messages,
   onBotChange,
   onModelChange,
+  onSaveApiConfig,
   selectedModelId,
   t,
 }: ChatPanelProps) {
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <ChatPanelHeader
-        availableBotDefinitions={availableBotDefinitions}
+        allBotDefinitions={allBotDefinitions}
         botDefinition={botDefinition}
+        inUseBotIds={inUseBotIds}
         isReadonly={isReadonly}
         onBotChange={onBotChange}
         onModelChange={onModelChange}
+        onSaveApiConfig={onSaveApiConfig}
         selectedModelId={selectedModelId}
         t={t}
       />

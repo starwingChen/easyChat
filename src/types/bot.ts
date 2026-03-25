@@ -6,11 +6,18 @@ export interface BotModel {
   isDefault?: boolean;
 }
 
+export interface ApiConfigDefinition {
+  apiKeyLabel: string;
+  modelNameLabel: string;
+}
+
 export interface BotDefinition {
   id: string;
   name: string;
   brand: string;
   themeColor: string;
+  accessMode: 'session' | 'api';
+  apiConfig?: ApiConfigDefinition;
   models: BotModel[];
   defaultModel: string;
   capabilities: string[];

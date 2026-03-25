@@ -5,6 +5,9 @@ interface DropdownOption<T extends string> {
   value: T;
   label: string;
   preview?: ReactNode;
+  content?: ReactNode;
+  disabled?: boolean;
+  suffix?: ReactNode;
 }
 
 interface DropdownProps<T extends string> {
@@ -58,17 +61,28 @@ export function Dropdown<T extends string>({
           {options.map((option) => (
             <button
               className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm ${
-                option.value === value ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50'
+                option.disabled
+                  ? 'cursor-not-allowed text-slate-300'
+                  : option.value === value
+                    ? 'bg-slate-100 text-slate-900'
+                    : 'text-slate-600 hover:bg-slate-50'
               }`}
+              disabled={option.disabled}
               key={option.value}
               onClick={() => {
+                if (option.disabled) {
+                  return;
+                }
                 onChange(option.value);
                 setIsOpen(false);
               }}
               type="button"
             >
               {option.preview}
-              <span>{option.label}</span>
+              <div className="min-w-0 flex-1">
+                {option.content ? option.content : <span className="truncate">{option.label}</span>}
+              </div>
+              {option.suffix ? <span className="ml-auto flex items-center gap-1">{option.suffix}</span> : null}
             </button>
           ))}
         </div>

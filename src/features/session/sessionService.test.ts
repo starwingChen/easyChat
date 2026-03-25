@@ -15,6 +15,8 @@ const baseSession: ChatSession = {
     claude: 'claude-3.5-sonnet',
     copilot: 'copilot-standard',
     perplexity: 'sonar-huge',
+    deepseek: 'deepseek-chat',
+    'deepseek-api': 'deepseek-chat',
   },
   messages: [],
   createdAt: '2026-03-25T00:00:00.000Z',

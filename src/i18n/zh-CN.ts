@@ -12,12 +12,20 @@ const zhCN = {
   'chat.you': '你',
   'chat.selectBot': '选择机器人',
   'chat.selectModel': '选择模型',
+  'chat.inUse': '使用中',
+  'chat.api': 'API',
+  'chat.configure': '配置',
   'locale.toggle': 'EN',
   'layout.1': '单栏',
   'layout.2v': '上下',
   'layout.2h': '左右',
   'layout.3': '三栏',
   'layout.4': '四栏',
+  'config.title': 'API 配置',
+  'config.apiKey': 'API Key',
+  'config.modelName': '调用模型名称',
+  'config.cancel': '取消',
+  'config.save': '保存',
 } as const;
 
 export default zhCN;

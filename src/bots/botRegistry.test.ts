@@ -12,6 +12,8 @@ describe('botRegistry', () => {
       'claude',
       'copilot',
       'perplexity',
+      'deepseek',
+      'deepseek-api',
     ]);
     expect(registry.getBot('claude').definition.name).toBe('Claude');
     expect(registry.getAvailableModels('claude').map((model) => model.id)).toEqual([

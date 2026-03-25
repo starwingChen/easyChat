@@ -28,6 +28,7 @@ export function SidePanelShell() {
         historySnapshots={state.historySnapshots}
         onCreateSession={createNewSession}
         onSelectView={selectView}
+        onToggleLocale={toggleLocale}
         t={t}
       />
       <div className="flex min-w-0 flex-1 flex-col">
@@ -35,7 +36,6 @@ export function SidePanelShell() {
           currentLayout={currentSession.layout}
           isReadonly={isReadonly}
           onChangeLayout={setLayout}
-          onToggleLocale={toggleLocale}
           t={t}
           title={state.currentView.mode === 'active' ? t('workspace.title.active') : currentSession.title}
         />

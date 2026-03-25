@@ -16,6 +16,8 @@ describe('historyService', () => {
         claude: 'claude-3.5-sonnet',
         copilot: 'copilot-standard',
         perplexity: 'sonar-huge',
+        deepseek: 'deepseek-chat',
+        'deepseek-api': 'deepseek-chat',
       },
       messages: [
         {

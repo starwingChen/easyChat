@@ -1,9 +1,11 @@
+/** @type {import('../types/bot').BotDefinition[]} */
 export const mockBotDefinitions = [
   {
     id: 'chatgpt',
     name: 'ChatGPT',
     brand: 'OpenAI',
     themeColor: '#22c55e',
+    accessMode: 'session',
     defaultModel: 'gpt-4o',
     capabilities: ['reasoning', 'general'],
     models: [
@@ -20,6 +22,7 @@ export const mockBotDefinitions = [
     name: 'Gemini',
     brand: 'Google',
     themeColor: '#3b82f6',
+    accessMode: 'session',
     defaultModel: 'gemini-1.5-pro',
     capabilities: ['multimodal', 'research'],
     models: [
@@ -36,6 +39,7 @@ export const mockBotDefinitions = [
     name: 'Claude',
     brand: 'Anthropic',
     themeColor: '#f97316',
+    accessMode: 'session',
     defaultModel: 'claude-3.5-sonnet',
     capabilities: ['writing', 'analysis'],
     models: [
@@ -52,6 +56,7 @@ export const mockBotDefinitions = [
     name: 'Copilot',
     brand: 'Microsoft',
     themeColor: '#14b8a6',
+    accessMode: 'session',
     defaultModel: 'copilot-standard',
     capabilities: ['coding', 'search'],
     models: [
@@ -68,6 +73,7 @@ export const mockBotDefinitions = [
     name: 'Perplexity',
     brand: 'Perplexity',
     themeColor: '#8b5cf6',
+    accessMode: 'session',
     defaultModel: 'sonar-huge',
     capabilities: ['search', 'citations'],
     models: [
@@ -77,6 +83,44 @@ export const mockBotDefinitions = [
     greeting: {
       'zh-CN': '你好，我是 Perplexity。你可以问我任何问题。',
       'en-US': 'Perplexity here. Ask me anything!',
+    },
+  },
+  {
+    id: 'deepseek',
+    name: 'DeepSeek',
+    brand: 'DeepSeek',
+    themeColor: '#2563eb',
+    accessMode: 'session',
+    defaultModel: 'deepseek-chat',
+    capabilities: ['reasoning', 'coding'],
+    models: [
+      { id: 'deepseek-chat', label: 'DeepSeek Chat', isDefault: true },
+      { id: 'deepseek-reasoner', label: 'DeepSeek Reasoner' },
+    ],
+    greeting: {
+      'zh-CN': '你好！这里是 DeepSeek，会话模式已就绪。',
+      'en-US': 'Hello from DeepSeek. Session mode is ready.',
+    },
+  },
+  {
+    id: 'deepseek-api',
+    name: 'DeepSeek API',
+    brand: 'DeepSeek',
+    themeColor: '#1d4ed8',
+    accessMode: 'api',
+    apiConfig: {
+      apiKeyLabel: 'API Key',
+      modelNameLabel: 'Runtime Model',
+    },
+    defaultModel: 'deepseek-chat',
+    capabilities: ['api', 'reasoning'],
+    models: [
+      { id: 'deepseek-chat', label: 'DeepSeek Chat', isDefault: true },
+      { id: 'deepseek-reasoner', label: 'DeepSeek Reasoner' },
+    ],
+    greeting: {
+      'zh-CN': '你好！这里是 DeepSeek API，需要先配置 API 信息。',
+      'en-US': 'Hello from DeepSeek API. Configure API access before sending.',
     },
   },
 ];

@@ -39,16 +39,13 @@ function renderTree(
   if (tree.type === 'panel') {
     const botId = props.visibleBotIds[tree.index];
     const botDefinition = props.botRegistry.getBot(botId).definition;
-    const availableBotDefinitions = props.botRegistry
-      .getAllBots()
-      .map((bot) => bot.definition)
-      .filter((bot) => !props.visibleBotIds.includes(bot.id) || bot.id === botId)
-      .filter((bot) => bot.id !== botId);
+    const allBotDefinitions = props.botRegistry.getAllBots().map((bot) => bot.definition);
 
     return (
       <ChatPanel
-        availableBotDefinitions={availableBotDefinitions}
+        allBotDefinitions={allBotDefinitions}
         botDefinition={botDefinition}
+        inUseBotIds={props.visibleBotIds}
         isReadonly={props.isReadonly}
         key={botId}
         messages={props.currentSession.messages}

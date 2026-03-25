@@ -9,6 +9,7 @@ interface SessionSidebarProps {
   historySnapshots: SessionSnapshot[];
   onCreateSession: () => void;
   onSelectView: (view: ViewState) => void;
+  onToggleLocale: () => void;
   t: (key: string) => string;
 }
 
@@ -17,6 +18,7 @@ export function SessionSidebar({
   historySnapshots,
   onCreateSession,
   onSelectView,
+  onToggleLocale,
   t,
 }: SessionSidebarProps) {
   return (
@@ -62,6 +64,15 @@ export function SessionSidebar({
             />
           ))}
         </div>
+      </div>
+      <div className="border-t border-slate-200 px-3 py-3">
+        <button
+          className="w-full rounded-xl bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-100"
+          onClick={onToggleLocale}
+          type="button"
+        >
+          {t('locale.toggle')}
+        </button>
       </div>
     </aside>
   );

@@ -27,6 +27,7 @@ describe('SessionSidebar', () => {
         ]}
         onCreateSession={onCreateSession}
         onSelectView={onSelect}
+        onToggleLocale={vi.fn()}
         t={(key) => ({
           'app.name': 'OmniChat',
           'sidebar.current': 'Current',
@@ -40,5 +41,34 @@ describe('SessionSidebar', () => {
     await user.click(screen.getByRole('button', { name: /react vs vue comparison/i }));
 
     expect(onSelect).toHaveBeenCalledWith({ mode: 'history', sessionId: 'hist-1' });
+  });
+
+  it('renders locale toggle in the bottom area and calls back on click', async () => {
+    const user = userEvent.setup();
+    const onToggleLocale = vi.fn();
+
+    render(
+      <SessionSidebar
+        currentView={{ mode: 'active', sessionId: 'session-active' }}
+        historySnapshots={[]}
+        onCreateSession={vi.fn()}
+        onSelectView={vi.fn()}
+        onToggleLocale={onToggleLocale}
+        t={(key) =>
+          ({
+            'app.name': 'OmniChat',
+            'sidebar.current': 'Current',
+            'sidebar.activeSession': 'Active Session',
+            'sidebar.history': 'History',
+            'sidebar.newSession': 'New Session',
+            'locale.toggle': 'EN',
+          })[key] ?? key
+        }
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'EN' }));
+
+    expect(onToggleLocale).toHaveBeenCalled();
   });
 });
