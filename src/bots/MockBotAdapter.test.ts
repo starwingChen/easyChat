@@ -11,19 +11,19 @@ describe('MockBotAdapter', () => {
   });
 
   it('builds a deterministic mock response for a prompt', async () => {
-    const adapter = new MockBotAdapter('gemini');
+    const adapter = new MockBotAdapter('claude');
 
     const response = await adapter.sendMessage({
       sessionId: 'session-1',
       content: 'Summarize hooks in one sentence',
       locale: 'en-US',
-      modelId: 'gemini-1.5-pro',
-      targetBotIds: ['gemini'],
+      modelId: 'claude-3.5-sonnet',
+      targetBotIds: ['claude'],
     });
 
-    expect(response.botId).toBe('gemini');
-    expect(response.modelId).toBe('gemini-1.5-pro');
-    expect(response.content).toContain('Gemini');
+    expect(response.botId).toBe('claude');
+    expect(response.modelId).toBe('claude-3.5-sonnet');
+    expect(response.content).toContain('Claude');
     expect(response.content).toContain('Summarize hooks in one sentence');
   });
 });

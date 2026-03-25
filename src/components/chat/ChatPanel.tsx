@@ -20,7 +20,7 @@ function filterMessagesForBot(messages: ChatMessage[], botId: string): ChatMessa
   return messages.filter(
     (message) =>
       (message.role === 'user' && message.targetBotIds?.includes(botId)) ||
-      (message.role === 'assistant' && message.botId === botId),
+      (message.role === 'assistant' && message.botId === botId && message.status !== 'welcome'),
   );
 }
 
@@ -51,6 +51,7 @@ export function ChatPanel({
       />
       <MessageList
         botDefinition={botDefinition}
+        loadingLabel={t('chat.loading')}
         messages={filterMessagesForBot(messages, botDefinition.id)}
         youLabel={t('chat.you')}
       />

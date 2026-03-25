@@ -18,23 +18,6 @@ export const mockBotDefinitions = [
     },
   },
   {
-    id: 'gemini',
-    name: 'Gemini',
-    brand: 'Google',
-    themeColor: '#3b82f6',
-    accessMode: 'session',
-    defaultModel: 'gemini-1.5-pro',
-    capabilities: ['multimodal', 'research'],
-    models: [
-      { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', isDefault: true },
-      { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
-    ],
-    greeting: {
-      'zh-CN': '你好！这里是 Gemini。你想探索什么问题？',
-      'en-US': 'Hi there! Gemini here. What would you like to explore?',
-    },
-  },
-  {
     id: 'claude',
     name: 'Claude',
     brand: 'Anthropic',
@@ -129,10 +112,6 @@ export const mockReplyTemplates = {
   chatgpt: {
     'zh-CN': 'ChatGPT（{{model}}）会从结构化角度回答：“{{prompt}}”。',
     'en-US': 'ChatGPT ({{model}}) approaches "{{prompt}}" with a structured product answer.',
-  },
-  gemini: {
-    'zh-CN': 'Gemini（{{model}}）会从探索与发散角度回应：“{{prompt}}”。',
-    'en-US': 'Gemini ({{model}}) explores "{{prompt}}" with a broad, curious take.',
   },
   claude: {
     'zh-CN': 'Claude（{{model}}）会用更平衡的文字组织来回答：“{{prompt}}”。',

@@ -12,6 +12,24 @@ interface BroadcastMessageInput {
   now?: () => string;
 }
 
+export interface PendingBotReplyRequest {
+  botId: string;
+  content: string;
+  createdAt: string;
+  locale: Locale;
+  messageId: string;
+  modelId: string;
+  registry: BotRegistry;
+  sessionId: string;
+  targetBotIds: string[];
+}
+
+interface BroadcastDraft {
+  messages: ChatMessage[];
+  requests: PendingBotReplyRequest[];
+  updatedAt: string;
+}
+
 function createMessageId(prefix: string, stamp: string, suffix = ''): string {
   return `${prefix}-${stamp}${suffix}`;
 }
@@ -22,28 +40,9 @@ export function buildSelectedModels(registry: BotRegistry): Record<string, strin
   );
 }
 
-export function createWelcomeMessages(
-  sessionId: string,
-  botIds: string[],
-  registry: BotRegistry,
-  locale: Locale,
-  createdAt: string,
-): ChatMessage[] {
-  return botIds.map((botId, index) => ({
-    id: createMessageId(botId, createdAt, `-welcome-${index}`),
-    sessionId,
-    role: 'assistant',
-    botId,
-    modelId: registry.getBot(botId).getDefaultModel(),
-    content: registry.getBot(botId).definition.greeting[locale],
-    createdAt,
-    status: 'welcome',
-  }));
-}
-
 export function createInitialSession(
   registry: BotRegistry,
-  locale: Locale,
+  _locale: Locale,
   createdAt: string,
 ): ChatSession {
   const sessionId = 'session-active';
@@ -56,23 +55,23 @@ export function createInitialSession(
     layout: '4',
     activeBotIds,
     selectedModels,
-    messages: createWelcomeMessages(sessionId, activeBotIds, registry, locale, createdAt),
+    messages: [],
     createdAt,
     updatedAt: createdAt,
   };
 }
 
-export async function broadcastMessage({
+export function createBroadcastDraft({
   session,
   registry,
   locale,
   content,
   now = () => new Date().toISOString(),
-}: BroadcastMessageInput): Promise<ChatSession> {
+}: BroadcastMessageInput): BroadcastDraft | null {
   const trimmedContent = content.trim();
 
   if (!trimmedContent) {
-    return session;
+    return null;
   }
 
   const visibleBotIds = getVisibleBotIds(session.activeBotIds, session.layout);
@@ -86,34 +85,68 @@ export async function broadcastMessage({
     createdAt,
     status: 'done',
   };
+  const loadingMessages: ChatMessage[] = visibleBotIds.map((botId, index) => {
+    const bot = registry.getBot(botId);
 
-  const assistantMessages = await Promise.all(
-    visibleBotIds.map(async (botId, index) => {
-      const bot = registry.getBot(botId);
-      const response = await bot.sendMessage({
-        sessionId: session.id,
-        content: trimmedContent,
-        locale,
-        modelId: session.selectedModels[botId] ?? bot.getDefaultModel(),
-        targetBotIds: visibleBotIds,
-      });
-
-      return {
-        id: createMessageId(botId, createdAt, `-${index}`),
-        sessionId: session.id,
-        role: 'assistant' as const,
-        botId,
-        modelId: response.modelId,
-        content: response.content,
-        createdAt,
-        status: 'done' as const,
-      };
-    }),
-  );
+    return {
+      id: createMessageId(botId, createdAt, `-${index}`),
+      sessionId: session.id,
+      role: 'assistant',
+      botId,
+      modelId: session.selectedModels[botId] ?? bot.getDefaultModel(),
+      content: '',
+      createdAt,
+      status: 'loading',
+    };
+  });
 
   return {
-    ...session,
-    messages: [...session.messages, userMessage, ...assistantMessages],
+    messages: [userMessage, ...loadingMessages],
+    requests: loadingMessages.map((message) => ({
+      botId: message.botId!,
+      content: trimmedContent,
+      createdAt,
+      locale,
+      messageId: message.id,
+      modelId: message.modelId!,
+      registry,
+      sessionId: session.id,
+      targetBotIds: visibleBotIds,
+    })),
     updatedAt: createdAt,
   };
+}
+
+export async function resolvePendingBotReply(request: PendingBotReplyRequest): Promise<ChatMessage> {
+  try {
+    const response = await request.registry.getBot(request.botId).sendMessage({
+      sessionId: request.sessionId,
+      content: request.content,
+      locale: request.locale,
+      modelId: request.modelId,
+      targetBotIds: request.targetBotIds,
+    });
+
+    return {
+      id: request.messageId,
+      sessionId: request.sessionId,
+      role: 'assistant',
+      botId: request.botId,
+      modelId: response.modelId,
+      content: response.content,
+      createdAt: request.createdAt,
+      status: 'done',
+    };
+  } catch (error) {
+    return {
+      id: request.messageId,
+      sessionId: request.sessionId,
+      role: 'assistant',
+      botId: request.botId,
+      modelId: request.modelId,
+      content: error instanceof Error ? error.message : 'Unknown bot error',
+      createdAt: request.createdAt,
+      status: 'error',
+    };
+  }
 }

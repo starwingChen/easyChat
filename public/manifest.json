@@ -1,22 +1,23 @@
 {
   "manifest_version": 3,
-  "name": "OmniChat",
+  "name": "EasyChat",
   "description": "Compare multiple AI assistants in one Chrome side panel.",
   "version": "0.1.0",
   "permissions": ["sidePanel", "storage", "tabs"],
+  "host_permissions": ["https://gemini.google.com/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"
   },
   "action": {
-    "default_title": "Open OmniChat"
+    "default_title": "Open EasyChat"
   },
   "side_panel": {
     "default_path": "index.html"
   },
   "commands": {
     "open-side-panel": {
-      "description": "Open the OmniChat side panel"
+      "description": "Open the EasyChat side panel"
     }
   }
 }

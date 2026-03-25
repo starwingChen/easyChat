@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { GeminiBotAdapter } from './gemini/GeminiBotAdapter';
+import { MockBotAdapter } from './MockBotAdapter';
 import { createBotRegistry } from './botRegistry';
 
 describe('botRegistry', () => {
@@ -16,6 +18,8 @@ describe('botRegistry', () => {
       'deepseek-api',
     ]);
     expect(registry.getBot('claude').definition.name).toBe('Claude');
+    expect(registry.getBot('gemini')).toBeInstanceOf(GeminiBotAdapter);
+    expect(registry.getBot('claude')).toBeInstanceOf(MockBotAdapter);
     expect(registry.getAvailableModels('claude').map((model) => model.id)).toEqual([
       'claude-3.5-sonnet',
       'claude-3-opus',

@@ -1,14 +1,18 @@
+import { LoaderCircle } from 'lucide-react';
+
 import type { BotDefinition } from '../../types/bot';
 import type { ChatMessage } from '../../types/message';
 
 interface MessageBubbleProps {
   message: ChatMessage;
   botDefinition: BotDefinition;
+  loadingLabel: string;
   youLabel: string;
 }
 
-export function MessageBubble({ message, botDefinition, youLabel }: MessageBubbleProps) {
+export function MessageBubble({ message, botDefinition, loadingLabel, youLabel }: MessageBubbleProps) {
   const isUser = message.role === 'user';
+  const isLoading = !isUser && message.status === 'loading';
 
   return (
     <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
@@ -30,7 +34,13 @@ export function MessageBubble({ message, botDefinition, youLabel }: MessageBubbl
             : 'rounded-tl-sm bg-slate-100 text-slate-700'
         }`}
       >
-        {message.content}
+        {isLoading ? (
+          <span aria-label={loadingLabel} className="inline-flex items-center text-slate-500" role="status">
+            <LoaderCircle className="h-4 w-4 animate-spin" />
+          </span>
+        ) : (
+          message.content
+        )}
       </div>
     </div>
   );

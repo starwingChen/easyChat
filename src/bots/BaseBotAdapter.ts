@@ -10,4 +10,12 @@ export abstract class BaseBotAdapter {
   getDefaultModel(): string {
     return this.definition.defaultModel;
   }
+
+  resetConversation(): void {}
+
+  getPersistedState(): unknown | null {
+    return null;
+  }
+
+  restorePersistedState(_state: unknown): void {}
 }

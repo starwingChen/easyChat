@@ -1,4 +1,4 @@
-import { Bot, Plus } from 'lucide-react';
+import { Bot, PanelLeftClose, Plus } from 'lucide-react';
 
 import type { ViewState } from '../../types/app';
 import type { SessionSnapshot } from '../../types/session';
@@ -9,6 +9,7 @@ interface SessionSidebarProps {
   historySnapshots: SessionSnapshot[];
   onCreateSession: () => void;
   onSelectView: (view: ViewState) => void;
+  onToggleSidebar: () => void;
   onToggleLocale: () => void;
   t: (key: string) => string;
 }
@@ -18,14 +19,25 @@ export function SessionSidebar({
   historySnapshots,
   onCreateSession,
   onSelectView,
+  onToggleSidebar,
   onToggleLocale,
   t,
 }: SessionSidebarProps) {
   return (
     <aside className="flex w-[198px] shrink-0 flex-col border-r border-slate-200 bg-slate-50/80">
-      <div className="flex items-center gap-2 px-4 py-4">
-        <Bot className="h-5 w-5 text-blue-500" />
-        <span className="text-lg font-semibold text-slate-900">{t('app.name')}</span>
+      <div className="flex items-center justify-between px-4 py-4">
+        <div className="flex items-center gap-2">
+          <Bot className="h-5 w-5 text-blue-500" />
+          <span className="text-lg font-semibold text-slate-900">{t('app.name')}</span>
+        </div>
+        <button
+          aria-label={t('sidebar.collapse')}
+          className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+          onClick={onToggleSidebar}
+          type="button"
+        >
+          <PanelLeftClose className="h-4 w-4" />
+        </button>
       </div>
       <div className="flex-1 space-y-4 overflow-y-auto px-3 pb-4">
         <div className="space-y-2">

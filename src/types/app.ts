@@ -23,4 +23,10 @@ export interface PersistedPreferences {
   historySnapshots: SessionSnapshot[];
   layout: LayoutType;
   selectedModels: Record<string, string>;
+  currentView: ViewState;
+  activeSession: ChatSession;
+  botStates: Record<string, unknown>;
+  sidebar: {
+    isOpen: boolean;
+  };
 }

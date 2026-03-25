@@ -1,6 +1,6 @@
 import type { Locale, PersistedPreferences } from '../../types/app';
 
-export const STORAGE_KEY = 'omnichat-preferences';
+export const STORAGE_KEY = 'EasyChat-preferences';
 
 export async function loadPersistedPreferences(): Promise<Partial<PersistedPreferences> | null> {
   if (typeof chrome !== 'undefined' && chrome.storage?.local) {

@@ -17,7 +17,11 @@ import {
   loadPersistedPreferences,
   persistPreferences,
 } from '../features/locale/localeService';
-import { broadcastMessage, createInitialSession } from '../features/session/sessionService';
+import {
+  createBroadcastDraft,
+  createInitialSession,
+  resolvePendingBotReply,
+} from '../features/session/sessionService';
 import { appReducer } from './appReducer';
 import { selectCurrentSessionRecord, selectVisibleBotIds } from './selectors';
 
@@ -26,6 +30,16 @@ const initialLocale = resolveLocale(
   typeof navigator !== 'undefined' ? getPreferredLocale(navigator.language) : 'zh-CN',
 );
 const initialSessionTimestamp = '2026-03-25T00:00:00.000Z';
+const allBotIds = registry.getAllBots().map((bot) => bot.definition.id);
+
+function collectBotStates() {
+  return Object.fromEntries(
+    registry
+      .getAllBots()
+      .map((bot) => [bot.definition.id, bot.getPersistedState()] as const)
+      .filter((entry) => entry[1] !== null),
+  );
+}
 
 const initialState: AppState = {
   locale: initialLocale,
@@ -49,6 +63,7 @@ interface AppStateContextValue {
   registry: typeof registry;
   selectView: (view: ViewState) => void;
   setLayout: (layout: AppState['activeSession']['layout']) => void;
+  toggleSidebar: () => void;
   replaceBot: (index: number, botId: string) => void;
   setModel: (botId: string, modelId: string) => void;
   sendMessage: (content: string) => Promise<void>;
@@ -74,7 +89,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           historySnapshots: persisted.historySnapshots,
           layout: persisted.layout,
           selectedModels: persisted.selectedModels,
+          currentView: persisted.currentView,
+          activeSession: persisted.activeSession,
+          sidebar: persisted.sidebar,
+          allBotIds,
         },
+      });
+
+      Object.entries(persisted.botStates ?? {}).forEach(([botId, botState]) => {
+        registry.getBot(botId).restorePersistedState(botState);
       });
     });
   }, []);
@@ -85,8 +108,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       historySnapshots: state.historySnapshots,
       layout: state.activeSession.layout,
       selectedModels: state.activeSession.selectedModels,
+      currentView: state.currentView,
+      activeSession: state.activeSession,
+      botStates: collectBotStates(),
+      sidebar: state.sidebar,
     }).catch(() => undefined);
-  }, [state.locale, state.historySnapshots, state.activeSession.layout, state.activeSession.selectedModels]);
+  }, [state]);
 
   const currentSession = selectCurrentSessionRecord(state);
   const visibleBotIds = selectVisibleBotIds(state);
@@ -104,7 +131,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         dispatch({ type: 'set-view', payload: view });
       },
       setLayout(layout) {
-        dispatch({ type: 'set-layout', payload: layout });
+        dispatch({ type: 'set-layout', payload: { layout, allBotIds } });
+      },
+      toggleSidebar() {
+        dispatch({ type: 'toggle-sidebar' });
       },
       replaceBot(index, botId) {
         dispatch({ type: 'replace-active-bot', payload: { index, botId } });
@@ -113,14 +143,38 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         dispatch({ type: 'set-selected-model', payload: { botId, modelId } });
       },
       async sendMessage(content) {
-        const nextSession = await broadcastMessage({
+        const draft = createBroadcastDraft({
           session: state.activeSession,
           registry,
           locale: state.locale,
           content,
         });
 
-        dispatch({ type: 'replace-active-session', payload: nextSession });
+        if (!draft) {
+          return;
+        }
+
+        dispatch({
+          type: 'append-active-messages',
+          payload: {
+            messages: draft.messages,
+            updatedAt: draft.updatedAt,
+          },
+        });
+
+        await Promise.all(
+          draft.requests.map(async (request) => {
+            const message = await resolvePendingBotReply(request);
+
+            dispatch({
+              type: 'replace-active-message',
+              payload: {
+                message,
+                updatedAt: new Date().toISOString(),
+              },
+            });
+          }),
+        );
       },
       createNewSession() {
         const timestamp = new Date().toISOString();
@@ -135,6 +189,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             ),
           });
         }
+
+        registry.getAllBots().forEach((bot) => {
+          bot.resetConversation();
+        });
 
         dispatch({
           type: 'replace-active-session',

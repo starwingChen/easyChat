@@ -9,6 +9,12 @@ export type AppAction =
         historySnapshots: SessionSnapshot[];
         layout: LayoutType;
         selectedModels: Record<string, string>;
+        currentView: ViewState;
+        activeSession: ChatSession;
+        sidebar: {
+          isOpen: boolean;
+        };
+        allBotIds: string[];
       }>;
     }
   | {
@@ -21,11 +27,31 @@ export type AppAction =
     }
   | {
       type: 'set-layout';
-      payload: LayoutType;
+      payload: {
+        layout: LayoutType;
+        allBotIds: string[];
+      };
+    }
+  | {
+      type: 'toggle-sidebar';
     }
   | {
       type: 'replace-active-session';
       payload: ChatSession;
+    }
+  | {
+      type: 'append-active-messages';
+      payload: {
+        messages: ChatSession['messages'];
+        updatedAt: string;
+      };
+    }
+  | {
+      type: 'replace-active-message';
+      payload: {
+        message: ChatSession['messages'][number];
+        updatedAt: string;
+      };
     }
   | {
       type: 'replace-active-bot';

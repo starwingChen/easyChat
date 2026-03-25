@@ -27,13 +27,15 @@ describe('SessionSidebar', () => {
         ]}
         onCreateSession={onCreateSession}
         onSelectView={onSelect}
+        onToggleSidebar={vi.fn()}
         onToggleLocale={vi.fn()}
         t={(key) => ({
-          'app.name': 'OmniChat',
+          'app.name': 'EasyChat',
           'sidebar.current': 'Current',
           'sidebar.activeSession': 'Active Session',
           'sidebar.history': 'History',
           'sidebar.newSession': 'New Session',
+          'sidebar.collapse': 'Collapse sidebar',
         })[key] ?? key}
       />,
     );
@@ -53,14 +55,16 @@ describe('SessionSidebar', () => {
         historySnapshots={[]}
         onCreateSession={vi.fn()}
         onSelectView={vi.fn()}
+        onToggleSidebar={vi.fn()}
         onToggleLocale={onToggleLocale}
         t={(key) =>
           ({
-            'app.name': 'OmniChat',
+            'app.name': 'EasyChat',
             'sidebar.current': 'Current',
             'sidebar.activeSession': 'Active Session',
             'sidebar.history': 'History',
             'sidebar.newSession': 'New Session',
+            'sidebar.collapse': 'Collapse sidebar',
             'locale.toggle': 'EN',
           })[key] ?? key
         }
@@ -70,5 +74,36 @@ describe('SessionSidebar', () => {
     await user.click(screen.getByRole('button', { name: 'EN' }));
 
     expect(onToggleLocale).toHaveBeenCalled();
+  });
+
+  it('renders a collapse button beside the title and calls back on click', async () => {
+    const user = userEvent.setup();
+    const onToggleSidebar = vi.fn();
+
+    render(
+      <SessionSidebar
+        currentView={{ mode: 'active', sessionId: 'session-active' }}
+        historySnapshots={[]}
+        onCreateSession={vi.fn()}
+        onSelectView={vi.fn()}
+        onToggleSidebar={onToggleSidebar}
+        onToggleLocale={vi.fn()}
+        t={(key) =>
+          ({
+            'app.name': 'EasyChat',
+            'sidebar.current': 'Current',
+            'sidebar.activeSession': 'Active Session',
+            'sidebar.history': 'History',
+            'sidebar.newSession': 'New Session',
+            'sidebar.collapse': 'Collapse sidebar',
+            'locale.toggle': 'EN',
+          })[key] ?? key
+        }
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Collapse sidebar' }));
+
+    expect(onToggleSidebar).toHaveBeenCalled();
   });
 });

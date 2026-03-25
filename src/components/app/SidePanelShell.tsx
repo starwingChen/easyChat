@@ -1,3 +1,5 @@
+import { Bot, PanelLeftOpen } from 'lucide-react';
+
 import { useAppState } from '../../store/AppStateContext';
 import { SessionSidebar } from '../sidebar/SessionSidebar';
 import { ChatWorkspace } from '../chat/ChatWorkspace';
@@ -14,6 +16,7 @@ export function SidePanelShell() {
     registry,
     selectView,
     setLayout,
+    toggleSidebar,
     replaceBot,
     setModel,
     sendMessage,
@@ -23,14 +26,29 @@ export function SidePanelShell() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-white text-slate-900">
-      <SessionSidebar
-        currentView={state.currentView}
-        historySnapshots={state.historySnapshots}
-        onCreateSession={createNewSession}
-        onSelectView={selectView}
-        onToggleLocale={toggleLocale}
-        t={t}
-      />
+      {state.sidebar.isOpen ? (
+        <SessionSidebar
+          currentView={state.currentView}
+          historySnapshots={state.historySnapshots}
+          onCreateSession={createNewSession}
+          onSelectView={selectView}
+          onToggleLocale={toggleLocale}
+          onToggleSidebar={toggleSidebar}
+          t={t}
+        />
+      ) : (
+        <aside className="flex w-14 shrink-0 flex-col items-center border-r border-slate-200 bg-slate-50/80 py-4">
+          <button
+            aria-label={t('sidebar.expand')}
+            className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-200 hover:text-slate-900"
+            onClick={toggleSidebar}
+            type="button"
+          >
+            <PanelLeftOpen className="h-4 w-4" />
+          </button>
+          <Bot className="mt-4 h-5 w-5 text-blue-500" />
+        </aside>
+      )}
       <div className="flex min-w-0 flex-1 flex-col">
         <WorkspaceHeader
           currentLayout={currentSession.layout}
