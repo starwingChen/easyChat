@@ -4,5 +4,10 @@
 /node_modules
 demo
 proposal
-doc
+dist
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+# doc
 .worktrees/
+package-lock.json
