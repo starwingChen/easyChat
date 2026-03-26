@@ -12,6 +12,7 @@ describe('extension manifest', () => {
     };
 
     expect(manifest.host_permissions).toContain('https://gemini.google.com/*');
+    expect(manifest.host_permissions).toContain('https://chatgpt.com/*');
   });
 
   it('declares Alt+Shift+S and Command+Shift+S as the suggested side panel shortcut', () => {

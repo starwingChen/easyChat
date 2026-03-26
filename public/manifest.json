@@ -4,7 +4,10 @@
   "description": "Compare multiple AI assistants in one Chrome side panel.",
   "version": "0.1.0",
   "permissions": ["sidePanel", "storage", "tabs"],
-  "host_permissions": ["https://gemini.google.com/*"],
+  "host_permissions": [
+    "https://gemini.google.com/*",
+    "https://chatgpt.com/*"
+    ],
   "background": {
     "service_worker": "background.js",
     "type": "module"
