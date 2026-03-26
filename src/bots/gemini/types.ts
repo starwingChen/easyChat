@@ -1,5 +1,5 @@
 export interface GeminiRequestParams {
-  atValue: string;
+  atValue?: string;
   blValue: string;
   buildLabel: string;
 }

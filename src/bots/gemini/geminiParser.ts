@@ -10,6 +10,12 @@ function extractValue(source: string, key: string): string {
   return match[1];
 }
 
+function extractOptionalValue(source: string, key: string): string | undefined {
+  const match = source.match(new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`));
+
+  return match?.[1];
+}
+
 function decodeJsonString(value: string): string {
   return JSON.parse(`"${value}"`) as string;
 }
@@ -30,7 +36,7 @@ function extractWrbPayloads(source: string): unknown[] {
 
 export function parseGeminiBootstrap(html: string): GeminiRequestParams {
   return {
-    atValue: extractValue(html, 'SNlM0e'),
+    atValue: extractOptionalValue(html, 'SNlM0e'),
     blValue: extractValue(html, 'cfb2h'),
     buildLabel: extractValue(html, 'd2zJAe'),
   };

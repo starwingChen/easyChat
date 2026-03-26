@@ -16,6 +16,19 @@ const bootstrapHtml = `
 </html>
 `;
 
+const bootstrapHtmlWithoutAtValue = `
+<html>
+  <body>
+    <script data-id="_gd">
+      window.WIZ_global_data = {
+        "cfb2h": "boq_assistant-bard-web-server_20260323.09_p2",
+        "d2zJAe": "AIzaSyExample"
+      };
+    </script>
+  </body>
+</html>
+`;
+
 const generateResponse = `)]
 }'
 
@@ -33,6 +46,14 @@ describe('geminiParser', () => {
   it('extracts bootstrap values from the Gemini homepage html', () => {
     expect(parseGeminiBootstrap(bootstrapHtml)).toEqual({
       atValue: 'test-at-value',
+      blValue: 'boq_assistant-bard-web-server_20260323.09_p2',
+      buildLabel: 'AIzaSyExample',
+    });
+  });
+
+  it('treats SNlM0e as optional when the homepage html does not include it', () => {
+    expect(parseGeminiBootstrap(bootstrapHtmlWithoutAtValue)).toEqual({
+      atValue: undefined,
       blValue: 'boq_assistant-bard-web-server_20260323.09_p2',
       buildLabel: 'AIzaSyExample',
     });

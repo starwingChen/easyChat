@@ -26,9 +26,13 @@ export function createGeminiClient(): GeminiClient {
     },
     async generate(input: GeminiGenerateInput): Promise<GeminiGenerateResult> {
       const body = new URLSearchParams({
-        at: input.requestParams.atValue,
         'f.req': buildRequestPayload(input.prompt, input.contextIds),
       });
+
+      if (input.requestParams.atValue) {
+        body.set('at', input.requestParams.atValue);
+      }
+
       const responseText = await fetchPage(GEMINI_STREAM_GENERATE_URL, {
         method: 'POST',
         query: {

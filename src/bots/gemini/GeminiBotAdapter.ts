@@ -40,7 +40,7 @@ function isGeminiConversationContext(value: unknown): value is GeminiConversatio
     candidate.contextIds.length === 3 &&
     candidate.contextIds.every((id) => typeof id === 'string') &&
     !!requestParams &&
-    typeof requestParams.atValue === 'string' &&
+    (typeof requestParams.atValue === 'string' || typeof requestParams.atValue === 'undefined') &&
     typeof requestParams.blValue === 'string' &&
     typeof requestParams.buildLabel === 'string'
   );
