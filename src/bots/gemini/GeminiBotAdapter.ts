@@ -55,6 +55,8 @@ export class GeminiBotAdapter extends BaseBotAdapter {
 
   private conversationContext?: GeminiConversationContext;
 
+  private conversationRevision = 0;
+
   constructor(options: GeminiBotAdapterOptions = {}) {
     super();
     this.client = options.client ?? createGeminiClient();
@@ -73,16 +75,20 @@ export class GeminiBotAdapter extends BaseBotAdapter {
       };
     }
 
+    const activeContext = this.conversationContext;
+    const revision = this.conversationRevision;
     const result = await this.client.generate({
       prompt: input.content,
-      requestParams: this.conversationContext.requestParams,
-      contextIds: this.conversationContext.contextIds,
+      requestParams: activeContext.requestParams,
+      contextIds: activeContext.contextIds,
     });
 
-    this.conversationContext = {
-      ...this.conversationContext,
-      contextIds: result.contextIds,
-    };
+    if (revision === this.conversationRevision) {
+      this.conversationContext = {
+        requestParams: activeContext.requestParams,
+        contextIds: result.contextIds,
+      };
+    }
 
     return {
       id: `${this.definition.id}-${this.now()}`,
@@ -95,6 +101,7 @@ export class GeminiBotAdapter extends BaseBotAdapter {
   }
 
   resetConversation(): void {
+    this.conversationRevision += 1;
     this.conversationContext = undefined;
   }
 
@@ -110,6 +117,8 @@ export class GeminiBotAdapter extends BaseBotAdapter {
   }
 
   restorePersistedState(state: unknown): void {
+    this.conversationRevision += 1;
+
     if (!state) {
       this.conversationContext = undefined;
       return;

@@ -62,4 +62,53 @@ describe('historyService', () => {
       createdAt: '2026-03-25T00:05:00.000Z',
     });
   });
+
+  it('keeps loading bot panels in the snapshot so history view does not crash', () => {
+    const session: ChatSession = {
+      id: 'session-active',
+      title: 'Active Session',
+      layout: '2h',
+      activeBotIds: ['chatgpt', 'gemini'],
+      selectedModels: {
+        chatgpt: 'gpt-4o',
+        gemini: 'gemini-1.5-pro',
+      },
+      messages: [
+        {
+          id: 'm-1',
+          sessionId: 'session-active',
+          role: 'user',
+          content: 'Hello',
+          targetBotIds: ['chatgpt', 'gemini'],
+          createdAt: '2026-03-25T00:00:00.000Z',
+          status: 'done',
+        },
+        {
+          id: 'm-2',
+          sessionId: 'session-active',
+          role: 'assistant',
+          botId: 'chatgpt',
+          content: '',
+          createdAt: '2026-03-25T00:00:01.000Z',
+          status: 'loading',
+        },
+        {
+          id: 'm-3',
+          sessionId: 'session-active',
+          role: 'assistant',
+          botId: 'gemini',
+          content: '',
+          createdAt: '2026-03-25T00:00:01.000Z',
+          status: 'loading',
+        },
+      ],
+      createdAt: '2026-03-25T00:00:00.000Z',
+      updatedAt: '2026-03-25T00:00:01.000Z',
+    };
+
+    const snapshot = createSnapshotFromSession(session, 'snapshot-2', '2026-03-25T00:05:00.000Z');
+
+    expect(snapshot.activeBotIds).toEqual(['chatgpt', 'gemini']);
+    expect(snapshot.layout).toBe('2h');
+  });
 });

@@ -152,4 +152,53 @@ describe('GeminiBotAdapter', () => {
       contextIds: ['conv-1', 'resp-1', 'choice-1'],
     });
   });
+
+  it('does not keep a broken partial context when reset happens while a reply is pending', async () => {
+    const fetchRequestParams = vi.fn(async () => createRequestParams());
+    let resolveFirstReply: ((value: GeminiGenerateResult) => void) | undefined;
+    const generate = vi
+      .fn<GeminiClient['generate']>()
+      .mockImplementationOnce(
+        () =>
+          new Promise<GeminiGenerateResult>((resolve) => {
+            resolveFirstReply = resolve;
+          }),
+      )
+      .mockResolvedValueOnce(createResult('second reply', ['conv-2', 'resp-2', 'choice-2']));
+
+    const adapter = new GeminiBotAdapter({
+      client: {
+        fetchRequestParams,
+        generate,
+      },
+    });
+
+    const pendingReply = adapter.sendMessage({
+      sessionId: 'session-1',
+      content: 'hello',
+      locale: 'zh-CN',
+      modelId: 'gemini-1.5-pro',
+      targetBotIds: ['gemini'],
+    });
+
+    await Promise.resolve();
+    adapter.resetConversation();
+    resolveFirstReply?.(createResult('first reply', ['conv-1', 'resp-1', 'choice-1']));
+    await pendingReply;
+
+    await adapter.sendMessage({
+      sessionId: 'session-2',
+      content: 'fresh start',
+      locale: 'zh-CN',
+      modelId: 'gemini-1.5-pro',
+      targetBotIds: ['gemini'],
+    });
+
+    expect(fetchRequestParams).toHaveBeenCalledTimes(2);
+    expect(generate).toHaveBeenNthCalledWith(2, {
+      prompt: 'fresh start',
+      requestParams: createRequestParams(),
+      contextIds: ['', '', ''],
+    });
+  });
 });

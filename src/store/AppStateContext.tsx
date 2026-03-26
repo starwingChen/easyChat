@@ -196,7 +196,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
         dispatch({
           type: 'replace-active-session',
-          payload: createInitialSession(registry, state.locale, timestamp),
+          payload: createInitialSession(
+            registry,
+            state.locale,
+            timestamp,
+            state.activeSession.layout,
+            state.activeSession.activeBotIds,
+          ),
         });
       },
       toggleLocale() {

@@ -44,15 +44,16 @@ export function createInitialSession(
   registry: BotRegistry,
   _locale: Locale,
   createdAt: string,
+  layout: ChatSession['layout'] = '4',
+  activeBotIds = ['chatgpt', 'gemini', 'claude', 'copilot'],
 ): ChatSession {
   const sessionId = 'session-active';
-  const activeBotIds = ['chatgpt', 'gemini', 'claude', 'copilot'];
   const selectedModels = buildSelectedModels(registry);
 
   return {
     id: sessionId,
     title: 'Active Session',
-    layout: '4',
+    layout,
     activeBotIds,
     selectedModels,
     messages: [],

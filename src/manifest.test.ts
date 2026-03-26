@@ -13,4 +13,18 @@ describe('extension manifest', () => {
 
     expect(manifest.host_permissions).toContain('https://gemini.google.com/*');
   });
+
+  it('declares Alt+Shift+S and Command+Shift+S as the suggested side panel shortcut', () => {
+    const manifest = JSON.parse(
+      readFileSync(resolve(process.cwd(), 'public/manifest.json'), 'utf8'),
+    ) as {
+      commands?: Record<string, { suggested_key?: { default?: string; mac?: string } }>;
+    };
+
+    expect(manifest.commands?.['open-side-panel']?.suggested_key).toEqual({
+      default: 'Alt+Shift+S',
+      windows: 'Alt+Shift+S',
+      mac: 'Command+Shift+S',
+    });
+  });
 });

@@ -29,12 +29,7 @@ export function createSnapshotFromSession(
   const repliedBotIds = Array.from(
     new Set(
       session.messages
-        .filter(
-          (message) =>
-            message.role === 'assistant' &&
-            message.status !== 'welcome' &&
-            message.status !== 'loading',
-        )
+        .filter((message) => message.role === 'assistant' && message.status !== 'welcome')
         .map((message) => message.botId)
         .filter((botId): botId is string => Boolean(botId)),
     ),
