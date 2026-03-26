@@ -20,6 +20,52 @@ const botDefinition = {
 };
 
 describe('MessageBubble', () => {
+  it('renders markdown for user and assistant messages', () => {
+    const { container, rerender } = render(
+      <MessageBubble
+        botDefinition={botDefinition}
+        loadingLabel="Loading reply"
+        message={{
+          id: 'user-1',
+          sessionId: 'session-1',
+          role: 'user',
+          content: 'Hello **team**\n[Docs](https://example.com)',
+          createdAt: '2026-03-26T00:00:00.000Z',
+          status: 'done',
+          targetBotIds: ['gemini'],
+        }}
+        stopLabel="Stop reply"
+        youLabel="You"
+      />,
+    );
+
+    expect(screen.getByText('team')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Docs' })).toHaveAttribute('target', '_blank');
+    expect(container.querySelector('strong')).toBeInTheDocument();
+    expect(container.querySelector('br')).toBeInTheDocument();
+
+    rerender(
+      <MessageBubble
+        botDefinition={botDefinition}
+        loadingLabel="Loading reply"
+        message={{
+          id: 'assistant-1',
+          sessionId: 'session-1',
+          role: 'assistant',
+          botId: 'gemini',
+          modelId: 'gemini-1.5-pro',
+          content: '> quoted reply',
+          createdAt: '2026-03-26T00:00:00.000Z',
+          status: 'done',
+        }}
+        stopLabel="Stop reply"
+        youLabel="You"
+      />,
+    );
+
+    expect(container.querySelector('blockquote')).toBeInTheDocument();
+  });
+
   it('renders a loading indicator for loading assistant messages', () => {
     render(
       <MessageBubble

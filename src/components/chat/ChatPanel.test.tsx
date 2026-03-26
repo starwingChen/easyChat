@@ -50,7 +50,7 @@ describe('ChatPanel', () => {
             id: 'm-1',
             sessionId: 'session-1',
             role: 'user',
-            content: 'Hello ChatGPT',
+            content: 'Hello **ChatGPT**',
             targetBotIds: ['chatgpt'],
             createdAt: '2026-03-25T00:00:00.000Z',
             status: 'done',
@@ -59,7 +59,7 @@ describe('ChatPanel', () => {
             id: 'm-2',
             sessionId: 'session-1',
             role: 'user',
-            content: 'Hello Gemini',
+            content: 'Hello [Gemini](https://gemini.google.com)',
             targetBotIds: ['gemini'],
             createdAt: '2026-03-25T00:00:01.000Z',
             status: 'done',
@@ -69,7 +69,7 @@ describe('ChatPanel', () => {
             sessionId: 'session-1',
             role: 'assistant',
             botId: 'chatgpt',
-            content: 'Hi back',
+            content: '> Hi back',
             createdAt: '2026-03-25T00:00:02.000Z',
             status: 'done',
           },
@@ -89,9 +89,9 @@ describe('ChatPanel', () => {
       />,
     );
 
-    expect(screen.getByText('Hello ChatGPT')).toBeInTheDocument();
+    expect(screen.getByText('ChatGPT', { selector: 'strong' })).toBeInTheDocument();
     expect(screen.getByText('Hi back')).toBeInTheDocument();
-    expect(screen.queryByText('Hello Gemini')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Gemini' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /select bot/i })).not.toBeInTheDocument();
   });
 });

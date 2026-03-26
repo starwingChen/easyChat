@@ -2,6 +2,7 @@ import { LoaderCircle, Square } from 'lucide-react';
 
 import type { BotDefinition } from '../../types/bot';
 import type { ChatMessage } from '../../types/message';
+import { RichTextMessage } from './RichTextMessage';
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -58,7 +59,7 @@ export function MessageBubble({
             </button>
           </span>
         ) : (
-          message.content
+          <RichTextMessage content={message.content} />
         )}
       </div>
     </div>
