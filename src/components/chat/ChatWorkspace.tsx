@@ -11,6 +11,7 @@ interface ChatWorkspaceProps {
   currentSession: ChatSession | SessionSnapshot;
   isReadonly: boolean;
   onBotChange: (index: number, botId: string) => void;
+  onCancelLoading?: (messageId: string) => void;
   onModelChange: (botId: string, modelId: string) => void;
   t: (key: string) => string;
   visibleBotIds: string[];
@@ -50,6 +51,7 @@ function renderTree(
         key={botId}
         messages={props.currentSession.messages}
         onBotChange={(nextBotId) => props.onBotChange(tree.index, nextBotId)}
+        onCancelLoading={props.onCancelLoading}
         onModelChange={(modelId) => props.onModelChange(botId, modelId)}
         selectedModelId={props.currentSession.selectedModels[botId] ?? botDefinition.defaultModel}
         t={props.t}

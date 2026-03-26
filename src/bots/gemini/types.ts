@@ -13,6 +13,7 @@ export interface GeminiGenerateInput {
   prompt: string;
   requestParams: GeminiRequestParams;
   contextIds: string[];
+  signal?: AbortSignal;
 }
 
 export interface GeminiGenerateResult {

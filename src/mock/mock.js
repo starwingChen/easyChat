@@ -132,7 +132,7 @@ export const mockHistorySnapshots = [
     id: 'hist-1',
     sourceSessionId: 'session-previous-1',
     title: 'React vs Vue comparison',
-    layout: '2h',
+    layout: '2v',
     activeBotIds: ['chatgpt', 'claude'],
     selectedModels: {
       chatgpt: 'gpt-4o',

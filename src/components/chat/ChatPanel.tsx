@@ -10,6 +10,7 @@ interface ChatPanelProps {
   isReadonly: boolean;
   messages: ChatMessage[];
   onBotChange: (botId: string) => void;
+  onCancelLoading?: (messageId: string) => void;
   onModelChange: (modelId: string) => void;
   onSaveApiConfig?: (config: { apiKey: string; modelName: string }) => void;
   selectedModelId: string;
@@ -31,6 +32,7 @@ export function ChatPanel({
   isReadonly,
   messages,
   onBotChange,
+  onCancelLoading,
   onModelChange,
   onSaveApiConfig,
   selectedModelId,
@@ -53,6 +55,8 @@ export function ChatPanel({
         botDefinition={botDefinition}
         loadingLabel={t('chat.loading')}
         messages={filterMessagesForBot(messages, botDefinition.id)}
+        onCancelLoading={onCancelLoading}
+        stopLabel={t('chat.stopReply')}
         youLabel={t('chat.you')}
       />
     </div>

@@ -30,6 +30,7 @@ export interface SendMessageInput {
   locale: Locale;
   modelId: string;
   targetBotIds: string[];
+  signal?: AbortSignal;
 }
 
 export interface BotResponse {

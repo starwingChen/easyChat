@@ -1,4 +1,4 @@
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle, Square } from 'lucide-react';
 
 import type { BotDefinition } from '../../types/bot';
 import type { ChatMessage } from '../../types/message';
@@ -7,10 +7,19 @@ interface MessageBubbleProps {
   message: ChatMessage;
   botDefinition: BotDefinition;
   loadingLabel: string;
+  onCancelLoading?: (messageId: string) => void;
+  stopLabel: string;
   youLabel: string;
 }
 
-export function MessageBubble({ message, botDefinition, loadingLabel, youLabel }: MessageBubbleProps) {
+export function MessageBubble({
+  message,
+  botDefinition,
+  loadingLabel,
+  onCancelLoading,
+  stopLabel,
+  youLabel,
+}: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const isLoading = !isUser && message.status === 'loading';
 
@@ -35,8 +44,18 @@ export function MessageBubble({ message, botDefinition, loadingLabel, youLabel }
         }`}
       >
         {isLoading ? (
-          <span aria-label={loadingLabel} className="inline-flex items-center text-slate-500" role="status">
-            <LoaderCircle className="h-4 w-4 animate-spin" />
+          <span className="inline-flex items-center gap-2 text-slate-500">
+            <span aria-label={loadingLabel} className="inline-flex items-center" role="status">
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            </span>
+            <button
+              aria-label={stopLabel}
+              className="absolute left-[68px] rounded-md p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+              onClick={() => onCancelLoading?.(message.id)}
+              type="button"
+            >
+              <Square className="h-3.5 w-3.5 fill-current" />
+            </button>
           </span>
         ) : (
           message.content

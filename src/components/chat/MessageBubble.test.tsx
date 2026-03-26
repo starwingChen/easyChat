@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 import { MessageBubble } from './MessageBubble';
 
@@ -34,10 +35,40 @@ describe('MessageBubble', () => {
           createdAt: '2026-03-26T00:00:00.000Z',
           status: 'loading',
         }}
+        stopLabel="Stop reply"
         youLabel="You"
       />,
     );
 
     expect(screen.getByRole('status', { name: 'Loading reply' })).toBeInTheDocument();
+  });
+
+  it('emits cancel when the stop button is clicked on a loading message', async () => {
+    const user = userEvent.setup();
+    const onCancelLoading = vi.fn();
+
+    render(
+      <MessageBubble
+        botDefinition={botDefinition}
+        loadingLabel="Loading reply"
+        message={{
+          id: 'loading-2',
+          sessionId: 'session-1',
+          role: 'assistant',
+          botId: 'gemini',
+          modelId: 'gemini-1.5-pro',
+          content: '',
+          createdAt: '2026-03-26T00:00:00.000Z',
+          status: 'loading',
+        }}
+        onCancelLoading={onCancelLoading}
+        stopLabel="Stop reply"
+        youLabel="You"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Stop reply' }));
+
+    expect(onCancelLoading).toHaveBeenCalledWith('loading-2');
   });
 });

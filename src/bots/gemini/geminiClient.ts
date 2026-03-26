@@ -36,6 +36,7 @@ export function createGeminiClient(): GeminiClient {
           _reqid: createRequestId(),
           rt: 'c',
         },
+        signal: input.signal,
         body,
       });
 

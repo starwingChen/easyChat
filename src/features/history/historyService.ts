@@ -7,7 +7,7 @@ function deriveSnapshotLayout(botCount: number): LayoutType {
   }
 
   if (botCount === 2) {
-    return '2h';
+    return '2v';
   }
 
   if (botCount === 3) {
@@ -26,26 +26,28 @@ export function createSnapshotFromSession(
   snapshotId: string,
   createdAt: string,
 ): SessionSnapshot {
+  const snapshotMessages = session.messages.filter((message) => message.status !== 'loading');
   const repliedBotIds = Array.from(
     new Set(
-      session.messages
+      snapshotMessages
         .filter((message) => message.role === 'assistant' && message.status !== 'welcome')
         .map((message) => message.botId)
         .filter((botId): botId is string => Boolean(botId)),
     ),
   );
+  const activeBotIds = repliedBotIds.length > 0 ? repliedBotIds : session.activeBotIds;
   const titleSeed =
-    session.messages.find((message) => message.role === 'user')?.content.trim() || session.title;
+    snapshotMessages.find((message) => message.role === 'user')?.content.trim() || session.title;
   const title = titleSeed.length > 32 ? `${titleSeed.slice(0, 32)}...` : titleSeed;
 
   return {
     id: snapshotId,
     sourceSessionId: session.id,
     title,
-    layout: deriveSnapshotLayout(repliedBotIds.length),
-    activeBotIds: repliedBotIds,
+    layout: repliedBotIds.length > 0 ? deriveSnapshotLayout(repliedBotIds.length) : session.layout,
+    activeBotIds,
     selectedModels: { ...session.selectedModels },
-    messages: session.messages,
+    messages: snapshotMessages,
     createdAt,
   };
 }

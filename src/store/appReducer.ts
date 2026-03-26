@@ -130,5 +130,21 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         historySnapshots: [action.payload, ...state.historySnapshots],
       };
+    case 'delete-history-snapshot': {
+      const historySnapshots = state.historySnapshots.filter(
+        (snapshot) => snapshot.id !== action.payload.snapshotId,
+      );
+      const isDeletingCurrentHistory =
+        state.currentView.mode === 'history' &&
+        state.currentView.sessionId === action.payload.snapshotId;
+
+      return {
+        ...state,
+        currentView: isDeletingCurrentHistory
+          ? { mode: 'active', sessionId: state.activeSession.id }
+          : state.currentView,
+        historySnapshots,
+      };
+    }
   }
 }

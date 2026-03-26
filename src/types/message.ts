@@ -1,5 +1,5 @@
 export type MessageRole = 'user' | 'assistant' | 'system';
-export type MessageStatus = 'loading' | 'done' | 'error' | 'welcome';
+export type MessageStatus = 'loading' | 'done' | 'error' | 'welcome' | 'cancelled';
 
 export interface ChatMessage {
   id: string;

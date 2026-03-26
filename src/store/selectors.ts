@@ -18,3 +18,19 @@ export function selectVisibleBotIds(state: AppState): string[] {
   const currentSession = selectCurrentSessionRecord(state);
   return getVisibleBotIds(currentSession.activeBotIds, currentSession.layout);
 }
+
+export function selectHasVisibleLoadingMessages(state: AppState): boolean {
+  if (state.currentView.mode !== 'active') {
+    return false;
+  }
+
+  const visibleBotIds = getVisibleBotIds(state.activeSession.activeBotIds, state.activeSession.layout);
+
+  return state.activeSession.messages.some(
+    (message) =>
+      message.role === 'assistant' &&
+      message.status === 'loading' &&
+      !!message.botId &&
+      visibleBotIds.includes(message.botId),
+  );
+}

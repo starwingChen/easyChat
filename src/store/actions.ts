@@ -70,4 +70,10 @@ export type AppAction =
   | {
       type: 'push-history-snapshot';
       payload: SessionSnapshot;
+    }
+  | {
+      type: 'delete-history-snapshot';
+      payload: {
+        snapshotId: string;
+      };
     };

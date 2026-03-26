@@ -23,7 +23,11 @@ import {
   resolvePendingBotReply,
 } from '../features/session/sessionService';
 import { appReducer } from './appReducer';
-import { selectCurrentSessionRecord, selectVisibleBotIds } from './selectors';
+import {
+  selectCurrentSessionRecord,
+  selectHasVisibleLoadingMessages,
+  selectVisibleBotIds,
+} from './selectors';
 
 const registry = createBotRegistry();
 const initialLocale = resolveLocale(
@@ -57,6 +61,8 @@ const initialState: AppState = {
 interface AppStateContextValue {
   state: AppState;
   currentSession: ReturnType<typeof selectCurrentSessionRecord>;
+  cancelReply: (messageId: string) => void;
+  isComposerDisabled: boolean;
   visibleBotIds: string[];
   isReadonly: boolean;
   t: ReturnType<typeof createTranslator>;
@@ -68,6 +74,7 @@ interface AppStateContextValue {
   setModel: (botId: string, modelId: string) => void;
   sendMessage: (content: string) => Promise<void>;
   createNewSession: () => void;
+  deleteHistorySnapshot: (snapshotId: string) => void;
   toggleLocale: () => void;
 }
 
@@ -75,6 +82,7 @@ const AppStateContext = createContext<AppStateContextValue | null>(null);
 
 export function AppStateProvider({ children }: PropsWithChildren) {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const pendingReplyControllers = useMemo(() => new Map<string, AbortController>(), []);
 
   useEffect(() => {
     loadPersistedPreferences().then((persisted) => {
@@ -116,6 +124,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   }, [state]);
 
   const currentSession = selectCurrentSessionRecord(state);
+  const hasVisibleLoadingMessages = selectHasVisibleLoadingMessages(state);
   const visibleBotIds = selectVisibleBotIds(state);
   const t = useMemo(() => createTranslator(state.locale), [state.locale]);
 
@@ -123,6 +132,31 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     () => ({
       state,
       currentSession,
+      cancelReply(messageId) {
+        pendingReplyControllers.get(messageId)?.abort();
+        pendingReplyControllers.delete(messageId);
+
+        const loadingMessage = state.activeSession.messages.find(
+          (message) => message.id === messageId && message.status === 'loading',
+        );
+
+        if (!loadingMessage) {
+          return;
+        }
+
+        dispatch({
+          type: 'replace-active-message',
+          payload: {
+            message: {
+              ...loadingMessage,
+              content: t('chat.replyStopped'),
+              status: 'cancelled',
+            },
+            updatedAt: new Date().toISOString(),
+          },
+        });
+      },
+      isComposerDisabled: hasVisibleLoadingMessages,
       visibleBotIds,
       isReadonly: state.currentView.mode === 'history',
       t,
@@ -164,7 +198,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
         await Promise.all(
           draft.requests.map(async (request) => {
-            const message = await resolvePendingBotReply(request);
+            const abortController = new AbortController();
+            pendingReplyControllers.set(request.messageId, abortController);
+
+            const message = await resolvePendingBotReply({
+              ...request,
+              signal: abortController.signal,
+            });
+
+            if (pendingReplyControllers.get(request.messageId) !== abortController) {
+              return;
+            }
+
+            pendingReplyControllers.delete(request.messageId);
 
             dispatch({
               type: 'replace-active-message',
@@ -190,6 +236,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           });
         }
 
+        pendingReplyControllers.forEach((controller) => {
+          controller.abort();
+        });
+        pendingReplyControllers.clear();
+
         registry.getAllBots().forEach((bot) => {
           bot.resetConversation();
         });
@@ -205,12 +256,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ),
         });
       },
+      deleteHistorySnapshot(snapshotId) {
+        dispatch({
+          type: 'delete-history-snapshot',
+          payload: { snapshotId },
+        });
+      },
       toggleLocale() {
         const nextLocale: Locale = state.locale === 'zh-CN' ? 'en-US' : 'zh-CN';
         dispatch({ type: 'set-locale', payload: nextLocale });
       },
     }),
-    [currentSession, state, t, visibleBotIds],
+    [currentSession, hasVisibleLoadingMessages, pendingReplyControllers, state, t, visibleBotIds],
   );
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;

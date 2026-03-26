@@ -81,6 +81,7 @@ export class GeminiBotAdapter extends BaseBotAdapter {
       prompt: input.content,
       requestParams: activeContext.requestParams,
       contextIds: activeContext.contextIds,
+      signal: input.signal,
     });
 
     if (revision === this.conversationRevision) {

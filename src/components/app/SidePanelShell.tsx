@@ -11,9 +11,11 @@ export function SidePanelShell() {
     state,
     currentSession,
     visibleBotIds,
+    isComposerDisabled,
     isReadonly,
     t,
     registry,
+    cancelReply,
     selectView,
     setLayout,
     toggleSidebar,
@@ -21,6 +23,7 @@ export function SidePanelShell() {
     setModel,
     sendMessage,
     createNewSession,
+    deleteHistorySnapshot,
     toggleLocale,
   } = useAppState();
 
@@ -31,6 +34,7 @@ export function SidePanelShell() {
           currentView={state.currentView}
           historySnapshots={state.historySnapshots}
           onCreateSession={createNewSession}
+          onDeleteHistory={deleteHistorySnapshot}
           onSelectView={selectView}
           onToggleLocale={toggleLocale}
           onToggleSidebar={toggleSidebar}
@@ -62,11 +66,12 @@ export function SidePanelShell() {
           currentSession={currentSession}
           isReadonly={isReadonly}
           onBotChange={replaceBot}
+          onCancelLoading={cancelReply}
           onModelChange={setModel}
           t={t}
           visibleBotIds={visibleBotIds}
         />
-        {!isReadonly ? <MessageComposer isReadonly={false} onSend={sendMessage} t={t} /> : null}
+        {!isReadonly ? <MessageComposer disabled={isComposerDisabled} onSend={sendMessage} t={t} /> : null}
       </div>
     </div>
   );

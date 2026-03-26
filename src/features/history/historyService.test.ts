@@ -58,12 +58,12 @@ describe('historyService', () => {
       id: 'snapshot-1',
       sourceSessionId: 'session-active',
       activeBotIds: ['chatgpt', 'claude'],
-      layout: '2h',
+      layout: '2v',
       createdAt: '2026-03-25T00:05:00.000Z',
     });
   });
 
-  it('keeps loading bot panels in the snapshot so history view does not crash', () => {
+  it('drops loading messages from the snapshot while keeping the original panel layout', () => {
     const session: ChatSession = {
       id: 'session-active',
       title: 'Active Session',
@@ -110,5 +110,12 @@ describe('historyService', () => {
 
     expect(snapshot.activeBotIds).toEqual(['chatgpt', 'gemini']);
     expect(snapshot.layout).toBe('2h');
+    expect(snapshot.messages).toEqual([
+      expect.objectContaining({
+        id: 'm-1',
+        role: 'user',
+        content: 'Hello',
+      }),
+    ]);
   });
 });

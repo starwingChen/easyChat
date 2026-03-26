@@ -21,6 +21,7 @@ export interface PendingBotReplyRequest {
   modelId: string;
   registry: BotRegistry;
   sessionId: string;
+  signal?: AbortSignal;
   targetBotIds: string[];
 }
 
@@ -44,7 +45,7 @@ export function createInitialSession(
   registry: BotRegistry,
   _locale: Locale,
   createdAt: string,
-  layout: ChatSession['layout'] = '4',
+  layout: ChatSession['layout'] = '2v',
   activeBotIds = ['chatgpt', 'gemini', 'claude', 'copilot'],
 ): ChatSession {
   const sessionId = 'session-active';
@@ -125,6 +126,7 @@ export async function resolvePendingBotReply(request: PendingBotReplyRequest): P
       content: request.content,
       locale: request.locale,
       modelId: request.modelId,
+      signal: request.signal,
       targetBotIds: request.targetBotIds,
     });
 

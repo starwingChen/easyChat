@@ -1,4 +1,5 @@
 import { Bot, PanelLeftClose, Plus } from 'lucide-react';
+import { useState } from 'react';
 
 import type { ViewState } from '../../types/app';
 import type { SessionSnapshot } from '../../types/session';
@@ -8,6 +9,7 @@ interface SessionSidebarProps {
   currentView: ViewState;
   historySnapshots: SessionSnapshot[];
   onCreateSession: () => void;
+  onDeleteHistory: (snapshotId: string) => void;
   onSelectView: (view: ViewState) => void;
   onToggleSidebar: () => void;
   onToggleLocale: () => void;
@@ -18,11 +20,14 @@ export function SessionSidebar({
   currentView,
   historySnapshots,
   onCreateSession,
+  onDeleteHistory,
   onSelectView,
   onToggleSidebar,
   onToggleLocale,
   t,
 }: SessionSidebarProps) {
+  const [confirmingSnapshotId, setConfirmingSnapshotId] = useState<string | null>(null);
+
   return (
     <aside className="flex w-[198px] shrink-0 flex-col border-r border-slate-200 bg-slate-50/80">
       <div className="flex items-center justify-between px-4 py-4">
@@ -70,9 +75,22 @@ export function SessionSidebar({
           {historySnapshots.map((snapshot) => (
             <SessionListItem
               isActive={currentView.mode === 'history' && currentView.sessionId === snapshot.id}
+              isDeleteConfirming={confirmingSnapshotId === snapshot.id}
               key={snapshot.id}
               label={snapshot.title}
-              onClick={() => onSelectView({ mode: 'history', sessionId: snapshot.id })}
+              onClick={() => {
+                setConfirmingSnapshotId(null);
+                onSelectView({ mode: 'history', sessionId: snapshot.id });
+              }}
+              onDeleteCancel={() => setConfirmingSnapshotId(null)}
+              onDeleteConfirm={() => {
+                setConfirmingSnapshotId(null);
+                onDeleteHistory(snapshot.id);
+              }}
+              onDeleteRequest={() =>
+                setConfirmingSnapshotId((currentId) => (currentId === snapshot.id ? null : snapshot.id))
+              }
+              t={t}
             />
           ))}
         </div>
