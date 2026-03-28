@@ -36,7 +36,8 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - 原设计以 mock 为主；当前实现已经接入 `ChatGPT` 和 `Gemini` 的 Web 会话适配器
 - `mock.js` 仍然是其他机器人定义、回复模板、历史快照的重要数据源
 - 当前新会话默认不注入欢迎语，`createInitialSession()` 返回空消息列表
-- API 模式机器人目前主要完成了 UI 展示与配置弹窗骨架，还没有形成完整持久化和真实调用链路
+- API 模式机器人已经形成真实调用链路、配置持久化与本地会话上下文持久化
+- `deepseek-api` 与 `qwen-api` 已统一抽象到共享的 OpenAI-compatible API bot 基座
 
 ## 2. 技术基线
 
@@ -114,6 +115,7 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - 用户消息只创建一条，但携带 `targetBotIds`
 - 每个可见 bot 会先生成一条 `assistant/loading` 占位消息
 - 各 bot 回复是并发独立解析和替换的，单个 bot 失败不能中断整次广播
+- 若 bot 返回带 `action://open-api-config` 的可操作错误文案，消息面板必须透传该文案，不要降级成通用“回复失败”
 - 历史快照中不保留 `loading` 消息
 - 历史视图必须只读，因此不能发送消息、切换 bot、切换模型
 
@@ -144,6 +146,8 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 `src/bots/botRegistry.ts` 当前注册：
 
 - `ChatGPTBotAdapter`
+- `DeepSeekApiBotAdapter`
+- `QwenApiBotAdapter`
 - `GeminiBotAdapter`
 - 基于 `mockBotDefinitions` 动态生成的其他 `MockBotAdapter`
 
@@ -151,6 +155,7 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 
 - `gemini` adapter 自己定义了 `BotDefinition`，不来自 `mock.js`
 - `chatgpt` definition 仍来自 `mock.js`
+- `deepseek-api` 与 `qwen-api` 是显式注册的 API adapter，不再走 mock adapter
 - mock adapter 只负责模板回复，不维护真实远端上下文
 
 ### 5.2 ChatGPT 约束
@@ -181,11 +186,29 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - `src/bots/gemini/geminiParser.ts`
 - `src/bots/gemini/GeminiBotAdapter.ts`
 
-### 5.4 新增机器人时必须遵守
+### 5.4 OpenAI-compatible API Bot 约束
+
+- 共享基座位于 `src/bots/openAiCompatibleApi/*`
+- 共享 client 负责：
+  - 用 OpenAI SDK 发 `chat.completions.create()`
+  - 接收 provider 传入的 `baseURL`
+  - 归一化 `auth / quota / unavailable / emptyResponse` 错误
+- 共享 adapter 基座负责：
+  - `apiKey + modelName` 配置校验
+  - 本地 conversation messages 累积
+  - `getPersistedState()` / `restorePersistedState()` 持久化
+  - provider 级 i18n 错误映射
+- provider 专属 adapter 只应保留：
+  - `BotDefinition`
+  - `baseURL`
+  - provider 自己的 i18n message ids
+- 当前 `deepseek-api` 与 `qwen-api` 都必须沿用这套基座，不要再各自复制一套 OpenAI SDK client / state / error mapping
+
+### 5.5 新增机器人时必须遵守
 
 1. 先决定是 `session` 还是 `api` 模式
 2. 新建 adapter class，继承 `BaseBotAdapter`
-3. 如需真实请求，拆出 `client` 和 `parser`
+3. 如需真实请求，优先复用现有共享 client / adapter 基座；只有协议真的不同再拆专属 `client` 或 `parser`
 4. 在 `botRegistry` 注册
 5. 补 `BotDefinition`、模型列表、必要的持久状态逻辑
 6. 为 adapter、client、parser、registry 至少补一层测试
@@ -323,4 +346,3 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 6. `src/features/history/historyService.ts`
 7. `src/bots/botRegistry.ts`
 8. 目标需求对应的 adapter / component / test
-
