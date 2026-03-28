@@ -9,7 +9,7 @@ function getDeepSeekApiDefinition(): BotDefinition {
   const definition = mockBotDefinitions.find((candidate) => candidate.id === 'deepseek-api');
 
   if (!definition) {
-    throw new Error('Missing DeepSeek API bot definition.');
+    throw new Error('Missing DeepSeek - API bot definition.');
   }
 
   return definition;

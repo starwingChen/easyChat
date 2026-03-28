@@ -21,7 +21,7 @@ const chatgptBot = {
 
 const deepseekApiBot = {
   id: 'deepseek-api',
-  name: 'DeepSeek API',
+  name: 'DeepSeek - API',
   brand: 'DeepSeek',
   themeColor: '#2563eb',
   defaultModel: 'deepseek-chat',
@@ -93,7 +93,7 @@ describe('ChatPanelHeader', () => {
 
     const options = screen.getAllByRole('button');
     expect(options[1]).toHaveTextContent('ChatGPT');
-    expect(options[2]).toHaveTextContent('DeepSeek API');
+    expect(options[2]).toHaveTextContent('DeepSeek - API');
     expect(screen.queryByText('API')).not.toBeInTheDocument();
     expect(screen.queryByText('In Use')).not.toBeInTheDocument();
   });

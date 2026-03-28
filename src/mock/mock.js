@@ -27,7 +27,7 @@ export const mockBotDefinitions = [
   },
   {
     id: 'deepseek-api',
-    name: 'DeepSeek API',
+    name: 'DeepSeek - API',
     brand: 'DeepSeek',
     themeColor: '#1d4ed8',
     accessMode: 'api',

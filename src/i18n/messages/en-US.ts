@@ -51,12 +51,12 @@ const enUSMessages = {
   'bot.replyTemplate.perplexity':
     'Perplexity ({model}) frames "{prompt}" as a search-first summary.',
   'bot.error.deepseekApi.missingConfig':
-    'DeepSeek API is not configured yet. Please [configure API](action://open-api-config) first.',
+    'DeepSeek - API is not configured yet. Please [configure API](action://open-api-config) first.',
   'bot.error.deepseekApi.auth':
-    'DeepSeek API authentication failed. Check the API key and account status.',
+    'DeepSeek - API authentication failed. Check the API key and account status.',
   'bot.error.deepseekApi.quota':
-    'DeepSeek API quota is exhausted or requests are too frequent. Check the account status.',
-  'bot.error.deepseekApi.unavailable': 'DeepSeek API is temporarily unavailable. Please try again later.',
+    'DeepSeek - API quota is exhausted or requests are too frequent. Check the account status.',
+  'bot.error.deepseekApi.unavailable': 'DeepSeek - API is temporarily unavailable. Please try again later.',
   'bot.error.deepseekApi.emptyResponse': 'DeepSeek returned an empty response.',
   'bot.error.qwenApi.missingConfig':
     'Qwen API is not configured yet. Please [configure API](action://open-api-config) first.',

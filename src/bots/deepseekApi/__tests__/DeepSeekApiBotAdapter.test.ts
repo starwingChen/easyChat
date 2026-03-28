@@ -15,7 +15,7 @@ describe('DeepSeekApiBotAdapter', () => {
         modelId: 'deepseek-chat',
         targetBotIds: ['deepseek-api'],
       }),
-    ).rejects.toThrow('DeepSeek API 尚未配置。请先[配置 API](action://open-api-config)。');
+    ).rejects.toThrow('DeepSeek - API 尚未配置。请先[配置 API](action://open-api-config)。');
   });
 
   it('localizes the missing-config message for english locale', async () => {
@@ -29,7 +29,7 @@ describe('DeepSeekApiBotAdapter', () => {
         modelId: 'deepseek-chat',
         targetBotIds: ['deepseek-api'],
       }),
-    ).rejects.toThrow('DeepSeek API is not configured yet. Please [configure API](action://open-api-config) first.');
+    ).rejects.toThrow('DeepSeek - API is not configured yet. Please [configure API](action://open-api-config) first.');
   });
 
   it('uses the saved api config and returns the configured runtime model name', async () => {
@@ -165,6 +165,6 @@ describe('DeepSeekApiBotAdapter', () => {
         modelId: 'ignored',
         targetBotIds: ['deepseek-api'],
       }),
-    ).rejects.toThrow('DeepSeek API quota is exhausted or requests are too frequent. Check the account status.');
+    ).rejects.toThrow('DeepSeek - API quota is exhausted or requests are too frequent. Check the account status.');
   });
 });

@@ -88,7 +88,7 @@ describe('ChatPanel', () => {
     const onSaveApiConfig = vi.fn();
     const deepseekApiBot = {
       id: 'deepseek-api',
-      name: 'DeepSeek API',
+      name: 'DeepSeek - API',
       brand: 'DeepSeek',
       themeColor: '#2563eb',
       accessMode: 'api' as const,
@@ -122,7 +122,7 @@ describe('ChatPanel', () => {
             role: 'assistant',
             botId: 'deepseek-api',
             modelId: 'deepseek-chat',
-            content: 'DeepSeek API 尚未配置。请先[配置 API](action://open-api-config)。',
+            content: 'DeepSeek - API 尚未配置。请先[配置 API](action://open-api-config)。',
             createdAt: '2026-03-28T00:00:00.000Z',
             status: 'error',
           },
