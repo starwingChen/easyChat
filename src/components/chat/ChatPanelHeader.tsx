@@ -8,6 +8,7 @@ import { Dropdown } from '../common/Dropdown';
 interface ChatPanelHeaderProps {
   allBotDefinitions: BotDefinition[];
   botDefinition: BotDefinition;
+  botsInConversation: string[];
   configuredModelName: string | null;
   initialApiConfig: ApiBotConfigValue | null;
   inUseBotIds: string[];
@@ -24,6 +25,7 @@ interface ChatPanelHeaderProps {
 export function ChatPanelHeader({
   allBotDefinitions,
   botDefinition,
+  botsInConversation,
   configuredModelName,
   initialApiConfig,
   inUseBotIds,
@@ -49,7 +51,11 @@ export function ChatPanelHeader({
     setModelName(initialApiConfig?.modelName ?? '');
   }, [initialApiConfig, isConfigOpen]);
 
-  const botOptions = allBotDefinitions.map((bot) => ({
+  const sortedBotDefinitions = [
+    ...allBotDefinitions.filter((bot) => bot.accessMode !== 'api'),
+    ...allBotDefinitions.filter((bot) => bot.accessMode === 'api'),
+  ];
+  const botOptions = sortedBotDefinitions.map((bot) => ({
     value: bot.id,
     label: bot.name,
     disabled: bot.id !== botDefinition.id && inUseBotIds.includes(bot.id),
@@ -57,23 +63,22 @@ export function ChatPanelHeader({
       <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: bot.themeColor }} />
     ),
     content: (
-      <div className="flex min-w-0 items-center gap-2">
+      <div className="flex min-w-0 items-center justify-between gap-2">
         <span className="truncate">{bot.name}</span>
-        {bot.accessMode === 'api' ? (
-          <span className="rounded-md border border-slate-200 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-            {t('chat.api')}
+        {botsInConversation.includes(bot.id) ? (
+          <span className="shrink-0 rounded-md border border-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+            {t('chat.inConversation')}
           </span>
         ) : null}
       </div>
     ),
   }));
-  const modelOptions = botDefinition.models.map((model) => ({
-    value: model.id,
-    label: model.label,
-  }));
   const selectedModel = botDefinition.models.find((model) => model.id === selectedModelId) ?? botDefinition.models[0];
-  const currentModelText = configuredModelName ?? t('config.unset');
-  const showApiModelText = botDefinition.accessMode === 'api';
+  const currentModelText = botDefinition.accessMode === 'api'
+    ? configuredModelName && configuredModelName.trim().length > 0
+      ? configuredModelName
+      : t('config.unset')
+    : selectedModel.label;
 
   return (
     <>
@@ -92,30 +97,20 @@ export function ChatPanelHeader({
           />
         )}
         <div className="flex items-center gap-2">
-          {showApiModelText ? (
-            <div className="flex items-center gap-2 px-2 text-xs text-slate-500">
-              <span className="font-medium text-slate-700">{currentModelText}</span>
-            </div>
-          ) : isReadonly ? (
-            <span className="px-2 text-xs text-slate-500">{selectedModel.label}</span>
-          ) : (
-            <Dropdown
-              align="right"
-              ariaLabel={t('chat.selectModel')}
-              onChange={onModelChange}
-              options={modelOptions}
-              value={selectedModelId}
-            />
-          )}
           {!isReadonly && botDefinition.accessMode === 'api' ? (
-            <button
-              aria-label={t('chat.configure')}
-              className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
-              onClick={onOpenApiConfig}
-              type="button"
-            >
-              <Settings2 className="h-4 w-4" />
-            </button>
+            <>
+              <div className="flex items-center gap-2 px-2 text-xs text-slate-500 shrink-0">
+                <span className="font-medium text-slate-700">{currentModelText}</span>
+              </div>
+              <button
+                aria-label={t('chat.configure')}
+                className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
+                onClick={onOpenApiConfig}
+                type="button"
+              >
+                <Settings2 className="h-4 w-4" />
+              </button>
+            </>
           ) : null}
         </div>
       </div>

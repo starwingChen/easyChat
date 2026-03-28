@@ -45,6 +45,13 @@ export function ChatPanel({
   selectedModelId,
 }: ChatPanelProps) {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const botsInConversation = Array.from(
+    new Set(
+      messages
+        .filter((message) => message.role === 'assistant' && message.status === 'done' && message.botId)
+        .map((message) => message.botId as string),
+    ),
+  );
 
   function handleMessageAction(action: BotMessageAction) {
     if (action === 'open-api-config') {
@@ -57,6 +64,7 @@ export function ChatPanel({
       <ChatPanelHeader
         allBotDefinitions={allBotDefinitions}
         botDefinition={botDefinition}
+        botsInConversation={botsInConversation}
         configuredModelName={configuredModelName}
         initialApiConfig={initialApiConfig}
         inUseBotIds={inUseBotIds}

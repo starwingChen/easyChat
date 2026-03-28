@@ -149,4 +149,71 @@ describe('ChatPanel', () => {
       modelName: 'deepseek-reasoner',
     });
   });
+
+  it('marks only bots with completed assistant replies as in conversation in the bot dropdown', async () => {
+    const user = userEvent.setup();
+    const chatgptBot = {
+      id: 'chatgpt',
+      name: 'ChatGPT',
+      brand: 'OpenAI',
+      themeColor: '#22c55e',
+      accessMode: 'session' as const,
+      defaultModel: 'gpt-4o',
+      capabilities: [],
+      models: [{ id: 'gpt-4o', label: 'GPT-4o', isDefault: true }],
+    };
+    const geminiBot = {
+      id: 'gemini',
+      name: 'Gemini',
+      brand: 'Google',
+      themeColor: '#3b82f6',
+      accessMode: 'session' as const,
+      defaultModel: 'gemini-1.5-pro',
+      capabilities: [],
+      models: [{ id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', isDefault: true }],
+    };
+
+    renderWithI18n(
+      <ChatPanel
+        allBotDefinitions={[chatgptBot, geminiBot]}
+        botDefinition={chatgptBot}
+        configuredModelName={null}
+        initialApiConfig={null}
+        inUseBotIds={['chatgpt']}
+        isReadonly={false}
+        messages={[
+          {
+            id: 'assistant-1',
+            sessionId: 'session-1',
+            role: 'assistant',
+            botId: 'chatgpt',
+            modelId: 'gpt-4o',
+            content: 'done reply',
+            createdAt: '2026-03-28T00:00:00.000Z',
+            status: 'done',
+          },
+          {
+            id: 'assistant-2',
+            sessionId: 'session-1',
+            role: 'assistant',
+            botId: 'gemini',
+            modelId: 'gemini-1.5-pro',
+            content: 'network error',
+            createdAt: '2026-03-28T00:00:01.000Z',
+            status: 'error',
+          },
+        ]}
+        onBotChange={vi.fn()}
+        onModelChange={vi.fn()}
+        onSaveApiConfig={vi.fn()}
+        selectedModelId="gpt-4o"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /select bot/i }));
+
+    expect(screen.getByText('In Conversation')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /chatgpt/i })).toHaveTextContent('In Conversation');
+    expect(screen.getByRole('button', { name: /gemini/i })).not.toHaveTextContent('In Conversation');
+  });
 });

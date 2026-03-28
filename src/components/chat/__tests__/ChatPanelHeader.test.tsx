@@ -47,6 +47,7 @@ describe('ChatPanelHeader', () => {
         botDefinition={chatgptBot}
         configuredModelName={null}
         initialApiConfig={null}
+        botsInConversation={[]}
         inUseBotIds={['chatgpt', 'deepseek-api']}
         isConfigOpen={false}
         isReadonly={false}
@@ -65,19 +66,21 @@ describe('ChatPanelHeader', () => {
     expect(screen.queryByText('In Use')).not.toBeInTheDocument();
   });
 
-  it('renders api identity inline and does not render an in-use tag', async () => {
+  it('places api bots after session bots and does not render an api tag', async () => {
     const user = userEvent.setup();
+    const onBotChange = vi.fn();
 
     renderWithI18n(
       <ChatPanelHeader
-        allBotDefinitions={[chatgptBot, deepseekApiBot]}
+        allBotDefinitions={[deepseekApiBot, chatgptBot]}
         botDefinition={chatgptBot}
         configuredModelName={null}
         initialApiConfig={null}
+        botsInConversation={[]}
         inUseBotIds={['chatgpt', 'deepseek-api']}
         isConfigOpen={false}
         isReadonly={false}
-        onBotChange={vi.fn()}
+        onBotChange={onBotChange}
         onCloseApiConfig={vi.fn()}
         onModelChange={vi.fn()}
         onOpenApiConfig={vi.fn()}
@@ -88,13 +91,14 @@ describe('ChatPanelHeader', () => {
 
     await user.click(screen.getByRole('button', { name: /select bot/i }));
 
-    const deepseekApiOption = screen.getByRole('button', { name: /deepseek api/i });
-    expect(deepseekApiOption.querySelectorAll('span').length).toBeGreaterThanOrEqual(3);
-    expect(screen.getAllByText('API')).toHaveLength(1);
+    const options = screen.getAllByRole('button');
+    expect(options[1]).toHaveTextContent('ChatGPT');
+    expect(options[2]).toHaveTextContent('DeepSeek API');
+    expect(screen.queryByText('API')).not.toBeInTheDocument();
     expect(screen.queryByText('In Use')).not.toBeInTheDocument();
   });
 
-  it('shows configured model text instead of a model dropdown for api bots', async () => {
+  it('shows configured model text for api bots and keeps the configure action', async () => {
     const user = userEvent.setup();
     const onOpenApiConfig = vi.fn();
 
@@ -104,6 +108,7 @@ describe('ChatPanelHeader', () => {
         botDefinition={deepseekApiBot}
         configuredModelName="deepseek-chat"
         initialApiConfig={null}
+        botsInConversation={[]}
         inUseBotIds={['deepseek-api']}
         isConfigOpen={false}
         isReadonly={false}
@@ -123,6 +128,82 @@ describe('ChatPanelHeader', () => {
     expect(onOpenApiConfig).toHaveBeenCalledTimes(1);
   });
 
+  it('shows the unset label when the api configured model is an empty string', () => {
+    renderWithI18n(
+      <ChatPanelHeader
+        allBotDefinitions={[chatgptBot, deepseekApiBot]}
+        botDefinition={deepseekApiBot}
+        configuredModelName=""
+        initialApiConfig={null}
+        botsInConversation={[]}
+        inUseBotIds={['deepseek-api']}
+        isConfigOpen={false}
+        isReadonly={false}
+        onBotChange={vi.fn()}
+        onCloseApiConfig={vi.fn()}
+        onModelChange={vi.fn()}
+        onOpenApiConfig={vi.fn()}
+        onSaveApiConfig={vi.fn()}
+        selectedModelId="deepseek-chat"
+      />,
+      { locale: 'zh-CN' },
+    );
+
+    expect(screen.getByText('未配置')).toBeInTheDocument();
+  });
+
+  it('hides the model area for session bots', () => {
+    const { container } = renderWithI18n(
+      <ChatPanelHeader
+        allBotDefinitions={[chatgptBot, deepseekApiBot]}
+        botDefinition={chatgptBot}
+        configuredModelName={null}
+        initialApiConfig={null}
+        botsInConversation={[]}
+        inUseBotIds={['chatgpt']}
+        isConfigOpen={false}
+        isReadonly={false}
+        onBotChange={vi.fn()}
+        onCloseApiConfig={vi.fn()}
+        onModelChange={vi.fn()}
+        onOpenApiConfig={vi.fn()}
+        onSaveApiConfig={vi.fn()}
+        selectedModelId="gpt-4-turbo"
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: /select model/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('GPT-4 Turbo')).not.toBeInTheDocument();
+    expect(container.querySelector('.border-b .text-xs')).toBeNull();
+  });
+
+  it('shows an in-conversation tag for bots with completed assistant replies', async () => {
+    const user = userEvent.setup();
+
+    renderWithI18n(
+      <ChatPanelHeader
+        allBotDefinitions={[chatgptBot, deepseekApiBot]}
+        botDefinition={chatgptBot}
+        configuredModelName={null}
+        initialApiConfig={null}
+        botsInConversation={['deepseek-api']}
+        inUseBotIds={['chatgpt']}
+        isConfigOpen={false}
+        isReadonly={false}
+        onBotChange={vi.fn()}
+        onCloseApiConfig={vi.fn()}
+        onModelChange={vi.fn()}
+        onOpenApiConfig={vi.fn()}
+        onSaveApiConfig={vi.fn()}
+        selectedModelId="gpt-4o"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /select bot/i }));
+
+    expect(screen.getByText('In Conversation')).toBeInTheDocument();
+  });
+
   it('prefills and saves the api config modal for api bots', async () => {
     const user = userEvent.setup();
     const onSaveApiConfig = vi.fn();
@@ -137,6 +218,7 @@ describe('ChatPanelHeader', () => {
           apiKey: 'sk-demo',
           modelName: 'deepseek-reasoner',
         }}
+        botsInConversation={[]}
         inUseBotIds={['deepseek-api']}
         isConfigOpen={true}
         isReadonly={false}

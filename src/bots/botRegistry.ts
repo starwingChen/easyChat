@@ -1,10 +1,8 @@
-import { mockBotDefinitions } from '../mock/mock.js';
 import type { BaseBotAdapter } from './BaseBotAdapter';
 import type { BotModel } from '../types/bot';
 import { ChatGPTBotAdapter } from './chatgpt/ChatGPTBotAdapter';
 import { DeepSeekApiBotAdapter } from './deepseekApi/DeepSeekApiBotAdapter';
 import { GeminiBotAdapter } from './gemini/GeminiBotAdapter';
-import { MockBotAdapter } from './MockBotAdapter';
 import { PerplexityBotAdapter } from './perplexity/PerplexityBotAdapter';
 import { QwenApiBotAdapter } from './qwenApi/QwenApiBotAdapter';
 
@@ -20,10 +18,7 @@ export function createBotRegistry(): BotRegistry {
   const geminiAdapter = new GeminiBotAdapter();
   const perplexityAdapter = new PerplexityBotAdapter();
   const qwenApiAdapter = new QwenApiBotAdapter();
-  const mockAdapters = mockBotDefinitions
-    .filter((definition) => !['chatgpt', 'deepseek-api', 'qwen-api', 'perplexity'].includes(definition.id))
-    .map((definition) => new MockBotAdapter(definition.id));
-  const adapters = [chatgptAdapter, deepseekApiAdapter, qwenApiAdapter, geminiAdapter, perplexityAdapter, ...mockAdapters];
+  const adapters = [chatgptAdapter, deepseekApiAdapter, qwenApiAdapter, geminiAdapter, perplexityAdapter];
   const adapterMap = new Map(adapters.map((adapter) => [adapter.definition.id, adapter]));
 
   return {

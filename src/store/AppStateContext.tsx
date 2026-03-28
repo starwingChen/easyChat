@@ -9,7 +9,6 @@ import {
 
 import { createBotRegistry } from '../bots/botRegistry';
 import { createAppTranslator, resolveLocale } from '../i18n';
-import { mockHistorySnapshots } from '../mock/mock.js';
 import type { AppState, Locale, ViewState } from '../types/app';
 import type { ApiBotConfigValue } from '../types/bot';
 import { createSnapshotFromSession, hasConversationMessages } from '../features/history/historyService';
@@ -55,7 +54,7 @@ const initialState: AppState = {
     sessionId: 'session-active',
   },
   activeSession: createInitialSession(registry, initialLocale, initialSessionTimestamp),
-  historySnapshots: mockHistorySnapshots as AppState['historySnapshots'],
+  historySnapshots: [],
   sidebar: {
     isOpen: true,
   },
@@ -94,14 +93,23 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         return;
       }
 
+      const historySnapshots = persisted.historySnapshots?.filter(
+        (snapshot) => !snapshot.sourceSessionId.startsWith('session-previous-'),
+      );
+      const currentView: ViewState | undefined =
+        persisted.currentView?.mode === 'history' &&
+        !historySnapshots?.some((snapshot) => snapshot.id === persisted.currentView?.sessionId)
+          ? { mode: 'active', sessionId: 'session-active' }
+          : persisted.currentView;
+
       dispatch({
         type: 'hydrate',
         payload: {
           locale: persisted.locale,
-          historySnapshots: persisted.historySnapshots,
+          historySnapshots,
           layout: persisted.layout,
           selectedModels: persisted.selectedModels,
-          currentView: persisted.currentView,
+          currentView,
           activeSession: persisted.activeSession,
           sidebar: persisted.sidebar,
           allBotIds,

@@ -14,32 +14,6 @@ export const mockBotDefinitions = [
     ],
   },
   {
-    id: 'claude',
-    name: 'Claude',
-    brand: 'Anthropic',
-    themeColor: '#f97316',
-    accessMode: 'session',
-    defaultModel: 'claude-3.5-sonnet',
-    capabilities: ['writing', 'analysis'],
-    models: [
-      { id: 'claude-3.5-sonnet', label: 'Claude 3.5 Sonnet', isDefault: true },
-      { id: 'claude-3-opus', label: 'Claude 3 Opus' },
-    ],
-  },
-  {
-    id: 'copilot',
-    name: 'Copilot',
-    brand: 'Microsoft',
-    themeColor: '#14b8a6',
-    accessMode: 'session',
-    defaultModel: 'copilot-standard',
-    capabilities: ['coding', 'search'],
-    models: [
-      { id: 'copilot-standard', label: 'Copilot', isDefault: true },
-      { id: 'copilot-pro', label: 'Copilot Pro' },
-    ],
-  },
-  {
     id: 'perplexity',
     name: 'Perplexity',
     brand: 'Perplexity',
@@ -48,21 +22,7 @@ export const mockBotDefinitions = [
     defaultModel: 'sonar-huge',
     capabilities: ['search', 'citations'],
     models: [
-      { id: 'sonar-huge', label: 'Sonar Huge', isDefault: true },
-      { id: 'sonar-large', label: 'Sonar Large' },
-    ],
-  },
-  {
-    id: 'deepseek',
-    name: 'DeepSeek',
-    brand: 'DeepSeek',
-    themeColor: '#2563eb',
-    accessMode: 'session',
-    defaultModel: 'deepseek-chat',
-    capabilities: ['reasoning', 'coding'],
-    models: [
-      { id: 'deepseek-chat', label: 'DeepSeek Chat', isDefault: true },
-      { id: 'deepseek-reasoner', label: 'DeepSeek Reasoner' },
+      { id: 'pplx-pro', label: 'Perplexity Pro', isDefault: true },
     ],
   },
   {
@@ -103,126 +63,6 @@ export const mockBotDefinitions = [
 
 export const mockReplyTemplates = {
   chatgpt: 'bot.replyTemplate.chatgpt',
-  claude: 'bot.replyTemplate.claude',
-  copilot: 'bot.replyTemplate.copilot',
-  perplexity: 'bot.replyTemplate.perplexity',
 };
 
-export const mockHistorySnapshots = [
-  {
-    id: 'hist-1',
-    sourceSessionId: 'session-previous-1',
-    title: 'React vs Vue comparison',
-    layout: '2v',
-    activeBotIds: ['chatgpt', 'claude'],
-    selectedModels: {
-      chatgpt: 'gpt-4o',
-      gemini: 'gemini-1.5-pro',
-      claude: 'claude-3.5-sonnet',
-      copilot: 'copilot-standard',
-      perplexity: 'sonar-huge',
-    },
-    messages: [
-      {
-        id: 'hist-1-user',
-        sessionId: 'session-previous-1',
-        role: 'user',
-        content: 'Compare **React** and **Vue** in one sentence.\nInclude one short bullet list.',
-        targetBotIds: ['chatgpt', 'claude'],
-        createdAt: '2026-03-25T00:00:00.000Z',
-        status: 'done',
-      },
-      {
-        id: 'hist-1-chatgpt',
-        sessionId: 'session-previous-1',
-        role: 'assistant',
-        botId: 'chatgpt',
-        modelId: 'gpt-4o',
-        content:
-          'React is a UI library with flexible composition, while Vue is a more batteries-included framework with a gentler learning curve.\n\n- React: flexible ecosystem\n- Vue: cohesive defaults',
-        createdAt: '2026-03-25T00:00:01.000Z',
-        status: 'done',
-      },
-      {
-        id: 'hist-1-claude',
-        sessionId: 'session-previous-1',
-        role: 'assistant',
-        botId: 'claude',
-        modelId: 'claude-3.5-sonnet',
-        content:
-          '> React favors explicit composition and ecosystem choice.\n>\n> Vue emphasizes approachability and cohesive defaults.',
-        createdAt: '2026-03-25T00:00:02.000Z',
-        status: 'done',
-      },
-    ],
-    createdAt: '2026-03-25T00:05:00.000Z',
-  },
-  {
-    id: 'hist-2',
-    sourceSessionId: 'session-previous-2',
-    title: 'Brainstorming startup ideas',
-    layout: '4',
-    activeBotIds: ['chatgpt', 'gemini', 'claude', 'copilot'],
-    selectedModels: {
-      chatgpt: 'gpt-4-turbo',
-      gemini: 'gemini-1.5-pro',
-      claude: 'claude-3-opus',
-      copilot: 'copilot-standard',
-      perplexity: 'sonar-huge',
-    },
-    messages: [
-      {
-        id: 'hist-2-user',
-        sessionId: 'session-previous-2',
-        role: 'user',
-        content: 'Give me one AI startup idea for pet owners.\nUse `one sentence` and a link label.',
-        targetBotIds: ['chatgpt', 'gemini', 'claude', 'copilot'],
-        createdAt: '2026-03-25T00:00:00.000Z',
-        status: 'done',
-      },
-      {
-        id: 'hist-2-chatgpt',
-        sessionId: 'session-previous-2',
-        role: 'assistant',
-        botId: 'chatgpt',
-        modelId: 'gpt-4-turbo',
-        content:
-          'Build an AI pet behavior coach that turns camera footage into daily training tips.\n\nLearn more at [Pet Coach](https://example.com/pet-coach).',
-        createdAt: '2026-03-25T00:00:01.000Z',
-        status: 'done',
-      },
-      {
-        id: 'hist-2-gemini',
-        sessionId: 'session-previous-2',
-        role: 'assistant',
-        botId: 'gemini',
-        modelId: 'gemini-1.5-pro',
-        content:
-          'Offer a multimodal health journal that combines meals, activity, and photo-based symptom tracking.\n\n```txt\nmeal + activity + symptoms\n```',
-        createdAt: '2026-03-25T00:00:02.000Z',
-        status: 'done',
-      },
-      {
-        id: 'hist-2-claude',
-        sessionId: 'session-previous-2',
-        role: 'assistant',
-        botId: 'claude',
-        modelId: 'claude-3-opus',
-        content: 'Create a concierge service that helps adopters match, onboard, and keep rescue pets successfully.',
-        createdAt: '2026-03-25T00:00:03.000Z',
-        status: 'done',
-      },
-      {
-        id: 'hist-2-copilot',
-        sessionId: 'session-previous-2',
-        role: 'assistant',
-        botId: 'copilot',
-        modelId: 'copilot-standard',
-        content: 'Launch a smart toy platform that adapts play patterns to each pet and reports engagement metrics.',
-        createdAt: '2026-03-25T00:00:04.000Z',
-        status: 'done',
-      },
-    ],
-    createdAt: '2026-03-25T00:10:00.000Z',
-  },
-];
+export const mockHistorySnapshots = [];

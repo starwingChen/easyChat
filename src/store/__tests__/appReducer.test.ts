@@ -44,7 +44,7 @@ describe('appReducer', () => {
           activeBotIds: ['gemini'],
           selectedModels: { gemini: 'gemini-1.5-flash' },
         }),
-        allBotIds: ['gemini', 'chatgpt', 'claude'],
+        allBotIds: ['gemini', 'chatgpt', 'perplexity'],
       },
     });
 
@@ -70,18 +70,18 @@ describe('appReducer', () => {
     const next = appReducer(state, {
       type: 'hydrate',
       payload: {
-        selectedModels: { gemini: 'gemini-from-root', claude: 'claude-from-root' },
+        selectedModels: { gemini: 'gemini-from-root', perplexity: 'perplexity-from-root' },
         activeSession: createSession({
           selectedModels: { gemini: 'gemini-from-active' },
         }),
-        allBotIds: ['gemini', 'chatgpt', 'claude'],
+        allBotIds: ['gemini', 'chatgpt', 'perplexity'],
       },
     });
 
     expect(next.activeSession.selectedModels).toEqual({
       gemini: 'gemini-from-active',
       chatgpt: 'gpt-4o',
-      claude: 'claude-from-root',
+      perplexity: 'perplexity-from-root',
     });
   });
 
@@ -95,19 +95,19 @@ describe('appReducer', () => {
 
     const next = appReducer(state, {
       type: 'set-layout',
-      payload: { layout: '3', allBotIds: ['gemini', 'chatgpt', 'claude', 'copilot'] },
+      payload: { layout: '3', allBotIds: ['gemini', 'chatgpt', 'perplexity', 'deepseek-api'] },
     });
 
     expect(next.activeSession.layout).toBe('3');
-    expect(next.activeSession.activeBotIds).toEqual(['gemini', 'chatgpt', 'claude']);
+    expect(next.activeSession.activeBotIds).toEqual(['gemini', 'chatgpt', 'perplexity']);
 
     const next2 = appReducer(next, {
       type: 'set-layout',
-      payload: { layout: '1', allBotIds: ['gemini', 'chatgpt', 'claude', 'copilot'] },
+      payload: { layout: '1', allBotIds: ['gemini', 'chatgpt', 'perplexity', 'deepseek-api'] },
     });
 
     // Layout changes should not discard existing selections; visibility is handled by selectors.
-    expect(next2.activeSession.activeBotIds).toEqual(['gemini', 'chatgpt', 'claude']);
+    expect(next2.activeSession.activeBotIds).toEqual(['gemini', 'chatgpt', 'perplexity']);
   });
 
   it('replaces an existing active message and updates updatedAt', () => {

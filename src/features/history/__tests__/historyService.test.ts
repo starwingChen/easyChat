@@ -172,6 +172,88 @@ describe('historyService', () => {
     ]);
   });
 
+  it('excludes bots and assistant messages that only ended in error or cancelled states', () => {
+    const session = createSession({
+      id: 'session-active',
+      title: 'Active Session',
+      layout: '3',
+      activeBotIds: ['chatgpt', 'gemini', 'perplexity'],
+      bots: [
+        createBotDefinition({
+          id: 'chatgpt',
+          name: 'ChatGPT',
+          brand: 'OpenAI',
+          themeColor: '#22c55e',
+          defaultModel: 'gpt-4o',
+          models: [{ id: 'gpt-4o', label: 'GPT-4o', isDefault: true }],
+        }),
+        createBotDefinition({
+          id: 'gemini',
+          name: 'Gemini',
+          brand: 'Google',
+          themeColor: '#3b82f6',
+          defaultModel: 'gemini-1.5-pro',
+          models: [{ id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', isDefault: true }],
+        }),
+        createBotDefinition({
+          id: 'perplexity',
+          name: 'Perplexity',
+          brand: 'Perplexity',
+          themeColor: '#20808d',
+          defaultModel: 'pplx-pro',
+          models: [{ id: 'pplx-pro', label: 'Perplexity Pro', isDefault: true }],
+        }),
+      ],
+      messages: [
+        createMessage('user', {
+          id: 'm-1',
+          sessionId: 'session-active',
+          content: 'Hello',
+          targetBotIds: ['chatgpt', 'gemini', 'perplexity'],
+          createdAt: '2026-03-25T00:00:00.000Z',
+        }),
+        createMessage('assistant', {
+          id: 'm-2',
+          sessionId: 'session-active',
+          botId: 'chatgpt',
+          modelId: 'gpt-4o',
+          content: 'Hi there',
+          createdAt: '2026-03-25T00:00:01.000Z',
+          status: 'done',
+        }),
+        createMessage('assistant', {
+          id: 'm-3',
+          sessionId: 'session-active',
+          botId: 'gemini',
+          modelId: 'gemini-1.5-pro',
+          content: 'Reply failed',
+          createdAt: '2026-03-25T00:00:02.000Z',
+          status: 'error',
+        }),
+        createMessage('assistant', {
+          id: 'm-4',
+          sessionId: 'session-active',
+          botId: 'perplexity',
+          modelId: 'pplx-pro',
+          content: 'Reply stopped',
+          createdAt: '2026-03-25T00:00:03.000Z',
+          status: 'cancelled',
+        }),
+      ],
+      createdAt: '2026-03-25T00:00:00.000Z',
+      updatedAt: '2026-03-25T00:00:03.000Z',
+    });
+
+    const snapshot = createSnapshotFromSession(session, 'snapshot-3', '2026-03-25T00:05:00.000Z');
+
+    expect(snapshot.activeBotIds).toEqual(['chatgpt']);
+    expect(snapshot.layout).toBe('1');
+    expect(snapshot.messages).toEqual([
+      expect.objectContaining({ id: 'm-1', role: 'user' }),
+      expect.objectContaining({ id: 'm-2', botId: 'chatgpt', status: 'done' }),
+    ]);
+  });
+
   it('creates a readonly history snapshot fixture without loading messages', () => {
     const session = createSession({
       id: 'session-history',

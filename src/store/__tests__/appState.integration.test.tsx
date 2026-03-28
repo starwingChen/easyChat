@@ -466,6 +466,43 @@ describe('AppStateContext', () => {
     expect(probe.historyCount).toBe(0);
   });
 
+  it('removes persisted mock history snapshots during hydration and falls back to the active view', async () => {
+    localeMocks.loadPersistedPreferences.mockResolvedValue({
+      ...persistedHistoryState,
+      historySnapshots: [
+        {
+          id: 'hist-mock',
+          sourceSessionId: 'session-previous-1',
+          title: 'Mock Snapshot',
+          layout: '2v',
+          activeBotIds: ['chatgpt', 'gemini'],
+          selectedModels: {
+            chatgpt: 'gpt-4-turbo',
+            gemini: 'gemini-1.5-pro',
+          },
+          messages: [],
+          createdAt: '2026-03-25T00:00:00.000Z',
+        },
+      ],
+      currentView: {
+        mode: 'history',
+        sessionId: 'hist-mock',
+      },
+    });
+
+    render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>,
+    );
+
+    await waitFor(() => {
+      expect(readProbe().historyCount).toBe(0);
+    });
+
+    expect(readProbe().currentView).toEqual({ mode: 'active', sessionId: 'session-active' });
+  });
+
   it('creates a new session while preserving layout and active bots', async () => {
     const user = userEvent.setup();
     localeMocks.loadPersistedPreferences.mockResolvedValue({

@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createBotRegistry } from '../../../bots/botRegistry';
 import type { BotRegistry } from '../../../bots/botRegistry';
-import { MockBotAdapter } from '../../../bots/MockBotAdapter';
 import { createSession } from '../../../../test/factories/session';
 import type { BotResponse, SendMessageInput } from '../../../types/bot';
 import {
@@ -36,6 +35,8 @@ describe('sessionService', () => {
     expect(enSession.title).toBe('Active Session');
     expect(zhSession.messages).toEqual([]);
     expect(enSession.messages).toEqual([]);
+    expect(zhSession.activeBotIds).toEqual(['chatgpt', 'gemini', 'perplexity', 'deepseek-api']);
+    expect(enSession.activeBotIds).toEqual(['chatgpt', 'gemini', 'perplexity', 'deepseek-api']);
   });
 
   it('creates a user message and loading placeholders for visible bots before replies resolve', () => {
@@ -238,7 +239,38 @@ describe('sessionService', () => {
           })();
         }
 
-        return botId === 'chatgpt' ? new MockBotAdapter('chatgpt') : successRegistry.getBot(botId);
+        if (botId === 'chatgpt') {
+          const originalBot = successRegistry.getBot(botId);
+
+          return new (class extends BaseBotAdapter {
+            readonly definition = originalBot.definition;
+
+            listModels() {
+              return originalBot.listModels();
+            }
+
+            getDefaultModel() {
+              return originalBot.getDefaultModel();
+            }
+
+            resetConversation() {
+              originalBot.resetConversation();
+            }
+
+            async sendMessage(input: SendMessageInput): Promise<BotResponse> {
+              return {
+                id: 'reply-chatgpt',
+                botId: 'chatgpt',
+                modelId: input.modelId,
+                content: 'ChatGPT reply',
+                createdAt: '2026-03-25T12:00:01.000Z',
+                status: 'done',
+              };
+            }
+          })();
+        }
+
+        return successRegistry.getBot(botId);
       },
     };
 

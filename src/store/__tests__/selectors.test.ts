@@ -65,7 +65,7 @@ describe('selectors', () => {
     const snapshot = createSnapshot({
       id: 'hist-1',
       layout: '2v',
-      activeBotIds: ['claude', 'copilot', 'gemini'],
+      activeBotIds: ['perplexity', 'deepseek-api', 'gemini'],
     });
 
     const activeState = createState({
@@ -79,7 +79,7 @@ describe('selectors', () => {
       currentView: { mode: 'history', sessionId: snapshot.id },
       historySnapshots: [snapshot],
     });
-    expect(selectVisibleBotIds(historyState)).toEqual(['claude', 'copilot']);
+    expect(selectVisibleBotIds(historyState)).toEqual(['perplexity', 'deepseek-api']);
   });
 
   it('detects visible loading messages only for active view and visible bots', () => {
@@ -118,4 +118,3 @@ describe('selectors', () => {
     expect(selectHasVisibleLoadingMessages(noVisibleLoading)).toBe(false);
   });
 });
-

@@ -26,11 +26,21 @@ export function createSnapshotFromSession(
   snapshotId: string,
   createdAt: string,
 ): SessionSnapshot {
-  const snapshotMessages = session.messages.filter((message) => message.status !== 'loading');
+  const snapshotMessages = session.messages.filter((message) => {
+    if (message.status === 'loading') {
+      return false;
+    }
+
+    if (message.role !== 'assistant') {
+      return true;
+    }
+
+    return message.status === 'done';
+  });
   const repliedBotIds = Array.from(
     new Set(
       snapshotMessages
-        .filter((message) => message.role === 'assistant' && message.status !== 'welcome')
+        .filter((message) => message.role === 'assistant' && message.status === 'done')
         .map((message) => message.botId)
         .filter((botId): botId is string => Boolean(botId)),
     ),

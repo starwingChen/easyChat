@@ -57,10 +57,10 @@ export const persistedHistoryState: PersistedPreferences = {
       sourceSessionId: 'session-active',
       title: 'React vs Vue comparison',
       layout: '2v',
-      activeBotIds: ['chatgpt', 'claude'],
+      activeBotIds: ['chatgpt', 'gemini'],
       selectedModels: {
-        chatgpt: 'gpt-4o',
-        claude: 'claude-3.5-sonnet',
+        chatgpt: 'gpt-4-turbo',
+        gemini: 'gemini-1.5-pro',
       },
       messages: [],
       createdAt: '2026-03-25T00:00:00.000Z',
@@ -68,10 +68,10 @@ export const persistedHistoryState: PersistedPreferences = {
   ],
   layout: '2v',
   selectedModels: {
-    chatgpt: 'gpt-4o',
+    chatgpt: 'gpt-4-turbo',
     gemini: 'gemini-1.5-pro',
-    claude: 'claude-3.5-sonnet',
-    copilot: 'copilot-standard',
+    perplexity: 'pplx-pro',
+    'deepseek-api': 'deepseek-chat',
   },
   currentView: {
     mode: 'history',
@@ -81,12 +81,12 @@ export const persistedHistoryState: PersistedPreferences = {
     id: 'session-active',
     title: 'Active Session',
     layout: '2v',
-    activeBotIds: ['chatgpt', 'gemini', 'claude', 'copilot'],
+    activeBotIds: ['chatgpt', 'gemini', 'perplexity', 'deepseek-api'],
     selectedModels: {
-      chatgpt: 'gpt-4o',
+      chatgpt: 'gpt-4-turbo',
       gemini: 'gemini-1.5-pro',
-      claude: 'claude-3.5-sonnet',
-      copilot: 'copilot-standard',
+      perplexity: 'pplx-pro',
+      'deepseek-api': 'deepseek-chat',
     },
     messages: [],
     createdAt: '2026-03-26T00:00:00.000Z',
@@ -97,4 +97,3 @@ export const persistedHistoryState: PersistedPreferences = {
     isOpen: true,
   },
 };
-

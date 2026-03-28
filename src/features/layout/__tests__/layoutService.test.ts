@@ -15,13 +15,13 @@ describe('layoutService', () => {
     const nextBots = ensureBotsForLayout({
       layout: '4',
       activeBotIds: ['chatgpt', 'gemini'],
-      allBotIds: ['chatgpt', 'gemini', 'claude', 'copilot', 'perplexity'],
+      allBotIds: ['chatgpt', 'gemini', 'perplexity', 'deepseek-api', 'qwen-api'],
     });
 
-    expect(nextBots.slice(0, 4)).toEqual(['chatgpt', 'gemini', 'claude', 'copilot']);
+    expect(nextBots.slice(0, 4)).toEqual(['chatgpt', 'gemini', 'perplexity', 'deepseek-api']);
   });
 
   it('only exposes the visible bots for the current layout', () => {
-    expect(getVisibleBotIds(['chatgpt', 'gemini', 'claude'], '2h')).toEqual(['chatgpt', 'gemini']);
+    expect(getVisibleBotIds(['chatgpt', 'gemini', 'perplexity'], '2h')).toEqual(['chatgpt', 'gemini']);
   });
 });

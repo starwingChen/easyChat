@@ -25,6 +25,7 @@ const zhCNMessages = {
   'chat.replyFailed': '回复失败',
   'chat.stopReply': '终止回复',
   'chat.replyStopped': '已终止这条回复',
+  'chat.inConversation': '对话中',
   'chat.inUse': '使用中',
   'chat.api': 'API',
   'chat.configure': '配置',
