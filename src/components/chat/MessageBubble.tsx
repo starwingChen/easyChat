@@ -10,6 +10,7 @@ interface MessageBubbleProps {
   loadingLabel: string;
   onCancelLoading?: (messageId: string) => void;
   onMessageAction?: (action: BotMessageAction) => void;
+  retryLabel?: string;
   stopLabel: string;
   youLabel: string;
 }
@@ -20,6 +21,7 @@ export function MessageBubble({
   loadingLabel,
   onCancelLoading,
   onMessageAction,
+  retryLabel,
   stopLabel,
   youLabel,
 }: MessageBubbleProps) {
@@ -39,30 +41,38 @@ export function MessageBubble({
           {isUser ? youLabel : botDefinition.name}
         </span>
       </div>
-      <div
-        className={`max-w-[86%] rounded-2xl px-4 py-2 text-sm leading-6 ${
-          isUser
-            ? 'rounded-tr-sm bg-blue-600 text-white'
-            : 'rounded-tl-sm bg-slate-100 text-slate-700'
-        }`}
-      >
-        {isLoading ? (
-          <span className="inline-flex items-center gap-2 text-slate-500">
-            <span aria-label={loadingLabel} className="inline-flex items-center" role="status">
-              <LoaderCircle className="h-4 w-4 animate-spin" />
+      <div className={`flex max-w-full items-start gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
+        <div
+          className={`max-w-[86%] rounded-2xl px-4 py-2 text-sm leading-6 ${
+            isUser
+              ? 'rounded-tr-sm bg-blue-600 text-white'
+              : 'rounded-tl-sm bg-slate-100 text-slate-700'
+          }`}
+        >
+          {isLoading ? (
+            <span className="inline-flex items-center gap-2 text-slate-500">
+              <span aria-label={loadingLabel} className="inline-flex items-center" role="status">
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+              </span>
+              <span>{loadingLabel}</span>
             </span>
+          ) : (
+            <RichTextMessage content={message.content} onAction={onMessageAction} />
+          )}
+        </div>
+        {isLoading ? (
+          <div className="flex shrink-0 items-center gap-2 px-1 pt-2 text-xs text-slate-400">
+            {retryLabel ? <span>{retryLabel}</span> : null}
             <button
               aria-label={stopLabel}
-              className="absolute left-[68px] rounded-md p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+              className="rounded-md p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
               onClick={() => onCancelLoading?.(message.id)}
               type="button"
             >
               <Square className="h-3.5 w-3.5 fill-current" />
             </button>
-          </span>
-        ) : (
-          <RichTextMessage content={message.content} onAction={onMessageAction} />
-        )}
+          </div>
+        ) : null}
       </div>
     </div>
   );

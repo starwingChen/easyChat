@@ -228,6 +228,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
             const message = await resolvePendingBotReply({
               ...request,
+              onRetry(retryingMessage) {
+                if (pendingReplyControllers.get(request.messageId) !== abortController) {
+                  return;
+                }
+
+                dispatch({
+                  type: 'replace-active-message',
+                  payload: {
+                    message: retryingMessage,
+                    updatedAt: new Date().toISOString(),
+                  },
+                });
+              },
               signal: abortController.signal,
             });
 

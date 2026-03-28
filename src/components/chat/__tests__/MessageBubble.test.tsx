@@ -117,4 +117,31 @@ describe('MessageBubble', () => {
 
     expect(onCancelLoading).toHaveBeenCalledWith('loading-2');
   });
+
+  it('renders retry progress next to a loading assistant message', () => {
+    render(
+      <MessageBubble
+        botDefinition={botDefinition}
+        loadingLabel="Loading reply"
+        message={{
+          id: 'loading-3',
+          sessionId: 'session-1',
+          role: 'assistant',
+          botId: 'gemini',
+          modelId: 'gemini-1.5-pro',
+          content: '',
+          createdAt: '2026-03-26T00:00:00.000Z',
+          status: 'loading',
+          retryCount: 2,
+          retryLimit: 2,
+        }}
+        retryLabel="Retry 2/2"
+        stopLabel="Stop reply"
+        youLabel="You"
+      />,
+    );
+
+    expect(screen.getByText('Retry 2/2')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Stop reply' })).toBeInTheDocument();
+  });
 });

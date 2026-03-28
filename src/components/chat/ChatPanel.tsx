@@ -72,6 +72,7 @@ export function ChatPanel({
       />
       <MessageList
         botDefinition={botDefinition}
+        formatRetryLabel={(retryCount, retryLimit) => `${t('chat.retry')} ${retryCount}/${retryLimit}`}
         loadingLabel={t('chat.loading')}
         messages={filterMessagesForBot(messages, botDefinition.id)}
         onCancelLoading={onCancelLoading}

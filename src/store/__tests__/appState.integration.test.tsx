@@ -91,6 +91,8 @@ function StateProbe() {
             botId: message.botId,
             content: message.content,
             status: message.status,
+            retryCount: message.retryCount,
+            retryLimit: message.retryLimit,
           })),
         })}
       </pre>
@@ -110,7 +112,12 @@ function readProbe() {
     deepseekApiState:
       | { apiKey: string; modelName: string; messages: Array<{ role: string; content: string }> }
       | null;
-    messages: Array<Pick<ChatMessage, 'id' | 'content' | 'status' | 'botId'>>;
+    messages: Array<
+      Pick<ChatMessage, 'id' | 'content' | 'status' | 'botId'> & {
+        retryCount?: number;
+        retryLimit?: number;
+      }
+    >;
   };
 }
 
@@ -287,6 +294,73 @@ describe('AppStateContext', () => {
     await waitFor(() => {
       expect(readProbe().messages.find((message) => message.id === loadingMessage!.id)?.status).toBe(
         'cancelled',
+      );
+    });
+  });
+
+  it('updates the visible loading message when a retry is triggered', async () => {
+    const user = userEvent.setup();
+    localeMocks.loadPersistedPreferences.mockResolvedValue(null);
+    let resolveReply: ((message: ChatMessage) => void) | undefined;
+
+    sessionMocks.resolvePendingBotReply.mockImplementation(
+      (request) =>
+        new Promise<ChatMessage>((resolve) => {
+          resolveReply = resolve;
+
+          request.onRetry?.({
+            id: request.messageId,
+            sessionId: request.sessionId,
+            role: 'assistant',
+            botId: request.botId,
+            modelId: request.modelId,
+            content: '',
+            createdAt: request.createdAt,
+            status: 'loading',
+            retryCount: 1,
+            retryLimit: 2,
+          });
+        }),
+    );
+
+    render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Set 1' }));
+    await user.click(screen.getByRole('button', { name: 'Send Hello' }));
+
+    await waitFor(() => {
+      expect(readProbe().messages).toContainEqual(
+        expect.objectContaining({
+          botId: 'chatgpt',
+          status: 'loading',
+          retryCount: 1,
+          retryLimit: 2,
+        }),
+      );
+    });
+
+    resolveReply?.({
+      id: readProbe().messages.find((message) => message.botId === 'chatgpt' && message.status === 'loading')!.id,
+      sessionId: 'session-active',
+      role: 'assistant',
+      botId: 'chatgpt',
+      modelId: 'auto',
+      content: 'Recovered reply',
+      createdAt: new Date().toISOString(),
+      status: 'done',
+    });
+
+    await waitFor(() => {
+      expect(readProbe().messages).toContainEqual(
+        expect.objectContaining({
+          botId: 'chatgpt',
+          status: 'done',
+          content: 'Recovered reply',
+        }),
       );
     });
   });

@@ -4,6 +4,7 @@ import { MessageBubble } from './MessageBubble';
 
 interface MessageListProps {
   botDefinition: BotDefinition;
+  formatRetryLabel: (retryCount: number, retryLimit: number) => string;
   loadingLabel: string;
   messages: ChatMessage[];
   onCancelLoading?: (messageId: string) => void;
@@ -14,6 +15,7 @@ interface MessageListProps {
 
 export function MessageList({
   botDefinition,
+  formatRetryLabel,
   loadingLabel,
   messages,
   onCancelLoading,
@@ -31,6 +33,11 @@ export function MessageList({
           message={message}
           onCancelLoading={onCancelLoading}
           onMessageAction={onMessageAction}
+          retryLabel={
+            message.status === 'loading' && message.retryCount && message.retryLimit
+              ? formatRetryLabel(message.retryCount, message.retryLimit)
+              : undefined
+          }
           stopLabel={stopLabel}
           youLabel={youLabel}
         />

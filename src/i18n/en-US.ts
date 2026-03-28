@@ -19,6 +19,7 @@ const enUS = {
   'chat.selectBot': 'Select bot',
   'chat.selectModel': 'Select model',
   'chat.loading': 'Loading reply',
+  'chat.retry': 'Network error, retrying...',
   'chat.stopReply': 'Stop reply',
   'chat.replyStopped': 'Reply stopped',
   'chat.inUse': 'In Use',

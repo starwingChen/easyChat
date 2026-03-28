@@ -11,4 +11,6 @@ export interface ChatMessage {
   targetBotIds?: string[];
   createdAt: string;
   status: MessageStatus;
+  retryCount?: number;
+  retryLimit?: number;
 }

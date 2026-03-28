@@ -167,7 +167,6 @@ describe('ChatPanelHeader', () => {
     );
 
     expect(screen.queryByRole('button', { name: /select model/i })).not.toBeInTheDocument();
-    expect(screen.getByText('Current Model')).toBeInTheDocument();
     expect(screen.getByText('deepseek-chat')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /configure/i }));

@@ -12,6 +12,8 @@ interface BroadcastMessageInput {
   now?: () => string;
 }
 
+export const BOT_REPLY_RETRY_LIMIT = 2;
+
 export interface PendingBotReplyRequest {
   botId: string;
   content: string;
@@ -19,6 +21,7 @@ export interface PendingBotReplyRequest {
   locale: Locale;
   messageId: string;
   modelId: string;
+  onRetry?: (message: ChatMessage) => void;
   registry: BotRegistry;
   sessionId: string;
   signal?: AbortSignal;
@@ -33,6 +36,30 @@ interface BroadcastDraft {
 
 function createMessageId(prefix: string, stamp: string, suffix = ''): string {
   return `${prefix}-${stamp}${suffix}`;
+}
+
+function createPendingAssistantMessage(
+  request: Pick<
+    PendingBotReplyRequest,
+    'botId' | 'createdAt' | 'messageId' | 'modelId' | 'sessionId'
+  >,
+  overrides: Partial<ChatMessage>,
+): ChatMessage {
+  return {
+    id: request.messageId,
+    sessionId: request.sessionId,
+    role: 'assistant',
+    botId: request.botId,
+    modelId: request.modelId,
+    content: '',
+    createdAt: request.createdAt,
+    status: 'loading',
+    ...overrides,
+  };
+}
+
+function getReplyFailureMessage(locale: Locale): string {
+  return locale === 'en-US' ? 'reply timeout, please retry' : '回复超时，请重试';
 }
 
 export function buildSelectedModels(registry: BotRegistry): Record<string, string> {
@@ -99,6 +126,8 @@ export function createBroadcastDraft({
       content: '',
       createdAt,
       status: 'loading',
+      retryCount: 0,
+      retryLimit: BOT_REPLY_RETRY_LIMIT,
     };
   });
 
@@ -120,36 +149,52 @@ export function createBroadcastDraft({
 }
 
 export async function resolvePendingBotReply(request: PendingBotReplyRequest): Promise<ChatMessage> {
-  try {
-    const response = await request.registry.getBot(request.botId).sendMessage({
-      sessionId: request.sessionId,
-      content: request.content,
-      locale: request.locale,
-      modelId: request.modelId,
-      signal: request.signal,
-      targetBotIds: request.targetBotIds,
-    });
+  for (let retryCount = 0; retryCount <= BOT_REPLY_RETRY_LIMIT; retryCount += 1) {
+    try {
+      const response = await request.registry.getBot(request.botId).sendMessage({
+        sessionId: request.sessionId,
+        content: request.content,
+        locale: request.locale,
+        modelId: request.modelId,
+        signal: request.signal,
+        targetBotIds: request.targetBotIds,
+      });
 
-    return {
-      id: request.messageId,
-      sessionId: request.sessionId,
-      role: 'assistant',
-      botId: request.botId,
-      modelId: response.modelId,
-      content: response.content,
-      createdAt: request.createdAt,
-      status: 'done',
-    };
-  } catch (error) {
-    return {
-      id: request.messageId,
-      sessionId: request.sessionId,
-      role: 'assistant',
-      botId: request.botId,
-      modelId: request.modelId,
-      content: error instanceof Error ? error.message : 'Unknown bot error',
-      createdAt: request.createdAt,
-      status: 'error',
-    };
+      return createPendingAssistantMessage(request, {
+        modelId: response.modelId,
+        content: response.content,
+        status: 'done',
+      });
+    } catch (error) {
+      if (request.signal?.aborted) {
+        return createPendingAssistantMessage(request, {
+          content: error instanceof Error ? error.message : 'Unknown bot error',
+          status: 'error',
+        });
+      }
+
+      if (retryCount === BOT_REPLY_RETRY_LIMIT) {
+        return createPendingAssistantMessage(request, {
+          content: getReplyFailureMessage(request.locale),
+          status: 'error',
+          retryCount: BOT_REPLY_RETRY_LIMIT,
+          retryLimit: BOT_REPLY_RETRY_LIMIT,
+        });
+      }
+
+      request.onRetry?.(
+        createPendingAssistantMessage(request, {
+          retryCount: retryCount + 1,
+          retryLimit: BOT_REPLY_RETRY_LIMIT,
+        }),
+      );
+    }
   }
+
+  return createPendingAssistantMessage(request, {
+    content: getReplyFailureMessage(request.locale),
+    status: 'error',
+    retryCount: BOT_REPLY_RETRY_LIMIT,
+    retryLimit: BOT_REPLY_RETRY_LIMIT,
+  });
 }
