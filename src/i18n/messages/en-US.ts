@@ -57,6 +57,13 @@ const enUSMessages = {
     'DeepSeek API quota is exhausted or requests are too frequent. Check the account status.',
   'bot.error.deepseekApi.unavailable': 'DeepSeek API is temporarily unavailable. Please try again later.',
   'bot.error.deepseekApi.emptyResponse': 'DeepSeek returned an empty response.',
+  'bot.error.qwenApi.missingConfig':
+    'Qwen API is not configured yet. Please [configure API](action://open-api-config) first.',
+  'bot.error.qwenApi.auth': 'Qwen API authentication failed. Check the API key and account status.',
+  'bot.error.qwenApi.quota':
+    'Qwen API quota is exhausted or requests are too frequent. Check the account status.',
+  'bot.error.qwenApi.unavailable': 'Qwen API is temporarily unavailable. Please try again later.',
+  'bot.error.qwenApi.emptyResponse': 'Qwen returned an empty response.',
 } as const;
 
 export default enUSMessages;

@@ -270,4 +270,29 @@ describe('sessionService', () => {
       retryLimit: 3,
     });
   });
+
+  it('preserves actionable api configuration errors instead of replacing them with a generic failure', async () => {
+    const registry = createBotRegistry();
+    const onRetry = vi.fn();
+
+    const failedReply = await resolvePendingBotReply({
+      botId: 'qwen-api',
+      content: 'hello',
+      createdAt: '2026-03-25T12:00:00.000Z',
+      locale: 'zh-CN',
+      messageId: 'qwen-api-2026-03-25T12:00:00.000Z',
+      modelId: 'qwen-plus',
+      onRetry,
+      registry,
+      sessionId: 'session-1',
+      targetBotIds: ['qwen-api'],
+    });
+
+    expect(onRetry).not.toHaveBeenCalled();
+    expect(failedReply).toMatchObject({
+      botId: 'qwen-api',
+      status: 'error',
+      content: 'Qwen API 尚未配置。请先[配置 API](action://open-api-config)。',
+    });
+  });
 });

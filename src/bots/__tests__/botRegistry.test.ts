@@ -4,6 +4,7 @@ import { ChatGPTBotAdapter } from '../chatgpt/ChatGPTBotAdapter';
 import { DeepSeekApiBotAdapter } from '../deepseekApi/DeepSeekApiBotAdapter';
 import { GeminiBotAdapter } from '../gemini/GeminiBotAdapter';
 import { MockBotAdapter } from '../MockBotAdapter';
+import { QwenApiBotAdapter } from '../qwenApi/QwenApiBotAdapter';
 import { createBotRegistry } from '../botRegistry';
 
 describe('botRegistry', () => {
@@ -13,11 +14,12 @@ describe('botRegistry', () => {
     const allBotIds = allBots.map((bot) => bot.definition.id);
 
     expect(new Set(allBotIds).size).toBe(allBotIds.length);
-    expect(allBotIds).toEqual(expect.arrayContaining(['chatgpt', 'gemini', 'claude', 'deepseek-api']));
+    expect(allBotIds).toEqual(expect.arrayContaining(['chatgpt', 'gemini', 'claude', 'deepseek-api', 'qwen-api']));
     expect(registry.getBot('claude').definition.name).toBe('Claude');
     expect(registry.getBot('chatgpt')).toBeInstanceOf(ChatGPTBotAdapter);
     expect(registry.getBot('gemini')).toBeInstanceOf(GeminiBotAdapter);
     expect(registry.getBot('deepseek-api')).toBeInstanceOf(DeepSeekApiBotAdapter);
+    expect(registry.getBot('qwen-api')).toBeInstanceOf(QwenApiBotAdapter);
     expect(registry.getBot('claude')).toBeInstanceOf(MockBotAdapter);
     expect(registry.getAvailableModels('claude')).toEqual(registry.getBot('claude').definition.models);
   });

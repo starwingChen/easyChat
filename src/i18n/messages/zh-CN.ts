@@ -50,6 +50,11 @@ const zhCNMessages = {
   'bot.error.deepseekApi.quota': 'DeepSeek API 配额不足或请求过于频繁，请检查账户状态。',
   'bot.error.deepseekApi.unavailable': 'DeepSeek API 暂时不可用，请稍后重试。',
   'bot.error.deepseekApi.emptyResponse': 'DeepSeek 返回了空响应。',
+  'bot.error.qwenApi.missingConfig': 'Qwen API 尚未配置。请先[配置 API](action://open-api-config)。',
+  'bot.error.qwenApi.auth': 'Qwen API 认证失败，请检查 API Key 或账户状态。',
+  'bot.error.qwenApi.quota': 'Qwen API 配额不足或请求过于频繁，请检查账户状态。',
+  'bot.error.qwenApi.unavailable': 'Qwen API 暂时不可用，请稍后重试。',
+  'bot.error.qwenApi.emptyResponse': 'Qwen 返回了空响应。',
 } as const;
 
 export default zhCNMessages;

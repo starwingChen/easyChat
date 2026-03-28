@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { DeepSeekApiBotAdapter } from '../DeepSeekApiBotAdapter';
-import type { SendDeepSeekPrompt } from '../types';
+import type { SendOpenAiCompatiblePrompt } from '../../openAiCompatibleApi/types';
 
 describe('DeepSeekApiBotAdapter', () => {
   it('throws a configuration error with an action link when api key is missing', async () => {
@@ -33,7 +33,7 @@ describe('DeepSeekApiBotAdapter', () => {
   });
 
   it('uses the saved api config and returns the configured runtime model name', async () => {
-    const sendPrompt = vi.fn<SendDeepSeekPrompt>().mockResolvedValue({ text: 'DeepSeek says hi' });
+    const sendPrompt = vi.fn<SendOpenAiCompatiblePrompt>().mockResolvedValue({ text: 'DeepSeek says hi' });
     const adapter = new DeepSeekApiBotAdapter({
       now: () => '2026-03-28T12:00:00.000Z',
       sendPrompt,
@@ -54,6 +54,7 @@ describe('DeepSeekApiBotAdapter', () => {
 
     expect(sendPrompt).toHaveBeenCalledWith(
       {
+        baseURL: 'https://api.deepseek.com',
         apiKey: 'sk-demo',
         modelName: 'deepseek-chat',
       },
@@ -95,7 +96,7 @@ describe('DeepSeekApiBotAdapter', () => {
 
   it('persists local conversation messages across requests', async () => {
     const sendPrompt = vi
-      .fn<SendDeepSeekPrompt>()
+      .fn<SendOpenAiCompatiblePrompt>()
       .mockResolvedValueOnce({ text: 'first reply' })
       .mockResolvedValueOnce({ text: 'second reply' });
     const adapter = new DeepSeekApiBotAdapter({ sendPrompt });
@@ -124,6 +125,7 @@ describe('DeepSeekApiBotAdapter', () => {
     expect(sendPrompt).toHaveBeenNthCalledWith(
       2,
       {
+        baseURL: 'https://api.deepseek.com',
         apiKey: 'sk-demo',
         modelName: 'deepseek-chat',
       },
@@ -147,7 +149,7 @@ describe('DeepSeekApiBotAdapter', () => {
   });
 
   it('translates structured client errors using the request locale', async () => {
-    const sendPrompt = vi.fn<SendDeepSeekPrompt>().mockRejectedValue({ code: 'quota' });
+    const sendPrompt = vi.fn<SendOpenAiCompatiblePrompt>().mockRejectedValue({ code: 'quota' });
     const adapter = new DeepSeekApiBotAdapter({ sendPrompt });
 
     adapter.setApiConfig({

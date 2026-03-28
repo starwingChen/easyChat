@@ -1,7 +1,10 @@
-import type { SendDeepSeekPrompt } from './types';
-import { createDeepSeekApiClientError, isDeepSeekApiClientError } from './types';
-
 import OpenAI from 'openai';
+
+import {
+  createOpenAiCompatibleApiClientError,
+  isOpenAiCompatibleApiClientError,
+  type SendOpenAiCompatiblePrompt,
+} from './types';
 
 function extractMessageText(content: unknown): string {
   if (typeof content === 'string' && content.trim()) {
@@ -26,26 +29,26 @@ function extractMessageText(content: unknown): string {
     }
   }
 
-  throw createDeepSeekApiClientError('emptyResponse');
+  throw createOpenAiCompatibleApiClientError('emptyResponse');
 }
 
-function mapDeepSeekError(error: unknown) {
+function mapOpenAiCompatibleError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
 
   if (/\b(401|403)\b|auth|unauthorized|invalid api key/i.test(message)) {
-    return createDeepSeekApiClientError('auth');
+    return createOpenAiCompatibleApiClientError('auth');
   }
 
   if (/\b402\b|\b429\b|quota|balance|insufficient/i.test(message)) {
-    return createDeepSeekApiClientError('quota');
+    return createOpenAiCompatibleApiClientError('quota');
   }
 
-  return createDeepSeekApiClientError('unavailable');
+  return createOpenAiCompatibleApiClientError('unavailable');
 }
 
-export const sendDeepSeekPrompt: SendDeepSeekPrompt = async (config, messages, signal) => {
+export const sendOpenAiCompatiblePrompt: SendOpenAiCompatiblePrompt = async (config, messages, signal) => {
   const client = new OpenAI({
-    baseURL: 'https://api.deepseek.com',
+    baseURL: config.baseURL,
     apiKey: config.apiKey,
     dangerouslyAllowBrowser: true,
   });
@@ -63,10 +66,10 @@ export const sendDeepSeekPrompt: SendDeepSeekPrompt = async (config, messages, s
       text: extractMessageText(completion.choices[0]?.message?.content),
     };
   } catch (error) {
-    if (isDeepSeekApiClientError(error)) {
+    if (isOpenAiCompatibleApiClientError(error)) {
       throw error;
     }
 
-    throw mapDeepSeekError(error);
+    throw mapOpenAiCompatibleError(error);
   }
 };

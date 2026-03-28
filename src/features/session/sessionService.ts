@@ -73,6 +73,10 @@ function getReplyFailureMessage(locale: Locale): string {
   return createAppTranslator(locale)('chat.replyFailed');
 }
 
+function isActionableBotError(error: unknown): error is Error {
+  return error instanceof Error && error.message.includes('action://open-api-config');
+}
+
 export function buildSelectedModels(registry: BotRegistry): Record<string, string> {
   return Object.fromEntries(
     registry.getAllBots().map((bot) => [bot.definition.id, bot.getDefaultModel()]),
@@ -213,6 +217,13 @@ export async function resolvePendingBotReply(request: PendingBotReplyRequest): P
       if (request.signal?.aborted) {
         return createPendingAssistantMessage(request, {
           content: error instanceof Error ? error.message : 'Unknown bot error',
+          status: 'error',
+        });
+      }
+
+      if (isActionableBotError(error)) {
+        return createPendingAssistantMessage(request, {
+          content: error.message,
           status: 'error',
         });
       }
