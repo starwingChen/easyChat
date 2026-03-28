@@ -1,0 +1,290 @@
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import type { ChatMessage } from '../../types/message';
+
+const localeMocks = vi.hoisted(() => ({
+  loadPersistedPreferences: vi.fn(),
+  persistPreferences: vi.fn(),
+}));
+
+const sessionMocks = vi.hoisted(() => ({
+  resolvePendingBotReply: vi.fn(),
+}));
+
+vi.mock('../../features/locale/localeService', () => ({
+  getPreferredLocale: () => 'zh-CN',
+  loadPersistedPreferences: localeMocks.loadPersistedPreferences,
+  persistPreferences: localeMocks.persistPreferences,
+}));
+
+vi.mock('../../features/session/sessionService', async () => {
+  const actual = await vi.importActual<typeof import('../../features/session/sessionService')>(
+    '../../features/session/sessionService',
+  );
+  return {
+    ...actual,
+    resolvePendingBotReply: sessionMocks.resolvePendingBotReply,
+  };
+});
+
+import { AppStateProvider, useAppState } from '../AppStateContext';
+import { persistedActiveState, persistedHistoryState } from './fixtures/persistedState';
+
+function StateProbe() {
+  const {
+    state,
+    visibleBotIds,
+    createNewSession,
+    setLayout,
+    cancelReply,
+    deleteHistorySnapshot,
+    isComposerDisabled,
+    sendMessage,
+  } =
+    useAppState();
+  const loadingMessageId = state.activeSession.messages.find((message) => message.status === 'loading')?.id;
+
+  return (
+    <div>
+      <button onClick={() => setLayout('1')} type="button">
+        Set 1
+      </button>
+      <button onClick={createNewSession} type="button">
+        New Session
+      </button>
+      <button onClick={() => sendMessage('hello')} type="button">
+        Send Hello
+      </button>
+      <button onClick={() => deleteHistorySnapshot('hist-1')} type="button">
+        Delete Hist 1
+      </button>
+      <button disabled={!loadingMessageId} onClick={() => loadingMessageId && cancelReply(loadingMessageId)} type="button">
+        Cancel Reply
+      </button>
+      <pre data-testid="probe">
+        {JSON.stringify({
+          currentView: state.currentView,
+          activeBotIds: state.activeSession.activeBotIds,
+          visibleBotIds,
+          isComposerDisabled,
+          layout: state.activeSession.layout,
+          historyCount: state.historySnapshots.length,
+          messages: state.activeSession.messages.map((message) => ({
+            id: message.id,
+            botId: message.botId,
+            content: message.content,
+            status: message.status,
+          })),
+        })}
+      </pre>
+    </div>
+  );
+}
+
+function readProbe() {
+  return JSON.parse(screen.getByTestId('probe').textContent ?? '{}') as {
+    currentView: { mode: string; sessionId: string };
+    activeBotIds: string[];
+    visibleBotIds: string[];
+    isComposerDisabled: boolean;
+    layout: string;
+    historyCount: number;
+    messages: Array<Pick<ChatMessage, 'id' | 'content' | 'status' | 'botId'>>;
+  };
+}
+
+describe('AppStateContext', () => {
+  beforeEach(() => {
+    localeMocks.loadPersistedPreferences.mockReset();
+    localeMocks.persistPreferences.mockReset().mockResolvedValue(undefined);
+    sessionMocks.resolvePendingBotReply.mockReset();
+  });
+
+  it('hydrates the active session and current view from persisted preferences', async () => {
+    localeMocks.loadPersistedPreferences.mockResolvedValue(persistedActiveState);
+
+    render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>,
+    );
+
+    await waitFor(() => {
+      expect(readProbe().messages.some((message) => message.content === 'persisted answer')).toBe(true);
+    });
+
+    const probe = readProbe();
+    expect(probe.currentView).toEqual({ mode: 'active', sessionId: 'session-active' });
+    expect(probe.layout).toBe('1');
+    expect(probe.activeBotIds).toEqual(['gemini']);
+    expect(probe.visibleBotIds).toEqual(['gemini']);
+  });
+
+  it('persists the current state payload', async () => {
+    localeMocks.loadPersistedPreferences.mockResolvedValue(null);
+
+    render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>,
+    );
+
+    await waitFor(() => {
+      expect(localeMocks.persistPreferences).toHaveBeenCalled();
+    });
+
+    expect(localeMocks.persistPreferences).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        locale: 'zh-CN',
+        currentView: {
+          mode: 'active',
+          sessionId: 'session-active',
+        },
+        activeSession: expect.objectContaining({
+          id: 'session-active',
+          layout: '2v',
+        }),
+        historySnapshots: expect.any(Array),
+        botStates: expect.any(Object),
+        sidebar: {
+          isOpen: true,
+        },
+      }),
+    );
+  });
+
+  it('sends a message and allows cancelling a visible loading reply', async () => {
+    const user = userEvent.setup();
+    localeMocks.loadPersistedPreferences.mockResolvedValue(null);
+    let resolveReply: ((message: ChatMessage) => void) | undefined;
+    sessionMocks.resolvePendingBotReply.mockImplementation(
+      () =>
+        new Promise<ChatMessage>((resolve) => {
+          resolveReply = resolve;
+        }),
+    );
+
+    render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Set 1' }));
+    await user.click(screen.getByRole('button', { name: 'Send Hello' }));
+
+    await waitFor(() => {
+      expect(readProbe().isComposerDisabled).toBe(true);
+    });
+
+    const loadingMessage = readProbe().messages.find((message) => message.status === 'loading');
+    expect(loadingMessage).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel Reply' }));
+
+    await waitFor(() => {
+      expect(readProbe().isComposerDisabled).toBe(false);
+    });
+
+    const cancelledMessage = readProbe().messages.find((message) => message.id === loadingMessage!.id);
+    expect(cancelledMessage).toEqual(
+      expect.objectContaining({
+        status: 'cancelled',
+        content: '已终止这条回复',
+      }),
+    );
+
+    // Even if the pending reply resolves later, it should not override the cancellation.
+    resolveReply?.({
+      id: loadingMessage!.id,
+      sessionId: 'session-active',
+      role: 'assistant',
+      botId: loadingMessage!.botId,
+      modelId: 'model-any',
+      content: 'late reply',
+      createdAt: new Date().toISOString(),
+      status: 'done',
+    });
+
+    await waitFor(() => {
+      expect(readProbe().messages.find((message) => message.id === loadingMessage!.id)?.status).toBe(
+        'cancelled',
+      );
+    });
+  });
+
+  it('falls back to the active session after deleting the selected history snapshot', async () => {
+    const user = userEvent.setup();
+    localeMocks.loadPersistedPreferences.mockResolvedValue(persistedHistoryState);
+
+    render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>,
+    );
+
+    await waitFor(() => {
+      expect(readProbe().currentView).toEqual({ mode: 'history', sessionId: 'hist-1' });
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Delete Hist 1' }));
+
+    const probe = readProbe();
+    expect(probe.currentView).toEqual({ mode: 'active', sessionId: 'session-active' });
+    expect(probe.historyCount).toBe(0);
+  });
+
+  it('creates a new session while preserving layout and active bots', async () => {
+    const user = userEvent.setup();
+    localeMocks.loadPersistedPreferences.mockResolvedValue({
+      ...persistedActiveState,
+      activeSession: {
+        ...persistedActiveState.activeSession,
+        layout: '2h',
+        activeBotIds: ['perplexity', 'gemini'],
+        selectedModels: {
+          perplexity: 'perplexity-model',
+          gemini: 'gemini-model',
+        },
+        messages: [
+          ...persistedActiveState.activeSession.messages,
+          {
+            id: 'assistant-extra',
+            sessionId: 'session-active',
+            role: 'assistant',
+            botId: 'perplexity',
+            modelId: 'perplexity-model',
+            content: 'persisted follow-up',
+            createdAt: '2026-03-26T00:00:02.000Z',
+            status: 'done',
+          },
+        ],
+      },
+      selectedModels: {
+        perplexity: 'perplexity-model',
+        gemini: 'gemini-model',
+      },
+    });
+
+    render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>,
+    );
+
+    await waitFor(() => {
+      expect(readProbe().activeBotIds).toEqual(['perplexity', 'gemini']);
+    });
+
+    await user.click(screen.getByRole('button', { name: 'New Session' }));
+
+    const probe = readProbe();
+    expect(probe.layout).toBe('2h');
+    expect(probe.activeBotIds).toEqual(['perplexity', 'gemini']);
+    expect(probe.messages).toEqual([]);
+    expect(probe.historyCount).toBe(1);
+    expect(probe.currentView).toEqual({ mode: 'active', sessionId: 'session-active' });
+  });
+});

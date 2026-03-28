@@ -4,6 +4,13 @@ import { EMPTY_CONTEXT_IDS, GEMINI_BASE_URL, GEMINI_STREAM_GENERATE_URL, createR
 import { parseGeminiBootstrap, parseGeminiGenerateResponse } from './geminiParser';
 import type { GeminiClient, GeminiGenerateInput, GeminiGenerateResult, GeminiRequestParams } from './types';
 
+type FetchPage = (url: string, options?: Parameters<typeof ofetch<string>>[1]) => Promise<string>;
+
+interface GeminiClientOptions {
+  fetchPage?: FetchPage;
+  createRequestId?: () => string;
+}
+
 function buildRequestPayload(prompt: string, contextIds: string[]): string {
   const ids = contextIds.length === 3 ? contextIds : EMPTY_CONTEXT_IDS;
   const payload = [null, JSON.stringify([[prompt, 0, null, []], null, ids])];
@@ -18,10 +25,13 @@ async function fetchPage(url: string, options?: Parameters<typeof ofetch<string>
   });
 }
 
-export function createGeminiClient(): GeminiClient {
+export function createGeminiClient(options: GeminiClientOptions = {}): GeminiClient {
+  const fetch = options.fetchPage ?? fetchPage;
+  const nextRequestId = options.createRequestId ?? createRequestId;
+
   return {
     async fetchRequestParams(): Promise<GeminiRequestParams> {
-      const html = await fetchPage(GEMINI_BASE_URL);
+      const html = await fetch(GEMINI_BASE_URL);
       return parseGeminiBootstrap(html);
     },
     async generate(input: GeminiGenerateInput): Promise<GeminiGenerateResult> {
@@ -33,11 +43,11 @@ export function createGeminiClient(): GeminiClient {
         body.set('at', input.requestParams.atValue);
       }
 
-      const responseText = await fetchPage(GEMINI_STREAM_GENERATE_URL, {
+      const responseText = await fetch(GEMINI_STREAM_GENERATE_URL, {
         method: 'POST',
         query: {
           bl: input.requestParams.blValue,
-          _reqid: createRequestId(),
+          _reqid: nextRequestId(),
           rt: 'c',
         },
         signal: input.signal,

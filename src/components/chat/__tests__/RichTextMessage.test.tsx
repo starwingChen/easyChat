@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { RichTextMessage } from './RichTextMessage';
+import { RichTextMessage } from '../RichTextMessage';
 
 describe('RichTextMessage', () => {
   it('renders markdown links and code blocks with safe link attributes', () => {

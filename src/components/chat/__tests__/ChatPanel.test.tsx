@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ChatPanel } from './ChatPanel';
+import { ChatPanel } from '../ChatPanel';
 
 describe('ChatPanel', () => {
   it('renders only messages relevant to the panel bot and hides selectors in readonly mode', () => {

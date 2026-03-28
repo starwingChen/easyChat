@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { ChatGPTBotAdapter } from './ChatGPTBotAdapter';
-import type { ChatGPTClient, ChatGPTConversationResult, ChatGPTRequirements } from './types';
+import { ChatGPTBotAdapter } from '../ChatGPTBotAdapter';
+import type { ChatGPTClient, ChatGPTConversationResult, ChatGPTRequirements } from '../types';
 
 function createRequirements(): ChatGPTRequirements {
   return {

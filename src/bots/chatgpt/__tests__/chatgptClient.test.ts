@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { createChatGPTClient } from './chatgptClient';
+import { createChatGPTClient } from '../chatgptClient';
 
 describe('chatgptClient', () => {
   it('uses ofetch-style JSON and native requests to send a ChatGPT conversation message', async () => {

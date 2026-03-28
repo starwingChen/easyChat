@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { MessageComposer } from './MessageComposer';
+import { MessageComposer } from '../MessageComposer';
 
 describe('MessageComposer', () => {
   it('submits trimmed text and clears the input', async () => {

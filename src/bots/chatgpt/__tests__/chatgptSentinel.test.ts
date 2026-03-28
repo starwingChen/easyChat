@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createChatGPTSentinel } from './chatgptSentinel';
+import { createChatGPTSentinel } from '../chatgptSentinel';
 
 describe('chatgptSentinel', () => {
   it('creates the chat-requirements token with the expected prefix', async () => {

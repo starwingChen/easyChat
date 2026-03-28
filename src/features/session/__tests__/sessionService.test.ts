@@ -1,31 +1,23 @@
-import { BaseBotAdapter } from '../../bots/BaseBotAdapter';
+import { BaseBotAdapter } from '../../../bots/BaseBotAdapter';
 import { describe, expect, it } from 'vitest';
 
-import { createBotRegistry } from '../../bots/botRegistry';
-import type { BotRegistry } from '../../bots/botRegistry';
-import { MockBotAdapter } from '../../bots/MockBotAdapter';
-import type { BotResponse, SendMessageInput } from '../../types/bot';
-import type { ChatSession } from '../../types/session';
-import { createBroadcastDraft, createInitialSession, resolvePendingBotReply } from './sessionService';
+import { createBotRegistry } from '../../../bots/botRegistry';
+import type { BotRegistry } from '../../../bots/botRegistry';
+import { MockBotAdapter } from '../../../bots/MockBotAdapter';
+import { createSession } from '../../../../test/factories/session';
+import type { BotResponse, SendMessageInput } from '../../../types/bot';
+import { createBroadcastDraft, createInitialSession, resolvePendingBotReply } from '../sessionService';
 
-const baseSession: ChatSession = {
-  id: 'session-active',
-  title: 'Active Session',
+const baseSession = createSession({
   layout: '2h',
   activeBotIds: ['chatgpt', 'gemini'],
   selectedModels: {
-    chatgpt: 'gpt-4o',
-    gemini: 'gemini-1.5-pro',
-    claude: 'claude-3.5-sonnet',
-    copilot: 'copilot-standard',
-    perplexity: 'sonar-huge',
-    deepseek: 'deepseek-chat',
-    'deepseek-api': 'deepseek-chat',
+    chatgpt: 'chatgpt-selected-model',
+    gemini: 'gemini-selected-model',
   },
-  messages: [],
   createdAt: '2026-03-25T00:00:00.000Z',
   updatedAt: '2026-03-25T00:00:00.000Z',
-};
+});
 
 describe('sessionService', () => {
   it('creates initial sessions without greeting messages', () => {

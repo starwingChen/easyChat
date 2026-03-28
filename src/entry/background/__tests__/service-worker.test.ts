@@ -50,7 +50,7 @@ describe('background service worker', () => {
       },
     });
 
-    await import('./service-worker');
+    await import('../service-worker');
   });
 
   it('toggles the side panel closed when the command is triggered again for the same window', async () => {

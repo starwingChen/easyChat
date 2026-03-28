@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ensureBotsForLayout, getBotCountForLayout, getVisibleBotIds } from './layoutService';
+import { ensureBotsForLayout, getBotCountForLayout, getVisibleBotIds } from '../layoutService';
 
 describe('layoutService', () => {
   it('maps layouts to panel counts', () => {

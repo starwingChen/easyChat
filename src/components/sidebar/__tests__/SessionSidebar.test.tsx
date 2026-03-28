@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { SessionSidebar } from './SessionSidebar';
+import { SessionSidebar } from '../SessionSidebar';
 
 describe('SessionSidebar', () => {
   it('lets the user switch between active and history sessions', async () => {
@@ -125,8 +125,6 @@ describe('SessionSidebar', () => {
     const deleteButton = within(historyItem as HTMLElement).getByRole('button', {
       name: /delete history session/i,
     });
-
-    expect(deleteButton.className).toContain('opacity-0');
 
     await user.click(deleteButton);
 

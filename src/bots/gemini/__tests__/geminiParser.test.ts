@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseGeminiBootstrap, parseGeminiGenerateResponse } from './geminiParser';
+import { parseGeminiBootstrap, parseGeminiGenerateResponse } from '../geminiParser';
 
 const bootstrapHtml = `
 <html>

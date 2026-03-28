@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { MessageBubble } from './MessageBubble';
+import { MessageBubble } from '../MessageBubble';
 
 const botDefinition = {
   id: 'gemini',

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { GeminiBotAdapter } from './GeminiBotAdapter';
-import type { GeminiClient, GeminiGenerateResult, GeminiRequestParams } from './types';
+import { GeminiBotAdapter } from '../GeminiBotAdapter';
+import type { GeminiClient, GeminiGenerateResult, GeminiRequestParams } from '../types';
 
 function createRequestParams(): GeminiRequestParams {
   return {

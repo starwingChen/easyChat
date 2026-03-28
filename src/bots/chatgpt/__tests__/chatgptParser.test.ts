@@ -4,7 +4,7 @@ import {
   parseChatGPTConversationStream,
   parseChatGPTRequirements,
   parseChatGPTSession,
-} from './chatgptParser';
+} from '../chatgptParser';
 
 describe('chatgptParser', () => {
   it('reads access token from the ChatGPT session response', () => {

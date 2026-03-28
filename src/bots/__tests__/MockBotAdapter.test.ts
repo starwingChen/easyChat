@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { MockBotAdapter } from './MockBotAdapter';
+import { MockBotAdapter } from '../MockBotAdapter';
 
 describe('MockBotAdapter', () => {
-  it('reads models and default model from mock data', () => {
+  it('exposes models and default model from its definition', () => {
     const adapter = new MockBotAdapter('chatgpt');
 
-    expect(adapter.listModels().map((model) => model.id)).toEqual(['gpt-4o', 'gpt-4-turbo']);
-    expect(adapter.getDefaultModel()).toBe('gpt-4o');
+    expect(adapter.listModels()).toEqual(adapter.definition.models);
+    expect(adapter.getDefaultModel()).toBe(adapter.definition.defaultModel);
   });
 
   it('builds a deterministic mock response for a prompt', async () => {
@@ -25,5 +25,9 @@ describe('MockBotAdapter', () => {
     expect(response.modelId).toBe('claude-3.5-sonnet');
     expect(response.content).toContain('Claude');
     expect(response.content).toContain('Summarize hooks in one sentence');
+  });
+
+  it('throws for an unknown mock bot id', () => {
+    expect(() => new MockBotAdapter('unknown-bot')).toThrow(/unknown bot/i);
   });
 });
