@@ -33,6 +33,7 @@ const zhCN = {
   'config.title': 'API 配置',
   'config.apiKey': 'API Key',
   'config.modelName': '调用模型名称',
+  'config.unset': '未配置',
   'config.cancel': '取消',
   'config.save': '保存',
 } as const;

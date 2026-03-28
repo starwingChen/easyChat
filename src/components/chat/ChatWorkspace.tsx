@@ -13,6 +13,7 @@ interface ChatWorkspaceProps {
   onBotChange: (index: number, botId: string) => void;
   onCancelLoading?: (messageId: string) => void;
   onModelChange: (botId: string, modelId: string) => void;
+  onSaveApiConfig?: (botId: string, config: { apiKey: string; modelName: string }) => void;
   t: (key: string) => string;
   visibleBotIds: string[];
 }
@@ -39,13 +40,16 @@ function renderTree(
 ): ReactElement {
   if (tree.type === 'panel') {
     const botId = props.visibleBotIds[tree.index];
-    const botDefinition = props.botRegistry.getBot(botId).definition;
+    const botAdapter = props.botRegistry.getBot(botId);
+    const botDefinition = botAdapter.definition;
     const allBotDefinitions = props.botRegistry.getAllBots().map((bot) => bot.definition);
 
     return (
       <ChatPanel
         allBotDefinitions={allBotDefinitions}
         botDefinition={botDefinition}
+        configuredModelName={botAdapter.getApiConfig()?.modelName ?? null}
+        initialApiConfig={botAdapter.getApiConfig()}
         inUseBotIds={props.visibleBotIds}
         isReadonly={props.isReadonly}
         key={botId}
@@ -53,6 +57,7 @@ function renderTree(
         onBotChange={(nextBotId) => props.onBotChange(tree.index, nextBotId)}
         onCancelLoading={props.onCancelLoading}
         onModelChange={(modelId) => props.onModelChange(botId, modelId)}
+        onSaveApiConfig={(config) => props.onSaveApiConfig?.(botId, config)}
         selectedModelId={props.currentSession.selectedModels[botId] ?? botDefinition.defaultModel}
         t={props.t}
       />

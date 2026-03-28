@@ -68,6 +68,12 @@ export type AppAction =
       };
     }
   | {
+      type: 'touch-active-session';
+      payload: {
+        updatedAt: string;
+      };
+    }
+  | {
       type: 'push-history-snapshot';
       payload: SessionSnapshot;
     }

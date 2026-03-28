@@ -1,16 +1,21 @@
 import { Settings2, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import type { BotDefinition } from '../../types/bot';
+import type { ApiBotConfigValue, BotDefinition } from '../../types/bot';
 import { Dropdown } from '../common/Dropdown';
 
 interface ChatPanelHeaderProps {
   allBotDefinitions: BotDefinition[];
   botDefinition: BotDefinition;
+  configuredModelName: string | null;
+  initialApiConfig: ApiBotConfigValue | null;
   inUseBotIds: string[];
+  isConfigOpen: boolean;
   isReadonly: boolean;
   onBotChange: (botId: string) => void;
+  onCloseApiConfig: () => void;
   onModelChange: (modelId: string) => void;
+  onOpenApiConfig: () => void;
   onSaveApiConfig?: (config: { apiKey: string; modelName: string }) => void;
   selectedModelId: string;
   t: (key: string) => string;
@@ -19,17 +24,30 @@ interface ChatPanelHeaderProps {
 export function ChatPanelHeader({
   allBotDefinitions,
   botDefinition,
+  configuredModelName,
+  initialApiConfig,
   inUseBotIds,
+  isConfigOpen,
   isReadonly,
   onBotChange,
+  onCloseApiConfig,
   onModelChange,
+  onOpenApiConfig,
   onSaveApiConfig,
   selectedModelId,
   t,
 }: ChatPanelHeaderProps) {
-  const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [apiKey, setApiKey] = useState('');
-  const [modelName, setModelName] = useState(selectedModelId);
+  const [modelName, setModelName] = useState('');
+
+  useEffect(() => {
+    if (!isConfigOpen) {
+      return;
+    }
+
+    setApiKey(initialApiConfig?.apiKey ?? '');
+    setModelName(initialApiConfig?.modelName ?? '');
+  }, [initialApiConfig, isConfigOpen]);
 
   const botOptions = allBotDefinitions.map((bot) => ({
     value: bot.id,
@@ -54,6 +72,8 @@ export function ChatPanelHeader({
     label: model.label,
   }));
   const selectedModel = botDefinition.models.find((model) => model.id === selectedModelId) ?? botDefinition.models[0];
+  const currentModelText = configuredModelName ?? t('config.unset');
+  const showApiModelText = botDefinition.accessMode === 'api';
 
   return (
     <>
@@ -72,7 +92,11 @@ export function ChatPanelHeader({
           />
         )}
         <div className="flex items-center gap-2">
-          {isReadonly ? (
+          {showApiModelText ? (
+            <div className="flex items-center gap-2 px-2 text-xs text-slate-500">
+              <span className="font-medium text-slate-700">{currentModelText}</span>
+            </div>
+          ) : isReadonly ? (
             <span className="px-2 text-xs text-slate-500">{selectedModel.label}</span>
           ) : (
             <Dropdown
@@ -87,10 +111,7 @@ export function ChatPanelHeader({
             <button
               aria-label={t('chat.configure')}
               className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
-              onClick={() => {
-                setModelName(selectedModelId);
-                setIsConfigOpen(true);
-              }}
+              onClick={onOpenApiConfig}
               type="button"
             >
               <Settings2 className="h-4 w-4" />
@@ -109,7 +130,7 @@ export function ChatPanelHeader({
               <button
                 aria-label={t('config.cancel')}
                 className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                onClick={() => setIsConfigOpen(false)}
+                onClick={onCloseApiConfig}
                 type="button"
               >
                 <X className="h-4 w-4" />
@@ -140,7 +161,7 @@ export function ChatPanelHeader({
             <div className="mt-5 flex justify-end gap-2">
               <button
                 className="rounded-xl px-3 py-2 text-sm text-slate-500 transition hover:bg-slate-100"
-                onClick={() => setIsConfigOpen(false)}
+                onClick={onCloseApiConfig}
                 type="button"
               >
                 {t('config.cancel')}
@@ -149,7 +170,7 @@ export function ChatPanelHeader({
                 className="rounded-xl bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
                 onClick={() => {
                   onSaveApiConfig?.({ apiKey, modelName });
-                  setIsConfigOpen(false);
+                  onCloseApiConfig();
                 }}
                 type="button"
               >

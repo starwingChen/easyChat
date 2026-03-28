@@ -1,4 +1,10 @@
-import type { BotDefinition, BotModel, BotResponse, SendMessageInput } from '../types/bot';
+import type {
+  ApiBotConfigValue,
+  BotDefinition,
+  BotModel,
+  BotResponse,
+  SendMessageInput,
+} from '../types/bot';
 
 export abstract class BaseBotAdapter {
   abstract readonly definition: BotDefinition;
@@ -18,4 +24,10 @@ export abstract class BaseBotAdapter {
   }
 
   restorePersistedState(_state: unknown): void {}
+
+  getApiConfig(): ApiBotConfigValue | null {
+    return null;
+  }
+
+  setApiConfig(_config: ApiBotConfigValue): void {}
 }

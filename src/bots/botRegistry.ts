@@ -2,6 +2,7 @@ import { mockBotDefinitions } from '../mock/mock.js';
 import type { BaseBotAdapter } from './BaseBotAdapter';
 import type { BotModel } from '../types/bot';
 import { ChatGPTBotAdapter } from './chatgpt/ChatGPTBotAdapter';
+import { DeepSeekApiBotAdapter } from './deepseekApi/DeepSeekApiBotAdapter';
 import { GeminiBotAdapter } from './gemini/GeminiBotAdapter';
 import { MockBotAdapter } from './MockBotAdapter';
 
@@ -13,11 +14,12 @@ export interface BotRegistry {
 
 export function createBotRegistry(): BotRegistry {
   const chatgptAdapter = new ChatGPTBotAdapter();
+  const deepseekApiAdapter = new DeepSeekApiBotAdapter();
   const geminiAdapter = new GeminiBotAdapter();
   const mockAdapters = mockBotDefinitions
-    .filter((definition) => definition.id !== 'chatgpt')
+    .filter((definition) => !['chatgpt', 'deepseek-api'].includes(definition.id))
     .map((definition) => new MockBotAdapter(definition.id));
-  const adapters = [chatgptAdapter, geminiAdapter, ...mockAdapters];
+  const adapters = [chatgptAdapter, deepseekApiAdapter, geminiAdapter, ...mockAdapters];
   const adapterMap = new Map(adapters.map((adapter) => [adapter.definition.id, adapter]));
 
   return {

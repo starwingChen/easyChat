@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 
 import { RichTextMessage } from '../RichTextMessage';
 
@@ -28,5 +29,21 @@ describe('RichTextMessage', () => {
     expect(container.querySelector('p')?.textContent).toContain('second line');
     expect(container.querySelector('br')).toBeInTheDocument();
     expect(container.querySelector('a[href="https://evil.test"]')).not.toBeInTheDocument();
+  });
+
+  it('calls onAction for action links instead of treating them as external links', async () => {
+    const user = userEvent.setup();
+    const onAction = vi.fn();
+
+    render(
+      <RichTextMessage
+        content="Open [API config](action://open-api-config)"
+        onAction={onAction}
+      />,
+    );
+
+    await user.click(screen.getByRole('link', { name: 'API config' }));
+
+    expect(onAction).toHaveBeenCalledWith('open-api-config');
   });
 });

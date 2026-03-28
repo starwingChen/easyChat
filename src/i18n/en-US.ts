@@ -33,6 +33,7 @@ const enUS = {
   'config.title': 'API Configuration',
   'config.apiKey': 'API Key',
   'config.modelName': 'Runtime Model',
+  'config.unset': 'Unset',
   'config.cancel': 'Cancel',
   'config.save': 'Save',
 } as const;

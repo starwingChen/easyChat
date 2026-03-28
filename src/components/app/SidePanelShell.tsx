@@ -21,6 +21,7 @@ export function SidePanelShell() {
     toggleSidebar,
     replaceBot,
     setModel,
+    saveApiConfig,
     sendMessage,
     createNewSession,
     deleteHistorySnapshot,
@@ -68,6 +69,7 @@ export function SidePanelShell() {
           onBotChange={replaceBot}
           onCancelLoading={cancelReply}
           onModelChange={setModel}
+          onSaveApiConfig={saveApiConfig}
           t={t}
           visibleBotIds={visibleBotIds}
         />

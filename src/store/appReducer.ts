@@ -125,6 +125,14 @@ export function appReducer(state: AppState, action: AppAction): AppState {
           },
         },
       };
+    case 'touch-active-session':
+      return {
+        ...state,
+        activeSession: {
+          ...state.activeSession,
+          updatedAt: action.payload.updatedAt,
+        },
+      };
     case 'push-history-snapshot':
       return {
         ...state,

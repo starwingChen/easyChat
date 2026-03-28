@@ -11,6 +11,17 @@ export interface ApiConfigDefinition {
   modelNameLabel: string;
 }
 
+export interface ApiBotConfigValue {
+  apiKey: string;
+  modelName: string;
+}
+
+export type BotMessageAction = 'open-api-config';
+
+export interface ApiActionLink {
+  action: BotMessageAction;
+}
+
 export interface BotDefinition {
   id: string;
   name: string;

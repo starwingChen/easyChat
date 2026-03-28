@@ -1,6 +1,6 @@
 import { LoaderCircle, Square } from 'lucide-react';
 
-import type { BotDefinition } from '../../types/bot';
+import type { BotDefinition, BotMessageAction } from '../../types/bot';
 import type { ChatMessage } from '../../types/message';
 import { RichTextMessage } from './RichTextMessage';
 
@@ -9,6 +9,7 @@ interface MessageBubbleProps {
   botDefinition: BotDefinition;
   loadingLabel: string;
   onCancelLoading?: (messageId: string) => void;
+  onMessageAction?: (action: BotMessageAction) => void;
   stopLabel: string;
   youLabel: string;
 }
@@ -18,6 +19,7 @@ export function MessageBubble({
   botDefinition,
   loadingLabel,
   onCancelLoading,
+  onMessageAction,
   stopLabel,
   youLabel,
 }: MessageBubbleProps) {
@@ -59,7 +61,7 @@ export function MessageBubble({
             </button>
           </span>
         ) : (
-          <RichTextMessage content={message.content} />
+          <RichTextMessage content={message.content} onAction={onMessageAction} />
         )}
       </div>
     </div>

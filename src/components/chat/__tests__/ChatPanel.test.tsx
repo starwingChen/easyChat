@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ChatPanel } from '../ChatPanel';
@@ -43,6 +44,8 @@ describe('ChatPanel', () => {
             { id: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
           ],
         }}
+        configuredModelName={null}
+        initialApiConfig={null}
         inUseBotIds={['chatgpt']}
         isReadonly={true}
         messages={[
@@ -93,5 +96,93 @@ describe('ChatPanel', () => {
     expect(screen.getByText('Hi back')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Gemini' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /select bot/i })).not.toBeInTheDocument();
+  });
+
+  it('opens the api config modal when an assistant message emits the open-api-config action', async () => {
+    const user = userEvent.setup();
+    const onSaveApiConfig = vi.fn();
+    const deepseekApiBot = {
+      id: 'deepseek-api',
+      name: 'DeepSeek API',
+      brand: 'DeepSeek',
+      themeColor: '#2563eb',
+      accessMode: 'api' as const,
+      defaultModel: 'deepseek-chat',
+      apiConfig: {
+        apiKeyLabel: 'API Key',
+        modelNameLabel: 'Runtime Model',
+      },
+      capabilities: [],
+      greeting: {
+        'zh-CN': '你好',
+        'en-US': 'Hello',
+      },
+      models: [
+        { id: 'deepseek-chat', label: 'DeepSeek Chat', isDefault: true },
+        { id: 'deepseek-reasoner', label: 'DeepSeek Reasoner' },
+      ],
+    };
+
+    render(
+      <ChatPanel
+        allBotDefinitions={[deepseekApiBot]}
+        botDefinition={deepseekApiBot}
+        configuredModelName="Unset"
+        initialApiConfig={{
+          apiKey: 'sk-demo',
+          modelName: 'deepseek-chat',
+        }}
+        inUseBotIds={['deepseek-api']}
+        isReadonly={false}
+        messages={[
+          {
+            id: 'assistant-1',
+            sessionId: 'session-1',
+            role: 'assistant',
+            botId: 'deepseek-api',
+            modelId: 'deepseek-chat',
+            content: 'DeepSeek API 尚未配置。请先[配置 API](action://open-api-config)。',
+            createdAt: '2026-03-28T00:00:00.000Z',
+            status: 'error',
+          },
+        ]}
+        onBotChange={vi.fn()}
+        onModelChange={vi.fn()}
+        onSaveApiConfig={onSaveApiConfig}
+        selectedModelId="deepseek-chat"
+        t={(key) =>
+          ({
+            'chat.you': 'You',
+            'chat.loading': 'Loading reply',
+            'chat.stopReply': 'Stop reply',
+            'chat.selectBot': 'Select bot',
+            'chat.selectModel': 'Select model',
+            'chat.configure': 'Configure',
+            'chat.api': 'API',
+            'config.title': 'API Configuration',
+            'config.apiKey': 'API Key',
+            'config.modelName': 'Runtime Model',
+            'config.unset': 'Unset',
+            'config.cancel': 'Cancel',
+            'config.save': 'Save',
+          })[key] ?? key
+        }
+      />,
+    );
+
+    await user.click(screen.getByRole('link', { name: '配置 API' }));
+
+    expect(screen.getByText('API Configuration')).toBeInTheDocument();
+    expect(screen.getByLabelText('API Key')).toHaveValue('sk-demo');
+    expect(screen.getByLabelText('Runtime Model')).toHaveValue('deepseek-chat');
+
+    await user.clear(screen.getByLabelText('Runtime Model'));
+    await user.type(screen.getByLabelText('Runtime Model'), 'deepseek-reasoner');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onSaveApiConfig).toHaveBeenCalledWith({
+      apiKey: 'sk-demo',
+      modelName: 'deepseek-reasoner',
+    });
   });
 });

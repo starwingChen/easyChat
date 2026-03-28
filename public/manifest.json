@@ -6,8 +6,9 @@
   "permissions": ["sidePanel", "storage", "tabs"],
   "host_permissions": [
     "https://gemini.google.com/*",
-    "https://chatgpt.com/*"
-    ],
+    "https://chatgpt.com/*",
+    "https://api.deepseek.com/*"
+  ],
   "background": {
     "service_worker": "background.js",
     "type": "module"

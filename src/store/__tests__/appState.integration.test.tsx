@@ -38,10 +38,12 @@ function StateProbe() {
     visibleBotIds,
     createNewSession,
     setLayout,
+    saveApiConfig,
     cancelReply,
     deleteHistorySnapshot,
     isComposerDisabled,
     sendMessage,
+    registry,
   } =
     useAppState();
   const loadingMessageId = state.activeSession.messages.find((message) => message.status === 'loading')?.id;
@@ -57,6 +59,17 @@ function StateProbe() {
       <button onClick={() => sendMessage('hello')} type="button">
         Send Hello
       </button>
+      <button
+        onClick={() =>
+          saveApiConfig('deepseek-api', {
+            apiKey: 'sk-saved',
+            modelName: 'deepseek-chat',
+          })
+        }
+        type="button"
+      >
+        Save API Config
+      </button>
       <button onClick={() => deleteHistorySnapshot('hist-1')} type="button">
         Delete Hist 1
       </button>
@@ -71,6 +84,8 @@ function StateProbe() {
           isComposerDisabled,
           layout: state.activeSession.layout,
           historyCount: state.historySnapshots.length,
+          deepseekApiConfig: registry.getBot('deepseek-api').getApiConfig(),
+          deepseekApiState: registry.getBot('deepseek-api').getPersistedState(),
           messages: state.activeSession.messages.map((message) => ({
             id: message.id,
             botId: message.botId,
@@ -91,6 +106,10 @@ function readProbe() {
     isComposerDisabled: boolean;
     layout: string;
     historyCount: number;
+    deepseekApiConfig: { apiKey: string; modelName: string } | null;
+    deepseekApiState:
+      | { apiKey: string; modelName: string; messages: Array<{ role: string; content: string }> }
+      | null;
     messages: Array<Pick<ChatMessage, 'id' | 'content' | 'status' | 'botId'>>;
   };
 }
@@ -153,6 +172,63 @@ describe('AppStateContext', () => {
         },
       }),
     );
+  });
+
+  it('restores and persists deepseek api state through botStates', async () => {
+    const user = userEvent.setup();
+    localeMocks.loadPersistedPreferences.mockResolvedValue({
+      ...persistedActiveState,
+      botStates: {
+        'deepseek-api': {
+          apiKey: 'sk-demo',
+          modelName: 'deepseek-chat',
+          messages: [
+            { role: 'user', content: 'hello' },
+            { role: 'assistant', content: 'reply' },
+          ],
+        },
+      },
+    });
+
+    render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>,
+    );
+
+    await waitFor(() => {
+      expect(readProbe().deepseekApiConfig).toEqual({
+        apiKey: 'sk-demo',
+        modelName: 'deepseek-chat',
+      });
+      expect(readProbe().deepseekApiState).toEqual({
+        apiKey: 'sk-demo',
+        modelName: 'deepseek-chat',
+        messages: [
+          { role: 'user', content: 'hello' },
+          { role: 'assistant', content: 'reply' },
+        ],
+      });
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Save API Config' }));
+
+    await waitFor(() => {
+      expect(localeMocks.persistPreferences).toHaveBeenCalledWith(
+        expect.objectContaining({
+          botStates: expect.objectContaining({
+            'deepseek-api': {
+              apiKey: 'sk-saved',
+              modelName: 'deepseek-chat',
+              messages: [
+                { role: 'user', content: 'hello' },
+                { role: 'assistant', content: 'reply' },
+              ],
+            },
+          }),
+        }),
+      );
+    });
   });
 
   it('sends a message and allows cancelling a visible loading reply', async () => {

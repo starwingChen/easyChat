@@ -1,4 +1,6 @@
-import type { BotDefinition } from '../../types/bot';
+import { useState } from 'react';
+
+import type { ApiBotConfigValue, BotDefinition, BotMessageAction } from '../../types/bot';
 import type { ChatMessage } from '../../types/message';
 import { ChatPanelHeader } from './ChatPanelHeader';
 import { MessageList } from './MessageList';
@@ -6,6 +8,8 @@ import { MessageList } from './MessageList';
 interface ChatPanelProps {
   allBotDefinitions: BotDefinition[];
   botDefinition: BotDefinition;
+  configuredModelName: string | null;
+  initialApiConfig: ApiBotConfigValue | null;
   inUseBotIds: string[];
   isReadonly: boolean;
   messages: ChatMessage[];
@@ -28,6 +32,8 @@ function filterMessagesForBot(messages: ChatMessage[], botId: string): ChatMessa
 export function ChatPanel({
   allBotDefinitions,
   botDefinition,
+  configuredModelName,
+  initialApiConfig,
   inUseBotIds,
   isReadonly,
   messages,
@@ -38,15 +44,28 @@ export function ChatPanel({
   selectedModelId,
   t,
 }: ChatPanelProps) {
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+
+  function handleMessageAction(action: BotMessageAction) {
+    if (action === 'open-api-config') {
+      setIsConfigOpen(true);
+    }
+  }
+
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <ChatPanelHeader
         allBotDefinitions={allBotDefinitions}
         botDefinition={botDefinition}
+        configuredModelName={configuredModelName}
+        initialApiConfig={initialApiConfig}
         inUseBotIds={inUseBotIds}
+        isConfigOpen={isConfigOpen}
         isReadonly={isReadonly}
         onBotChange={onBotChange}
+        onCloseApiConfig={() => setIsConfigOpen(false)}
         onModelChange={onModelChange}
+        onOpenApiConfig={() => setIsConfigOpen(true)}
         onSaveApiConfig={onSaveApiConfig}
         selectedModelId={selectedModelId}
         t={t}
@@ -56,6 +75,7 @@ export function ChatPanel({
         loadingLabel={t('chat.loading')}
         messages={filterMessagesForBot(messages, botDefinition.id)}
         onCancelLoading={onCancelLoading}
+        onMessageAction={handleMessageAction}
         stopLabel={t('chat.stopReply')}
         youLabel={t('chat.you')}
       />

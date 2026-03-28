@@ -11,6 +11,7 @@ import { createBotRegistry } from '../bots/botRegistry';
 import { createTranslator, resolveLocale } from '../i18n';
 import { mockHistorySnapshots } from '../mock/mock.js';
 import type { AppState, Locale, ViewState } from '../types/app';
+import type { ApiBotConfigValue } from '../types/bot';
 import { createSnapshotFromSession, hasConversationMessages } from '../features/history/historyService';
 import {
   getPreferredLocale,
@@ -72,6 +73,7 @@ interface AppStateContextValue {
   toggleSidebar: () => void;
   replaceBot: (index: number, botId: string) => void;
   setModel: (botId: string, modelId: string) => void;
+  saveApiConfig: (botId: string, config: ApiBotConfigValue) => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
   createNewSession: () => void;
   deleteHistorySnapshot: (snapshotId: string) => void;
@@ -175,6 +177,29 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       },
       setModel(botId, modelId) {
         dispatch({ type: 'set-selected-model', payload: { botId, modelId } });
+      },
+      async saveApiConfig(botId, config) {
+        registry.getBot(botId).setApiConfig(config);
+        const updatedAt = new Date().toISOString();
+
+        dispatch({
+          type: 'touch-active-session',
+          payload: { updatedAt },
+        });
+
+        await persistPreferences({
+          locale: state.locale,
+          historySnapshots: state.historySnapshots,
+          layout: state.activeSession.layout,
+          selectedModels: state.activeSession.selectedModels,
+          currentView: state.currentView,
+          activeSession: {
+            ...state.activeSession,
+            updatedAt,
+          },
+          botStates: collectBotStates(),
+          sidebar: state.sidebar,
+        }).catch(() => undefined);
       },
       async sendMessage(content) {
         const draft = createBroadcastDraft({

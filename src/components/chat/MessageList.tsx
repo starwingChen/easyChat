@@ -1,4 +1,4 @@
-import type { BotDefinition } from '../../types/bot';
+import type { BotDefinition, BotMessageAction } from '../../types/bot';
 import type { ChatMessage } from '../../types/message';
 import { MessageBubble } from './MessageBubble';
 
@@ -7,6 +7,7 @@ interface MessageListProps {
   loadingLabel: string;
   messages: ChatMessage[];
   onCancelLoading?: (messageId: string) => void;
+  onMessageAction?: (action: BotMessageAction) => void;
   stopLabel: string;
   youLabel: string;
 }
@@ -16,6 +17,7 @@ export function MessageList({
   loadingLabel,
   messages,
   onCancelLoading,
+  onMessageAction,
   stopLabel,
   youLabel,
 }: MessageListProps) {
@@ -28,6 +30,7 @@ export function MessageList({
           loadingLabel={loadingLabel}
           message={message}
           onCancelLoading={onCancelLoading}
+          onMessageAction={onMessageAction}
           stopLabel={stopLabel}
           youLabel={youLabel}
         />
