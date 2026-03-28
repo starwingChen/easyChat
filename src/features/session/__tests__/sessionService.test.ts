@@ -324,7 +324,7 @@ describe('sessionService', () => {
     expect(failedReply).toMatchObject({
       botId: 'qwen-api',
       status: 'error',
-      content: 'Qwen API 尚未配置。请先[配置 API](action://open-api-config)。',
+      content: 'Qwen - API 尚未配置。请先[配置 API](action://open-api-config)。',
     });
   });
 });

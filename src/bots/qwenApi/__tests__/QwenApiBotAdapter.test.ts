@@ -54,6 +54,6 @@ describe('QwenApiBotAdapter', () => {
         modelId: 'ignored',
         targetBotIds: ['qwen-api'],
       }),
-    ).rejects.toThrow('Qwen API is not configured yet. Please [configure API](action://open-api-config) first.');
+    ).rejects.toThrow('Qwen - API is not configured yet. Please [configure API](action://open-api-config) first.');
   });
 });

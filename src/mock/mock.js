@@ -44,7 +44,7 @@ export const mockBotDefinitions = [
   },
   {
     id: 'qwen-api',
-    name: 'Qwen API',
+    name: 'Qwen - API',
     brand: 'Alibaba Cloud',
     themeColor: '#f59e0b',
     accessMode: 'api',

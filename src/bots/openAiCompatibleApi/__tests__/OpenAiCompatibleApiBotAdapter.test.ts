@@ -6,7 +6,7 @@ import type { OpenAiCompatibleApiProvider, SendOpenAiCompatiblePrompt } from '..
 
 const providerDefinition: BotDefinition = {
   id: 'qwen-api',
-  name: 'Qwen API',
+  name: 'Qwen - API',
   brand: 'Alibaba Cloud',
   themeColor: '#f59e0b',
   accessMode: 'api',
@@ -51,7 +51,7 @@ describe('OpenAiCompatibleApiBotAdapter', () => {
     const adapter = new TestOpenAiCompatibleApiBotAdapter();
 
     await expect(adapter.sendMessage(createInput({ locale: 'en-US' }))).rejects.toThrow(
-      'Qwen API is not configured yet. Please [configure API](action://open-api-config) first.',
+      'Qwen - API is not configured yet. Please [configure API](action://open-api-config) first.',
     );
   });
 
@@ -118,7 +118,7 @@ describe('OpenAiCompatibleApiBotAdapter', () => {
     });
 
     await expect(adapter.sendMessage(createInput({ locale: 'en-US' }))).rejects.toThrow(
-      'Qwen API quota is exhausted or requests are too frequent. Check the account status.',
+      'Qwen - API quota is exhausted or requests are too frequent. Check the account status.',
     );
   });
 });

@@ -54,7 +54,7 @@ export function Dropdown<T extends string>({
       </button>
       {isOpen ? (
         <div
-          className={`absolute top-full z-20 mt-1 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg ${
+          className={`absolute top-full z-20 mt-1 w-50 rounded-xl border border-slate-200 bg-white p-1 shadow-lg ${
             align === 'right' ? 'right-0' : 'left-0'
           }`}
         >

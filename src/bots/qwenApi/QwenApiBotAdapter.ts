@@ -9,7 +9,7 @@ function getQwenApiDefinition(): BotDefinition {
   const definition = mockBotDefinitions.find((candidate) => candidate.id === 'qwen-api');
 
   if (!definition) {
-    throw new Error('Missing Qwen API bot definition.');
+    throw new Error('Missing Qwen - API bot definition.');
   }
 
   return definition;
