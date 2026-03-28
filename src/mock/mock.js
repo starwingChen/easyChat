@@ -6,10 +6,10 @@ export const mockBotDefinitions = [
     brand: 'OpenAI',
     themeColor: '#22c55e',
     accessMode: 'session',
-    defaultModel: 'gpt-4o',
+    defaultModel: 'auto',
     capabilities: ['reasoning', 'general'],
     models: [
-      { id: 'gpt-4o', label: 'GPT-4o', isDefault: true },
+      { id: 'auto', label: 'auto', isDefault: true },
       { id: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
     ],
     greeting: {

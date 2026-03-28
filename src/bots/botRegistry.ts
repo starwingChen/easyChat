@@ -1,6 +1,7 @@
 import { mockBotDefinitions } from '../mock/mock.js';
 import type { BaseBotAdapter } from './BaseBotAdapter';
 import type { BotModel } from '../types/bot';
+import { ChatGPTBotAdapter } from './chatgpt/ChatGPTBotAdapter';
 import { GeminiBotAdapter } from './gemini/GeminiBotAdapter';
 import { MockBotAdapter } from './MockBotAdapter';
 
@@ -11,7 +12,7 @@ export interface BotRegistry {
 }
 
 export function createBotRegistry(): BotRegistry {
-  const chatgptAdapter = new MockBotAdapter('chatgpt');
+  const chatgptAdapter = new ChatGPTBotAdapter();
   const geminiAdapter = new GeminiBotAdapter();
   const mockAdapters = mockBotDefinitions
     .filter((definition) => definition.id !== 'chatgpt')

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createBotRegistry } from '../../bots/botRegistry';
 import type { BotRegistry } from '../../bots/botRegistry';
+import { MockBotAdapter } from '../../bots/MockBotAdapter';
 import type { BotResponse, SendMessageInput } from '../../types/bot';
 import type { ChatSession } from '../../types/session';
 import { createBroadcastDraft, createInitialSession, resolvePendingBotReply } from './sessionService';
@@ -74,6 +75,10 @@ describe('sessionService', () => {
     const failingRegistry: BotRegistry = {
       ...successRegistry,
       getBot(botId) {
+        if (botId === 'chatgpt') {
+          return new MockBotAdapter('chatgpt');
+        }
+
         if (botId === 'gemini') {
           const originalBot = successRegistry.getBot(botId);
 
@@ -98,7 +103,7 @@ describe('sessionService', () => {
           })();
         }
 
-        return successRegistry.getBot(botId);
+        return botId === 'chatgpt' ? new MockBotAdapter('chatgpt') : successRegistry.getBot(botId);
       },
     };
 
@@ -106,7 +111,7 @@ describe('sessionService', () => {
       content: 'Compare React and Vue briefly',
       locale: 'en-US',
       now: () => '2026-03-25T12:00:00.000Z',
-      registry: successRegistry,
+      registry: failingRegistry,
       session: baseSession,
     });
     const failureDraft = createBroadcastDraft({
