@@ -12,6 +12,18 @@ interface MessageListProps {
   onRetryFailed?: (messageId: string) => void;
 }
 
+function getLastAssistantMessage(messages: ChatMessage[]) {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+
+    if (message.role === 'assistant') {
+      return message;
+    }
+  }
+
+  return null;
+}
+
 export function MessageList({
   botDefinition,
   messages,
@@ -20,16 +32,24 @@ export function MessageList({
   onRetryFailed,
 }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const previousAssistantMessageRef = useRef<ChatMessage | null | undefined>(undefined);
+  const lastAssistantMessage = getLastAssistantMessage(messages);
 
   useLayoutEffect(() => {
     const container = containerRef.current;
+    const previousAssistantMessage = previousAssistantMessageRef.current;
 
-    if (!container) {
-      return;
+    previousAssistantMessageRef.current = lastAssistantMessage;
+
+    if (
+      container &&
+      previousAssistantMessage !== undefined &&
+      lastAssistantMessage !== null &&
+      previousAssistantMessage !== lastAssistantMessage
+    ) {
+      container.scrollTop = container.scrollHeight;
     }
-
-    container.scrollTop = container.scrollHeight;
-  }, [messages]);
+  }, [lastAssistantMessage]);
 
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 py-4" ref={containerRef}>
