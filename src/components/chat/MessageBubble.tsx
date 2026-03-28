@@ -1,4 +1,4 @@
-import { LoaderCircle, Square } from 'lucide-react';
+import { LoaderCircle, RefreshCw, Square } from 'lucide-react';
 
 import type { BotDefinition, BotMessageAction } from '../../types/bot';
 import type { ChatMessage } from '../../types/message';
@@ -10,6 +10,8 @@ interface MessageBubbleProps {
   loadingLabel: string;
   onCancelLoading?: (messageId: string) => void;
   onMessageAction?: (action: BotMessageAction) => void;
+  onRetryFailed?: (messageId: string) => void;
+  retryActionLabel?: string;
   retryLabel?: string;
   stopLabel: string;
   youLabel: string;
@@ -21,12 +23,15 @@ export function MessageBubble({
   loadingLabel,
   onCancelLoading,
   onMessageAction,
+  onRetryFailed,
+  retryActionLabel,
   retryLabel,
   stopLabel,
   youLabel,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const isLoading = !isUser && message.status === 'loading';
+  const isError = !isUser && message.status === 'error';
 
   return (
     <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
@@ -41,9 +46,9 @@ export function MessageBubble({
           {isUser ? youLabel : botDefinition.name}
         </span>
       </div>
-      <div className={`flex max-w-full items-start gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
+      <div className={`flex w-full min-w-0 items-start gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
         <div
-          className={`max-w-[86%] rounded-2xl px-4 py-2 text-sm leading-6 ${
+          className={`min-w-0 max-w-[86%] rounded-2xl px-4 py-2 text-sm leading-6 ${
             isUser
               ? 'rounded-tr-sm bg-blue-600 text-white'
               : 'rounded-tl-sm bg-slate-100 text-slate-700'
@@ -70,6 +75,17 @@ export function MessageBubble({
               type="button"
             >
               <Square className="h-3.5 w-3.5 fill-current" />
+            </button>
+          </div>
+        ) : isError ? (
+          <div className="flex shrink-0 items-center gap-2 px-1 pt-2 text-xs text-slate-400">
+            <button
+              aria-label={retryActionLabel}
+              className="rounded-md p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+              onClick={() => onRetryFailed?.(message.id)}
+              type="button"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
             </button>
           </div>
         ) : null}

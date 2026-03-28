@@ -133,15 +133,45 @@ describe('MessageBubble', () => {
           createdAt: '2026-03-26T00:00:00.000Z',
           status: 'loading',
           retryCount: 2,
-          retryLimit: 2,
+          retryLimit: 3,
         }}
-        retryLabel="Retry 2/2"
+        retryLabel="Retry 2/3"
         stopLabel="Stop reply"
         youLabel="You"
       />,
     );
 
-    expect(screen.getByText('Retry 2/2')).toBeInTheDocument();
+    expect(screen.getByText('Retry 2/3')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Stop reply' })).toBeInTheDocument();
+  });
+
+  it('renders a retry button for failed assistant messages and emits retry', async () => {
+    const user = userEvent.setup();
+    const onRetryFailed = vi.fn();
+
+    render(
+      <MessageBubble
+        botDefinition={botDefinition}
+        loadingLabel="Loading reply"
+        message={{
+          id: 'error-1',
+          sessionId: 'session-1',
+          role: 'assistant',
+          botId: 'gemini',
+          modelId: 'gemini-1.5-pro',
+          content: 'Reply failed',
+          createdAt: '2026-03-26T00:00:00.000Z',
+          status: 'error',
+        }}
+        onRetryFailed={onRetryFailed}
+        retryActionLabel="Retry"
+        stopLabel="Stop reply"
+        youLabel="You"
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+
+    expect(onRetryFailed).toHaveBeenCalledWith('error-1');
   });
 });

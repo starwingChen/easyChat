@@ -16,6 +16,7 @@ export function SidePanelShell() {
     t,
     registry,
     cancelReply,
+    retryReply,
     selectView,
     setLayout,
     toggleSidebar,
@@ -68,6 +69,7 @@ export function SidePanelShell() {
           isReadonly={isReadonly}
           onBotChange={replaceBot}
           onCancelLoading={cancelReply}
+          onRetryFailed={retryReply}
           onModelChange={setModel}
           onSaveApiConfig={saveApiConfig}
           t={t}

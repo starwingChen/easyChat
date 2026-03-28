@@ -19,8 +19,10 @@ import {
   persistPreferences,
 } from '../features/locale/localeService';
 import {
+  BOT_REPLY_RETRY_LIMIT,
   createBroadcastDraft,
   createInitialSession,
+  createRetryReplyRequest,
   resolvePendingBotReply,
 } from '../features/session/sessionService';
 import { appReducer } from './appReducer';
@@ -63,6 +65,7 @@ interface AppStateContextValue {
   state: AppState;
   currentSession: ReturnType<typeof selectCurrentSessionRecord>;
   cancelReply: (messageId: string) => void;
+  retryReply: (messageId: string) => void;
   isComposerDisabled: boolean;
   visibleBotIds: string[];
   isReadonly: boolean;
@@ -157,6 +160,77 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             updatedAt: new Date().toISOString(),
           },
         });
+      },
+      retryReply(messageId) {
+        const failedMessage = state.activeSession.messages.find(
+          (message) => message.id === messageId && message.status === 'error',
+        );
+
+        if (!failedMessage) {
+          return;
+        }
+
+        const request = createRetryReplyRequest({
+          locale: state.locale,
+          message: failedMessage,
+          registry,
+          sessionId: state.activeSession.id,
+        });
+
+        if (!request) {
+          return;
+        }
+
+        dispatch({
+          type: 'replace-active-message',
+          payload: {
+            message: {
+              ...failedMessage,
+              content: '',
+              status: 'loading',
+              retryCount: 0,
+              retryLimit: BOT_REPLY_RETRY_LIMIT,
+            },
+            updatedAt: new Date().toISOString(),
+          },
+        });
+
+        void (async () => {
+          const abortController = new AbortController();
+          pendingReplyControllers.set(request.messageId, abortController);
+
+          const message = await resolvePendingBotReply({
+            ...request,
+            onRetry(retryingMessage) {
+              if (pendingReplyControllers.get(request.messageId) !== abortController) {
+                return;
+              }
+
+              dispatch({
+                type: 'replace-active-message',
+                payload: {
+                  message: retryingMessage,
+                  updatedAt: new Date().toISOString(),
+                },
+              });
+            },
+            signal: abortController.signal,
+          });
+
+          if (pendingReplyControllers.get(request.messageId) !== abortController) {
+            return;
+          }
+
+          pendingReplyControllers.delete(request.messageId);
+
+          dispatch({
+            type: 'replace-active-message',
+            payload: {
+              message,
+              updatedAt: new Date().toISOString(),
+            },
+          });
+        })();
       },
       isComposerDisabled: hasVisibleLoadingMessages,
       visibleBotIds,

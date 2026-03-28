@@ -15,6 +15,7 @@ interface ChatPanelProps {
   messages: ChatMessage[];
   onBotChange: (botId: string) => void;
   onCancelLoading?: (messageId: string) => void;
+  onRetryFailed?: (messageId: string) => void;
   onModelChange: (modelId: string) => void;
   onSaveApiConfig?: (config: { apiKey: string; modelName: string }) => void;
   selectedModelId: string;
@@ -39,6 +40,7 @@ export function ChatPanel({
   messages,
   onBotChange,
   onCancelLoading,
+  onRetryFailed,
   onModelChange,
   onSaveApiConfig,
   selectedModelId,
@@ -77,6 +79,8 @@ export function ChatPanel({
         messages={filterMessagesForBot(messages, botDefinition.id)}
         onCancelLoading={onCancelLoading}
         onMessageAction={handleMessageAction}
+        onRetryFailed={onRetryFailed}
+        retryActionLabel={t('chat.retry')}
         stopLabel={t('chat.stopReply')}
         youLabel={t('chat.you')}
       />

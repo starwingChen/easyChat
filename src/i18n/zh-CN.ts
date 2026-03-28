@@ -20,6 +20,7 @@ const zhCN = {
   'chat.selectModel': '选择模型',
   'chat.loading': '回复中',
   'chat.retry': '网络错误，重试中...',
+  'chat.replyFailed': '回复失败',
   'chat.stopReply': '终止回复',
   'chat.replyStopped': '已终止这条回复',
   'chat.inUse': '使用中',

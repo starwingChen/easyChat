@@ -1,4 +1,5 @@
 import type { BotRegistry } from '../../bots/botRegistry';
+import { getMessages } from '../../i18n';
 import type { Locale } from '../../types/app';
 import type { ChatMessage } from '../../types/message';
 import type { ChatSession } from '../../types/session';
@@ -12,7 +13,7 @@ interface BroadcastMessageInput {
   now?: () => string;
 }
 
-export const BOT_REPLY_RETRY_LIMIT = 2;
+export const BOT_REPLY_RETRY_LIMIT = 3;
 
 export interface PendingBotReplyRequest {
   botId: string;
@@ -34,6 +35,13 @@ interface BroadcastDraft {
   updatedAt: string;
 }
 
+interface RetryReplyRequestInput {
+  locale: Locale;
+  message: ChatMessage;
+  registry: BotRegistry;
+  sessionId: string;
+}
+
 function createMessageId(prefix: string, stamp: string, suffix = ''): string {
   return `${prefix}-${stamp}${suffix}`;
 }
@@ -41,7 +49,7 @@ function createMessageId(prefix: string, stamp: string, suffix = ''): string {
 function createPendingAssistantMessage(
   request: Pick<
     PendingBotReplyRequest,
-    'botId' | 'createdAt' | 'messageId' | 'modelId' | 'sessionId'
+    'botId' | 'content' | 'createdAt' | 'locale' | 'messageId' | 'modelId' | 'sessionId' | 'targetBotIds'
   >,
   overrides: Partial<ChatMessage>,
 ): ChatMessage {
@@ -53,13 +61,16 @@ function createPendingAssistantMessage(
     modelId: request.modelId,
     content: '',
     createdAt: request.createdAt,
+    requestContent: request.content,
+    requestLocale: request.locale,
+    requestTargetBotIds: request.targetBotIds,
     status: 'loading',
     ...overrides,
   };
 }
 
 function getReplyFailureMessage(locale: Locale): string {
-  return locale === 'en-US' ? 'reply timeout, please retry' : '回复超时，请重试';
+  return getMessages(locale)['chat.replyFailed'];
 }
 
 export function buildSelectedModels(registry: BotRegistry): Record<string, string> {
@@ -128,6 +139,9 @@ export function createBroadcastDraft({
       status: 'loading',
       retryCount: 0,
       retryLimit: BOT_REPLY_RETRY_LIMIT,
+      requestContent: trimmedContent,
+      requestLocale: locale,
+      requestTargetBotIds: visibleBotIds,
     };
   });
 
@@ -145,6 +159,35 @@ export function createBroadcastDraft({
       targetBotIds: visibleBotIds,
     })),
     updatedAt: createdAt,
+  };
+}
+
+export function createRetryReplyRequest({
+  locale,
+  message,
+  registry,
+  sessionId,
+}: RetryReplyRequestInput): PendingBotReplyRequest | null {
+  if (
+    message.role !== 'assistant' ||
+    !message.botId ||
+    message.status !== 'error' ||
+    !message.requestContent ||
+    !message.requestTargetBotIds?.length
+  ) {
+    return null;
+  }
+
+  return {
+    botId: message.botId,
+    content: message.requestContent,
+    createdAt: message.createdAt,
+    locale: message.requestLocale ?? locale,
+    messageId: message.id,
+    modelId: message.modelId ?? registry.getBot(message.botId).getDefaultModel(),
+    registry,
+    sessionId,
+    targetBotIds: message.requestTargetBotIds,
   };
 }
 

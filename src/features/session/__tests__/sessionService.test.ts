@@ -7,6 +7,8 @@ import { MockBotAdapter } from '../../../bots/MockBotAdapter';
 import { createSession } from '../../../../test/factories/session';
 import type { BotResponse, SendMessageInput } from '../../../types/bot';
 import {
+  BOT_REPLY_RETRY_LIMIT,
+  createRetryReplyRequest,
   createBroadcastDraft,
   createInitialSession,
   resolvePendingBotReply,
@@ -66,6 +68,43 @@ describe('sessionService', () => {
     ]);
   });
 
+  it('rebuilds a pending request from a failed assistant message', () => {
+    const registry = createBotRegistry();
+    const draft = createBroadcastDraft({
+      content: 'Compare React and Vue briefly',
+      locale: 'en-US',
+      now: () => '2026-03-25T12:00:00.000Z',
+      registry,
+      session: baseSession,
+    });
+
+    const failedMessage = {
+      ...draft!.messages[1],
+      status: 'error' as const,
+      content: 'Reply failed',
+      requestContent: 'Compare React and Vue briefly',
+      requestLocale: 'en-US' as const,
+      requestTargetBotIds: ['chatgpt', 'gemini'],
+    };
+
+    const request = createRetryReplyRequest({
+      locale: 'zh-CN',
+      message: failedMessage,
+      registry,
+      sessionId: baseSession.id,
+    });
+
+    expect(request).toMatchObject({
+      botId: 'chatgpt',
+      content: 'Compare React and Vue briefly',
+      locale: 'en-US',
+      messageId: failedMessage.id,
+      modelId: 'chatgpt-selected-model',
+      sessionId: baseSession.id,
+      targetBotIds: ['chatgpt', 'gemini'],
+    });
+  });
+
   it('retries failed bot replies twice before succeeding', async () => {
     const successRegistry = createBotRegistry();
     let attempts = 0;
@@ -96,7 +135,7 @@ describe('sessionService', () => {
           async sendMessage(_input: SendMessageInput): Promise<BotResponse> {
             attempts += 1;
 
-            if (attempts < 3) {
+            if (attempts < 4) {
               throw new Error(`Gemini request failed ${attempts}`);
             }
 
@@ -127,7 +166,8 @@ describe('sessionService', () => {
       onRetry,
     });
 
-    expect(attempts).toBe(3);
+    expect(BOT_REPLY_RETRY_LIMIT).toBe(3);
+    expect(attempts).toBe(4);
     expect(onRetry).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
@@ -135,7 +175,7 @@ describe('sessionService', () => {
         botId: 'gemini',
         status: 'loading',
         retryCount: 1,
-        retryLimit: 2,
+        retryLimit: 3,
       }),
     );
     expect(onRetry).toHaveBeenNthCalledWith(
@@ -145,7 +185,17 @@ describe('sessionService', () => {
         botId: 'gemini',
         status: 'loading',
         retryCount: 2,
-        retryLimit: 2,
+        retryLimit: 3,
+      }),
+    );
+    expect(onRetry).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        id: draft!.requests[1].messageId,
+        botId: 'gemini',
+        status: 'loading',
+        retryCount: 3,
+        retryLimit: 3,
       }),
     );
     expect(reply).toMatchObject({
@@ -207,13 +257,13 @@ describe('sessionService', () => {
       botId: 'chatgpt',
       status: 'done',
     });
-    expect(onRetry).toHaveBeenCalledTimes(2);
+    expect(onRetry).toHaveBeenCalledTimes(3);
     expect(failedReply).toMatchObject({
       botId: 'gemini',
       status: 'error',
       content: 'Reply failed',
-      retryCount: 2,
-      retryLimit: 2,
+      retryCount: 3,
+      retryLimit: 3,
     });
   });
 });

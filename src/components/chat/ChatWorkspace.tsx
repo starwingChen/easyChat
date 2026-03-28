@@ -12,6 +12,7 @@ interface ChatWorkspaceProps {
   isReadonly: boolean;
   onBotChange: (index: number, botId: string) => void;
   onCancelLoading?: (messageId: string) => void;
+  onRetryFailed?: (messageId: string) => void;
   onModelChange: (botId: string, modelId: string) => void;
   onSaveApiConfig?: (botId: string, config: { apiKey: string; modelName: string }) => void;
   t: (key: string) => string;
@@ -57,6 +58,7 @@ function renderTree(
         onBotChange={(nextBotId) => props.onBotChange(tree.index, nextBotId)}
         onCancelLoading={props.onCancelLoading}
         onModelChange={(modelId) => props.onModelChange(botId, modelId)}
+        onRetryFailed={props.onRetryFailed}
         onSaveApiConfig={(config) => props.onSaveApiConfig?.(botId, config)}
         selectedModelId={props.currentSession.selectedModels[botId] ?? botDefinition.defaultModel}
         t={props.t}

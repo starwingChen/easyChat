@@ -1,3 +1,5 @@
+import type { Locale } from './app';
+
 export type MessageRole = 'user' | 'assistant' | 'system';
 export type MessageStatus = 'loading' | 'done' | 'error' | 'welcome' | 'cancelled';
 
@@ -13,4 +15,7 @@ export interface ChatMessage {
   status: MessageStatus;
   retryCount?: number;
   retryLimit?: number;
+  requestContent?: string;
+  requestLocale?: Locale;
+  requestTargetBotIds?: string[];
 }

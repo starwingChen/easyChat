@@ -40,6 +40,7 @@ function StateProbe() {
     setLayout,
     saveApiConfig,
     cancelReply,
+    retryReply,
     deleteHistorySnapshot,
     isComposerDisabled,
     sendMessage,
@@ -47,6 +48,7 @@ function StateProbe() {
   } =
     useAppState();
   const loadingMessageId = state.activeSession.messages.find((message) => message.status === 'loading')?.id;
+  const failedMessageId = state.activeSession.messages.find((message) => message.status === 'error')?.id;
 
   return (
     <div>
@@ -75,6 +77,9 @@ function StateProbe() {
       </button>
       <button disabled={!loadingMessageId} onClick={() => loadingMessageId && cancelReply(loadingMessageId)} type="button">
         Cancel Reply
+      </button>
+      <button disabled={!failedMessageId} onClick={() => failedMessageId && retryReply(failedMessageId)} type="button">
+        Retry Reply
       </button>
       <pre data-testid="probe">
         {JSON.stringify({
@@ -318,7 +323,7 @@ describe('AppStateContext', () => {
             createdAt: request.createdAt,
             status: 'loading',
             retryCount: 1,
-            retryLimit: 2,
+            retryLimit: 3,
           });
         }),
     );
@@ -338,7 +343,7 @@ describe('AppStateContext', () => {
           botId: 'chatgpt',
           status: 'loading',
           retryCount: 1,
-          retryLimit: 2,
+          retryLimit: 3,
         }),
       );
     });
@@ -363,6 +368,81 @@ describe('AppStateContext', () => {
         }),
       );
     });
+  });
+
+  it('retries a failed reply when requested explicitly', async () => {
+    const user = userEvent.setup();
+    localeMocks.loadPersistedPreferences.mockResolvedValue(null);
+    let callCount = 0;
+
+    sessionMocks.resolvePendingBotReply.mockImplementation(async (request) => {
+      callCount += 1;
+
+      if (callCount === 1) {
+        return {
+          id: request.messageId,
+          sessionId: request.sessionId,
+          role: 'assistant',
+          botId: request.botId,
+          modelId: request.modelId,
+          content: '回复失败',
+          createdAt: request.createdAt,
+          status: 'error',
+          retryCount: 3,
+          retryLimit: 3,
+          requestContent: request.content,
+          requestLocale: request.locale,
+          requestTargetBotIds: request.targetBotIds,
+        };
+      }
+
+      return {
+        id: request.messageId,
+        sessionId: request.sessionId,
+        role: 'assistant',
+        botId: request.botId,
+        modelId: request.modelId,
+        content: 'Recovered reply',
+        createdAt: request.createdAt,
+        status: 'done',
+        requestContent: request.content,
+        requestLocale: request.locale,
+        requestTargetBotIds: request.targetBotIds,
+      };
+    });
+
+    render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Set 1' }));
+    await user.click(screen.getByRole('button', { name: 'Send Hello' }));
+
+    await waitFor(() => {
+      expect(readProbe().messages).toContainEqual(
+        expect.objectContaining({
+          botId: 'chatgpt',
+          status: 'error',
+          content: '回复失败',
+        }),
+      );
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Retry Reply' }));
+
+    await waitFor(() => {
+      expect(readProbe().messages).toContainEqual(
+        expect.objectContaining({
+          botId: 'chatgpt',
+          status: 'done',
+          content: 'Recovered reply',
+        }),
+      );
+    });
+
+    expect(callCount).toBe(2);
   });
 
   it('falls back to the active session after deleting the selected history snapshot', async () => {

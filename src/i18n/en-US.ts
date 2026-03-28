@@ -20,6 +20,7 @@ const enUS = {
   'chat.selectModel': 'Select model',
   'chat.loading': 'Loading reply',
   'chat.retry': 'Network error, retrying...',
+  'chat.replyFailed': 'Reply failed',
   'chat.stopReply': 'Stop reply',
   'chat.replyStopped': 'Reply stopped',
   'chat.inUse': 'In Use',
