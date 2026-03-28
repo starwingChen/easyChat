@@ -15,7 +15,6 @@ interface ChatWorkspaceProps {
   onRetryFailed?: (messageId: string) => void;
   onModelChange: (botId: string, modelId: string) => void;
   onSaveApiConfig?: (botId: string, config: { apiKey: string; modelName: string }) => void;
-  t: (key: string) => string;
   visibleBotIds: string[];
 }
 
@@ -61,7 +60,6 @@ function renderTree(
         onRetryFailed={props.onRetryFailed}
         onSaveApiConfig={(config) => props.onSaveApiConfig?.(botId, config)}
         selectedModelId={props.currentSession.selectedModels[botId] ?? botDefinition.defaultModel}
-        t={props.t}
       />
     );
   }

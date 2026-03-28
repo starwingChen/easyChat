@@ -32,7 +32,6 @@ export interface BotDefinition {
   models: BotModel[];
   defaultModel: string;
   capabilities: string[];
-  greeting: Record<Locale, string>;
 }
 
 export interface SendMessageInput {

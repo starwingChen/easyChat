@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import { renderWithI18n } from '../../../test/renderWithI18n';
 import { ChatPanelHeader } from '../ChatPanelHeader';
 
 const chatgptBot = {
@@ -12,10 +13,6 @@ const chatgptBot = {
   defaultModel: 'gpt-4o',
   accessMode: 'session' as const,
   capabilities: [],
-  greeting: {
-    'zh-CN': '你好',
-    'en-US': 'Hello',
-  },
   models: [
     { id: 'gpt-4o', label: 'GPT-4o', isDefault: true },
     { id: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
@@ -34,10 +31,6 @@ const deepseekApiBot = {
     modelNameLabel: 'Runtime Model',
   },
   capabilities: [],
-  greeting: {
-    'zh-CN': '你好',
-    'en-US': 'Hello',
-  },
   models: [
     { id: 'deepseek-chat', label: 'DeepSeek Chat', isDefault: true },
     { id: 'deepseek-reasoner', label: 'DeepSeek Reasoner' },
@@ -48,7 +41,7 @@ describe('ChatPanelHeader', () => {
   it('disables bot options already used in other panels and labels them as in use', async () => {
     const user = userEvent.setup();
 
-    render(
+    renderWithI18n(
       <ChatPanelHeader
         allBotDefinitions={[chatgptBot, deepseekApiBot]}
         botDefinition={chatgptBot}
@@ -63,20 +56,6 @@ describe('ChatPanelHeader', () => {
         onOpenApiConfig={vi.fn()}
         onSaveApiConfig={vi.fn()}
         selectedModelId="gpt-4o"
-        t={(key) =>
-          ({
-            'chat.selectBot': 'Select bot',
-            'chat.selectModel': 'Select model',
-            'chat.inUse': 'In Use',
-            'chat.api': 'API',
-            'chat.configure': 'Configure',
-            'config.title': 'API Configuration',
-            'config.apiKey': 'API Key',
-            'config.modelName': 'Runtime Model',
-            'config.cancel': 'Cancel',
-            'config.save': 'Save',
-          })[key] ?? key
-        }
       />,
     );
 
@@ -89,7 +68,7 @@ describe('ChatPanelHeader', () => {
   it('renders api identity inline and does not render an in-use tag', async () => {
     const user = userEvent.setup();
 
-    render(
+    renderWithI18n(
       <ChatPanelHeader
         allBotDefinitions={[chatgptBot, deepseekApiBot]}
         botDefinition={chatgptBot}
@@ -104,20 +83,6 @@ describe('ChatPanelHeader', () => {
         onOpenApiConfig={vi.fn()}
         onSaveApiConfig={vi.fn()}
         selectedModelId="gpt-4o"
-        t={(key) =>
-          ({
-            'chat.selectBot': 'Select bot',
-            'chat.selectModel': 'Select model',
-            'chat.inUse': 'In Use',
-            'chat.api': 'API',
-            'chat.configure': 'Configure',
-            'config.title': 'API Configuration',
-            'config.apiKey': 'API Key',
-            'config.modelName': 'Runtime Model',
-            'config.cancel': 'Cancel',
-            'config.save': 'Save',
-          })[key] ?? key
-        }
       />,
     );
 
@@ -133,7 +98,7 @@ describe('ChatPanelHeader', () => {
     const user = userEvent.setup();
     const onOpenApiConfig = vi.fn();
 
-    render(
+    renderWithI18n(
       <ChatPanelHeader
         allBotDefinitions={[chatgptBot, deepseekApiBot]}
         botDefinition={deepseekApiBot}
@@ -148,21 +113,6 @@ describe('ChatPanelHeader', () => {
         onOpenApiConfig={onOpenApiConfig}
         onSaveApiConfig={vi.fn()}
         selectedModelId="deepseek-chat"
-        t={(key) =>
-          ({
-            'chat.selectBot': 'Select bot',
-            'chat.selectModel': 'Select model',
-            'chat.inUse': 'In Use',
-            'chat.api': 'API',
-            'chat.configure': 'Configure',
-            'config.title': 'API Configuration',
-            'config.apiKey': 'API Key',
-            'config.modelName': 'Runtime Model',
-            'config.unset': 'Unset',
-            'config.cancel': 'Cancel',
-            'config.save': 'Save',
-          })[key] ?? key
-        }
       />,
     );
 
@@ -178,7 +128,7 @@ describe('ChatPanelHeader', () => {
     const onSaveApiConfig = vi.fn();
     const onCloseApiConfig = vi.fn();
 
-    render(
+    renderWithI18n(
       <ChatPanelHeader
         allBotDefinitions={[chatgptBot, deepseekApiBot]}
         botDefinition={deepseekApiBot}
@@ -196,20 +146,6 @@ describe('ChatPanelHeader', () => {
         onOpenApiConfig={vi.fn()}
         onSaveApiConfig={onSaveApiConfig}
         selectedModelId="deepseek-chat"
-        t={(key) =>
-          ({
-            'chat.selectBot': 'Select bot',
-            'chat.selectModel': 'Select model',
-            'chat.inUse': 'In Use',
-            'chat.api': 'API',
-            'chat.configure': 'Configure',
-            'config.title': 'API Configuration',
-            'config.apiKey': 'API Key',
-            'config.modelName': 'Runtime Model',
-            'config.cancel': 'Cancel',
-            'config.save': 'Save',
-          })[key] ?? key
-        }
       />,
     );
 

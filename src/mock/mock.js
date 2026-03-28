@@ -12,10 +12,6 @@ export const mockBotDefinitions = [
       { id: 'auto', label: 'auto', isDefault: true },
       { id: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
     ],
-    greeting: {
-      'zh-CN': '你好！我是 ChatGPT。今天想一起聊点什么？',
-      'en-US': 'Hello! I am ChatGPT. How can I assist you?',
-    },
   },
   {
     id: 'claude',
@@ -29,10 +25,6 @@ export const mockBotDefinitions = [
       { id: 'claude-3.5-sonnet', label: 'Claude 3.5 Sonnet', isDefault: true },
       { id: 'claude-3-opus', label: 'Claude 3 Opus' },
     ],
-    greeting: {
-      'zh-CN': '你好，我是 Claude。今天我可以怎么帮助你？',
-      'en-US': 'Greetings. I am Claude. How may I help you today?',
-    },
   },
   {
     id: 'copilot',
@@ -46,10 +38,6 @@ export const mockBotDefinitions = [
       { id: 'copilot-standard', label: 'Copilot', isDefault: true },
       { id: 'copilot-pro', label: 'Copilot Pro' },
     ],
-    greeting: {
-      'zh-CN': '你好，这里是 Copilot。准备开始写代码了吗？',
-      'en-US': 'Hello from Copilot! Ready to code?',
-    },
   },
   {
     id: 'perplexity',
@@ -63,10 +51,6 @@ export const mockBotDefinitions = [
       { id: 'sonar-huge', label: 'Sonar Huge', isDefault: true },
       { id: 'sonar-large', label: 'Sonar Large' },
     ],
-    greeting: {
-      'zh-CN': '你好，我是 Perplexity。你可以问我任何问题。',
-      'en-US': 'Perplexity here. Ask me anything!',
-    },
   },
   {
     id: 'deepseek',
@@ -80,10 +64,6 @@ export const mockBotDefinitions = [
       { id: 'deepseek-chat', label: 'DeepSeek Chat', isDefault: true },
       { id: 'deepseek-reasoner', label: 'DeepSeek Reasoner' },
     ],
-    greeting: {
-      'zh-CN': '你好！这里是 DeepSeek，会话模式已就绪。',
-      'en-US': 'Hello from DeepSeek. Session mode is ready.',
-    },
   },
   {
     id: 'deepseek-api',
@@ -101,30 +81,14 @@ export const mockBotDefinitions = [
       { id: 'deepseek-chat', label: 'DeepSeek Chat', isDefault: true },
       { id: 'deepseek-reasoner', label: 'DeepSeek Reasoner' },
     ],
-    greeting: {
-      'zh-CN': '你好！这里是 DeepSeek API，需要先配置 API 信息。',
-      'en-US': 'Hello from DeepSeek API. Configure API access before sending.',
-    },
   },
 ];
 
 export const mockReplyTemplates = {
-  chatgpt: {
-    'zh-CN': 'ChatGPT（{{model}}）会从结构化角度回答：“{{prompt}}”。',
-    'en-US': 'ChatGPT ({{model}}) approaches "{{prompt}}" with a structured product answer.',
-  },
-  claude: {
-    'zh-CN': 'Claude（{{model}}）会用更平衡的文字组织来回答：“{{prompt}}”。',
-    'en-US': 'Claude ({{model}}) responds to "{{prompt}}" with a careful, polished explanation.',
-  },
-  copilot: {
-    'zh-CN': 'Copilot（{{model}}）会把“{{prompt}}”转成偏工程实践的建议。',
-    'en-US': 'Copilot ({{model}}) turns "{{prompt}}" into an implementation-minded answer.',
-  },
-  perplexity: {
-    'zh-CN': 'Perplexity（{{model}}）会围绕“{{prompt}}”给出检索导向的总结。',
-    'en-US': 'Perplexity ({{model}}) frames "{{prompt}}" as a search-first summary.',
-  },
+  chatgpt: 'bot.replyTemplate.chatgpt',
+  claude: 'bot.replyTemplate.claude',
+  copilot: 'bot.replyTemplate.copilot',
+  perplexity: 'bot.replyTemplate.perplexity',
 };
 
 export const mockHistorySnapshots = [

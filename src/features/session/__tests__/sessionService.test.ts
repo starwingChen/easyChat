@@ -26,12 +26,16 @@ const baseSession = createSession({
 });
 
 describe('sessionService', () => {
-  it('creates initial sessions without greeting messages', () => {
+  it('creates localized initial sessions without greeting messages', () => {
     const registry = createBotRegistry();
 
-    const session = createInitialSession(registry, 'en-US', '2026-03-25T12:00:00.000Z');
+    const zhSession = createInitialSession(registry, 'zh-CN', '2026-03-25T12:00:00.000Z');
+    const enSession = createInitialSession(registry, 'en-US', '2026-03-25T12:00:00.000Z');
 
-    expect(session.messages).toEqual([]);
+    expect(zhSession.title).toBe('当前会话');
+    expect(enSession.title).toBe('Active Session');
+    expect(zhSession.messages).toEqual([]);
+    expect(enSession.messages).toEqual([]);
   });
 
   it('creates a user message and loading placeholders for visible bots before replies resolve', () => {

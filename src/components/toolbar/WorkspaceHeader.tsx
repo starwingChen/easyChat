@@ -1,3 +1,4 @@
+import { useI18n } from '../../i18n';
 import type { LayoutType } from '../../types/session';
 import { LayoutSwitcher } from './LayoutSwitcher';
 
@@ -6,16 +7,11 @@ interface WorkspaceHeaderProps {
   isReadonly: boolean;
   title: string;
   onChangeLayout: (layout: LayoutType) => void;
-  t: (key: string) => string;
 }
 
-export function WorkspaceHeader({
-  currentLayout,
-  isReadonly,
-  title,
-  onChangeLayout,
-  t,
-}: WorkspaceHeaderProps) {
+export function WorkspaceHeader({ currentLayout, isReadonly, title, onChangeLayout }: WorkspaceHeaderProps) {
+  const { t } = useI18n();
+
   return (
     <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4">
       <div>
@@ -25,7 +21,7 @@ export function WorkspaceHeader({
         ) : null}
       </div>
       <div className="flex items-center gap-2">
-        <LayoutSwitcher currentLayout={currentLayout} disabled={isReadonly} onChange={onChangeLayout} t={t} />
+        <LayoutSwitcher currentLayout={currentLayout} disabled={isReadonly} onChange={onChangeLayout} />
       </div>
     </header>
   );

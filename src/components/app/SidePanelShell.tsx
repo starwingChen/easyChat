@@ -1,5 +1,6 @@
 import { Bot, PanelLeftOpen } from 'lucide-react';
 
+import { useI18n } from '../../i18n';
 import { useAppState } from '../../store/AppStateContext';
 import { SessionSidebar } from '../sidebar/SessionSidebar';
 import { ChatWorkspace } from '../chat/ChatWorkspace';
@@ -13,7 +14,6 @@ export function SidePanelShell() {
     visibleBotIds,
     isComposerDisabled,
     isReadonly,
-    t,
     registry,
     cancelReply,
     retryReply,
@@ -28,6 +28,7 @@ export function SidePanelShell() {
     deleteHistorySnapshot,
     toggleLocale,
   } = useAppState();
+  const { t } = useI18n();
 
   return (
     <div className="flex h-screen overflow-hidden bg-white text-slate-900">
@@ -40,7 +41,6 @@ export function SidePanelShell() {
           onSelectView={selectView}
           onToggleLocale={toggleLocale}
           onToggleSidebar={toggleSidebar}
-          t={t}
         />
       ) : (
         <aside className="flex w-14 shrink-0 flex-col items-center border-r border-slate-200 bg-slate-50/80 py-4">
@@ -60,7 +60,6 @@ export function SidePanelShell() {
           currentLayout={currentSession.layout}
           isReadonly={isReadonly}
           onChangeLayout={setLayout}
-          t={t}
           title={state.currentView.mode === 'active' ? t('workspace.title.active') : currentSession.title}
         />
         <ChatWorkspace
@@ -72,10 +71,9 @@ export function SidePanelShell() {
           onRetryFailed={retryReply}
           onModelChange={setModel}
           onSaveApiConfig={saveApiConfig}
-          t={t}
           visibleBotIds={visibleBotIds}
         />
-        {!isReadonly ? <MessageComposer disabled={isComposerDisabled} onSend={sendMessage} t={t} /> : null}
+        {!isReadonly ? <MessageComposer disabled={isComposerDisabled} onSend={sendMessage} /> : null}
       </div>
     </div>
   );

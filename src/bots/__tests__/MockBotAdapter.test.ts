@@ -8,6 +8,7 @@ describe('MockBotAdapter', () => {
 
     expect(adapter.listModels()).toEqual(adapter.definition.models);
     expect(adapter.getDefaultModel()).toBe(adapter.definition.defaultModel);
+    expect(adapter.definition).not.toHaveProperty('greeting');
   });
 
   it('builds a deterministic mock response for a prompt', async () => {

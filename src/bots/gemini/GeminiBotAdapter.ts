@@ -16,10 +16,6 @@ const geminiDefinition: BotDefinition = {
     { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', isDefault: true },
     { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
   ],
-  greeting: {
-    'zh-CN': '你好！这里是 Gemini。你想探索什么问题？',
-    'en-US': 'Hi there! Gemini here. What would you like to explore?',
-  },
 };
 
 interface GeminiBotAdapterOptions {

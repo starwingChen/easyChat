@@ -1,5 +1,7 @@
 import { mockBotDefinitions, mockReplyTemplates } from '../mock/mock.js';
+import { createAppTranslator } from '../i18n';
 import type { BotDefinition, BotModel, BotResponse, SendMessageInput } from '../types/bot';
+import type { MessageId } from '../i18n';
 import { BaseBotAdapter } from './BaseBotAdapter';
 
 export class MockBotAdapter extends BaseBotAdapter {
@@ -22,17 +24,20 @@ export class MockBotAdapter extends BaseBotAdapter {
   }
 
   async sendMessage(input: SendMessageInput): Promise<BotResponse> {
-    const templateGroup =
-      mockReplyTemplates[this.botId as keyof typeof mockReplyTemplates] ?? mockReplyTemplates.chatgpt;
-    const template = templateGroup[input.locale] ?? templateGroup['en-US'];
+    const templateId =
+      (mockReplyTemplates[this.botId as keyof typeof mockReplyTemplates] ?? mockReplyTemplates.chatgpt) as MessageId;
     const selectedModel =
       this.definition.models.find((model) => model.id === input.modelId)?.label ?? this.definition.models[0].label;
+    const t = createAppTranslator(input.locale);
 
     return {
       id: `${this.botId}-${Date.now()}`,
       botId: this.botId,
       modelId: input.modelId,
-      content: template.replace('{{model}}', selectedModel).replace('{{prompt}}', input.content),
+      content: t(templateId, {
+        model: selectedModel,
+        prompt: input.content,
+      }),
       createdAt: new Date().toISOString(),
       status: 'done',
     };

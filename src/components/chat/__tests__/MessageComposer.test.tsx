@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import { renderWithI18n } from '../../../test/renderWithI18n';
 import { MessageComposer } from '../MessageComposer';
 
 describe('MessageComposer', () => {
@@ -9,18 +10,7 @@ describe('MessageComposer', () => {
     const user = userEvent.setup();
     const onSend = vi.fn();
 
-    render(
-      <MessageComposer
-        disabled={false}
-        onSend={onSend}
-        t={(key) =>
-          ({
-            'composer.placeholder': 'Message all bots simultaneously...',
-            'composer.send': 'Send',
-          })[key] ?? key
-        }
-      />,
-    );
+    renderWithI18n(<MessageComposer disabled={false} onSend={onSend} />);
 
     const input = screen.getByPlaceholderText(/message all bots simultaneously/i);
     await user.type(input, '  hello world  ');
@@ -31,18 +21,7 @@ describe('MessageComposer', () => {
   });
 
   it('disables input in readonly mode', () => {
-    render(
-      <MessageComposer
-        disabled={true}
-        onSend={vi.fn()}
-        t={(key) =>
-          ({
-            'composer.placeholder': 'Message all bots simultaneously...',
-            'composer.send': 'Send',
-          })[key] ?? key
-        }
-      />,
-    );
+    renderWithI18n(<MessageComposer disabled={true} onSend={vi.fn()} />);
 
     expect(screen.getByPlaceholderText(/message all bots simultaneously/i)).toBeDisabled();
   });
@@ -50,18 +29,7 @@ describe('MessageComposer', () => {
   it('does not send when enter is pressed during IME composition', async () => {
     const onSend = vi.fn();
 
-    render(
-      <MessageComposer
-        disabled={false}
-        onSend={onSend}
-        t={(key) =>
-          ({
-            'composer.placeholder': 'Message all bots simultaneously...',
-            'composer.send': 'Send',
-          })[key] ?? key
-        }
-      />,
-    );
+    renderWithI18n(<MessageComposer disabled={false} onSend={onSend} />);
 
     const input = screen.getByPlaceholderText(/message all bots simultaneously/i);
 
@@ -77,18 +45,7 @@ describe('MessageComposer', () => {
     const user = userEvent.setup();
     const onSend = vi.fn();
 
-    render(
-      <MessageComposer
-        disabled={false}
-        onSend={onSend}
-        t={(key) =>
-          ({
-            'composer.placeholder': 'Message all bots simultaneously...',
-            'composer.send': 'Send',
-          })[key] ?? key
-        }
-      />,
-    );
+    renderWithI18n(<MessageComposer disabled={false} onSend={onSend} />);
 
     const input = screen.getByPlaceholderText(/message all bots simultaneously/i);
     await user.type(input, 'hello');
@@ -102,18 +59,7 @@ describe('MessageComposer', () => {
   it('caps the composer height at 8 visible lines', async () => {
     const user = userEvent.setup();
 
-    render(
-      <MessageComposer
-        disabled={false}
-        onSend={vi.fn()}
-        t={(key) =>
-          ({
-            'composer.placeholder': 'Message all bots simultaneously...',
-            'composer.send': 'Send',
-          })[key] ?? key
-        }
-      />,
-    );
+    renderWithI18n(<MessageComposer disabled={false} onSend={vi.fn()} />);
 
     const input = screen.getByPlaceholderText(/message all bots simultaneously/i) as HTMLTextAreaElement;
 
@@ -138,18 +84,7 @@ describe('MessageComposer', () => {
       },
     });
 
-    render(
-      <MessageComposer
-        disabled={false}
-        onSend={vi.fn()}
-        t={(key) =>
-          ({
-            'composer.placeholder': 'Message all bots simultaneously...',
-            'composer.send': 'Send',
-          })[key] ?? key
-        }
-      />,
-    );
+    renderWithI18n(<MessageComposer disabled={false} onSend={vi.fn()} />);
 
     const input = screen.getByPlaceholderText(/message all bots simultaneously/i) as HTMLTextAreaElement;
 
@@ -164,35 +99,13 @@ describe('MessageComposer', () => {
   });
 
   it('returns focus to the composer after visible bot replies finish', () => {
-    const { rerender } = render(
-      <MessageComposer
-        disabled={true}
-        onSend={vi.fn()}
-        t={(key) =>
-          ({
-            'composer.placeholder': 'Message all bots simultaneously...',
-            'composer.send': 'Send',
-          })[key] ?? key
-        }
-      />,
-    );
+    const { rerender } = renderWithI18n(<MessageComposer disabled={true} onSend={vi.fn()} />);
 
     const input = screen.getByPlaceholderText(/message all bots simultaneously/i) as HTMLTextAreaElement;
 
     expect(input).not.toHaveFocus();
 
-    rerender(
-      <MessageComposer
-        disabled={false}
-        onSend={vi.fn()}
-        t={(key) =>
-          ({
-            'composer.placeholder': 'Message all bots simultaneously...',
-            'composer.send': 'Send',
-          })[key] ?? key
-        }
-      />,
-    );
+    rerender(<MessageComposer disabled={false} onSend={vi.fn()} />);
 
     expect(input).toHaveFocus();
   });

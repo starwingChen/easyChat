@@ -1,6 +1,7 @@
 import { Settings2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { useI18n } from '../../i18n';
 import type { ApiBotConfigValue, BotDefinition } from '../../types/bot';
 import { Dropdown } from '../common/Dropdown';
 
@@ -18,7 +19,6 @@ interface ChatPanelHeaderProps {
   onOpenApiConfig: () => void;
   onSaveApiConfig?: (config: { apiKey: string; modelName: string }) => void;
   selectedModelId: string;
-  t: (key: string) => string;
 }
 
 export function ChatPanelHeader({
@@ -35,10 +35,10 @@ export function ChatPanelHeader({
   onOpenApiConfig,
   onSaveApiConfig,
   selectedModelId,
-  t,
 }: ChatPanelHeaderProps) {
   const [apiKey, setApiKey] = useState('');
   const [modelName, setModelName] = useState('');
+  const { t } = useI18n();
 
   useEffect(() => {
     if (!isConfigOpen) {

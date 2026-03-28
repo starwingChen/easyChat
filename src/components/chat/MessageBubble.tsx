@@ -1,5 +1,6 @@
 import { LoaderCircle, RefreshCw, Square } from 'lucide-react';
 
+import { useI18n } from '../../i18n';
 import type { BotDefinition, BotMessageAction } from '../../types/bot';
 import type { ChatMessage } from '../../types/message';
 import { RichTextMessage } from './RichTextMessage';
@@ -7,31 +8,29 @@ import { RichTextMessage } from './RichTextMessage';
 interface MessageBubbleProps {
   message: ChatMessage;
   botDefinition: BotDefinition;
-  loadingLabel: string;
   onCancelLoading?: (messageId: string) => void;
   onMessageAction?: (action: BotMessageAction) => void;
   onRetryFailed?: (messageId: string) => void;
-  retryActionLabel?: string;
-  retryLabel?: string;
-  stopLabel: string;
-  youLabel: string;
 }
 
 export function MessageBubble({
   message,
   botDefinition,
-  loadingLabel,
   onCancelLoading,
   onMessageAction,
   onRetryFailed,
-  retryActionLabel,
-  retryLabel,
-  stopLabel,
-  youLabel,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const isLoading = !isUser && message.status === 'loading';
   const isError = !isUser && message.status === 'error';
+  const { t } = useI18n();
+  const retryLabel =
+    isLoading && message.retryCount && message.retryLimit
+      ? t('chat.retryProgress', {
+          retryCount: message.retryCount,
+          retryLimit: message.retryLimit,
+        })
+      : undefined;
 
   return (
     <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
@@ -43,7 +42,7 @@ export function MessageBubble({
           />
         ) : null}
         <span className="text-xs font-medium text-slate-500">
-          {isUser ? youLabel : botDefinition.name}
+          {isUser ? t('chat.you') : botDefinition.name}
         </span>
       </div>
       <div className={`flex w-full min-w-0 items-start gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -56,10 +55,10 @@ export function MessageBubble({
         >
           {isLoading ? (
             <span className="inline-flex items-center gap-2 text-slate-500">
-              <span aria-label={loadingLabel} className="inline-flex items-center" role="status">
+              <span aria-label={t('chat.loading')} className="inline-flex items-center" role="status">
                 <LoaderCircle className="h-4 w-4 animate-spin" />
               </span>
-              <span>{loadingLabel}</span>
+              <span>{t('chat.loading')}</span>
             </span>
           ) : (
             <RichTextMessage content={message.content} onAction={onMessageAction} />
@@ -69,7 +68,7 @@ export function MessageBubble({
           <div className="flex shrink-0 items-center gap-2 px-1 pt-2 text-xs text-slate-400">
             {retryLabel ? <span>{retryLabel}</span> : null}
             <button
-              aria-label={stopLabel}
+              aria-label={t('chat.stopReply')}
               className="rounded-md p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
               onClick={() => onCancelLoading?.(message.id)}
               type="button"
@@ -80,7 +79,7 @@ export function MessageBubble({
         ) : isError ? (
           <div className="flex shrink-0 items-center gap-2 px-1 pt-2 text-xs text-slate-400">
             <button
-              aria-label={retryActionLabel}
+              aria-label={t('chat.retryAction')}
               className="rounded-md p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
               onClick={() => onRetryFailed?.(message.id)}
               type="button"

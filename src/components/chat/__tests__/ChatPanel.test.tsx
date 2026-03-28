@@ -1,12 +1,13 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import { renderWithI18n } from '../../../test/renderWithI18n';
 import { ChatPanel } from '../ChatPanel';
 
 describe('ChatPanel', () => {
   it('renders only messages relevant to the panel bot and hides selectors in readonly mode', () => {
-    render(
+    renderWithI18n(
       <ChatPanel
         allBotDefinitions={[
           {
@@ -17,10 +18,6 @@ describe('ChatPanel', () => {
             accessMode: 'session',
             defaultModel: 'gpt-4o',
             capabilities: [],
-            greeting: {
-              'zh-CN': '你好',
-              'en-US': 'Hello',
-            },
             models: [
               { id: 'gpt-4o', label: 'GPT-4o', isDefault: true },
               { id: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
@@ -35,10 +32,6 @@ describe('ChatPanel', () => {
           accessMode: 'session',
           defaultModel: 'gpt-4o',
           capabilities: [],
-          greeting: {
-            'zh-CN': '你好',
-            'en-US': 'Hello',
-          },
           models: [
             { id: 'gpt-4o', label: 'GPT-4o', isDefault: true },
             { id: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
@@ -81,14 +74,6 @@ describe('ChatPanel', () => {
         onModelChange={vi.fn()}
         onSaveApiConfig={vi.fn()}
         selectedModelId="gpt-4o"
-        t={(key) =>
-          ({
-            'chat.you': 'You',
-            'chat.selectBot': 'Select bot',
-            'chat.selectModel': 'Select model',
-            'chat.configure': 'Configure',
-          })[key] ?? key
-        }
       />,
     );
 
@@ -113,17 +98,13 @@ describe('ChatPanel', () => {
         modelNameLabel: 'Runtime Model',
       },
       capabilities: [],
-      greeting: {
-        'zh-CN': '你好',
-        'en-US': 'Hello',
-      },
       models: [
         { id: 'deepseek-chat', label: 'DeepSeek Chat', isDefault: true },
         { id: 'deepseek-reasoner', label: 'DeepSeek Reasoner' },
       ],
     };
 
-    render(
+    renderWithI18n(
       <ChatPanel
         allBotDefinitions={[deepseekApiBot]}
         botDefinition={deepseekApiBot}
@@ -150,23 +131,6 @@ describe('ChatPanel', () => {
         onModelChange={vi.fn()}
         onSaveApiConfig={onSaveApiConfig}
         selectedModelId="deepseek-chat"
-        t={(key) =>
-          ({
-            'chat.you': 'You',
-            'chat.loading': 'Loading reply',
-            'chat.stopReply': 'Stop reply',
-            'chat.selectBot': 'Select bot',
-            'chat.selectModel': 'Select model',
-            'chat.configure': 'Configure',
-            'chat.api': 'API',
-            'config.title': 'API Configuration',
-            'config.apiKey': 'API Key',
-            'config.modelName': 'Runtime Model',
-            'config.unset': 'Unset',
-            'config.cancel': 'Cancel',
-            'config.save': 'Save',
-          })[key] ?? key
-        }
       />,
     );
 

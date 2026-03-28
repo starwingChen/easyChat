@@ -1,4 +1,5 @@
 import type { SendDeepSeekPrompt } from './types';
+import { createDeepSeekApiClientError, isDeepSeekApiClientError } from './types';
 
 import OpenAI from 'openai';
 
@@ -25,21 +26,21 @@ function extractMessageText(content: unknown): string {
     }
   }
 
-  return 'DeepSeek returned an empty response.';
+  throw createDeepSeekApiClientError('emptyResponse');
 }
 
-function mapDeepSeekError(error: unknown): Error {
+function mapDeepSeekError(error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
 
   if (/\b(401|403)\b|auth|unauthorized|invalid api key/i.test(message)) {
-    return new Error('DeepSeek API 认证失败，请检查 API Key 或账户状态。');
+    return createDeepSeekApiClientError('auth');
   }
 
   if (/\b402\b|\b429\b|quota|balance|insufficient/i.test(message)) {
-    return new Error('DeepSeek API 配额不足或请求过于频繁，请检查账户状态。');
+    return createDeepSeekApiClientError('quota');
   }
 
-  return new Error('DeepSeek API 暂时不可用，请稍后重试。');
+  return createDeepSeekApiClientError('unavailable');
 }
 
 export const sendDeepSeekPrompt: SendDeepSeekPrompt = async (config, messages, signal) => {
@@ -62,6 +63,10 @@ export const sendDeepSeekPrompt: SendDeepSeekPrompt = async (config, messages, s
       text: extractMessageText(completion.choices[0]?.message?.content),
     };
   } catch (error) {
+    if (isDeepSeekApiClientError(error)) {
+      throw error;
+    }
+
     throw mapDeepSeekError(error);
   }
 };

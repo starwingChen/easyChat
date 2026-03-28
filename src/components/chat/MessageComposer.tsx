@@ -1,17 +1,19 @@
 import { SendHorizontal } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
+import { useI18n } from '../../i18n';
+
 interface MessageComposerProps {
   disabled: boolean;
   onSend: (content: string) => void;
-  t: (key: string) => string;
 }
 
-export function MessageComposer({ disabled, onSend, t }: MessageComposerProps) {
+export function MessageComposer({ disabled, onSend }: MessageComposerProps) {
   const [value, setValue] = useState('');
   const [isComposing, setIsComposing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const previousDisabledRef = useRef(disabled);
+  const { t } = useI18n();
 
   useEffect(() => {
     const textarea = textareaRef.current;

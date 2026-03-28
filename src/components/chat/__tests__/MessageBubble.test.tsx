@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import { renderWithI18n } from '../../../test/renderWithI18n';
 import { MessageBubble } from '../MessageBubble';
 
 const botDefinition = {
@@ -12,19 +13,14 @@ const botDefinition = {
   accessMode: 'session' as const,
   defaultModel: 'gemini-1.5-pro',
   capabilities: [],
-  greeting: {
-    'zh-CN': '你好',
-    'en-US': 'Hello',
-  },
   models: [{ id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', isDefault: true }],
 };
 
 describe('MessageBubble', () => {
   it('renders markdown for user and assistant messages', () => {
-    const { container, rerender } = render(
+    const { container, rerender } = renderWithI18n(
       <MessageBubble
         botDefinition={botDefinition}
-        loadingLabel="Loading reply"
         message={{
           id: 'user-1',
           sessionId: 'session-1',
@@ -34,8 +30,6 @@ describe('MessageBubble', () => {
           status: 'done',
           targetBotIds: ['gemini'],
         }}
-        stopLabel="Stop reply"
-        youLabel="You"
       />,
     );
 
@@ -47,7 +41,6 @@ describe('MessageBubble', () => {
     rerender(
       <MessageBubble
         botDefinition={botDefinition}
-        loadingLabel="Loading reply"
         message={{
           id: 'assistant-1',
           sessionId: 'session-1',
@@ -58,8 +51,6 @@ describe('MessageBubble', () => {
           createdAt: '2026-03-26T00:00:00.000Z',
           status: 'done',
         }}
-        stopLabel="Stop reply"
-        youLabel="You"
       />,
     );
 
@@ -67,10 +58,9 @@ describe('MessageBubble', () => {
   });
 
   it('renders a loading indicator for loading assistant messages', () => {
-    render(
+    renderWithI18n(
       <MessageBubble
         botDefinition={botDefinition}
-        loadingLabel="Loading reply"
         message={{
           id: 'loading-1',
           sessionId: 'session-1',
@@ -81,8 +71,6 @@ describe('MessageBubble', () => {
           createdAt: '2026-03-26T00:00:00.000Z',
           status: 'loading',
         }}
-        stopLabel="Stop reply"
-        youLabel="You"
       />,
     );
 
@@ -93,10 +81,9 @@ describe('MessageBubble', () => {
     const user = userEvent.setup();
     const onCancelLoading = vi.fn();
 
-    render(
+    renderWithI18n(
       <MessageBubble
         botDefinition={botDefinition}
-        loadingLabel="Loading reply"
         message={{
           id: 'loading-2',
           sessionId: 'session-1',
@@ -108,8 +95,6 @@ describe('MessageBubble', () => {
           status: 'loading',
         }}
         onCancelLoading={onCancelLoading}
-        stopLabel="Stop reply"
-        youLabel="You"
       />,
     );
 
@@ -119,10 +104,9 @@ describe('MessageBubble', () => {
   });
 
   it('renders retry progress next to a loading assistant message', () => {
-    render(
+    renderWithI18n(
       <MessageBubble
         botDefinition={botDefinition}
-        loadingLabel="Loading reply"
         message={{
           id: 'loading-3',
           sessionId: 'session-1',
@@ -135,13 +119,10 @@ describe('MessageBubble', () => {
           retryCount: 2,
           retryLimit: 3,
         }}
-        retryLabel="Retry 2/3"
-        stopLabel="Stop reply"
-        youLabel="You"
       />,
     );
 
-    expect(screen.getByText('Retry 2/3')).toBeInTheDocument();
+    expect(screen.getByText('Network error, retrying... 2/3')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Stop reply' })).toBeInTheDocument();
   });
 
@@ -149,10 +130,9 @@ describe('MessageBubble', () => {
     const user = userEvent.setup();
     const onRetryFailed = vi.fn();
 
-    render(
+    renderWithI18n(
       <MessageBubble
         botDefinition={botDefinition}
-        loadingLabel="Loading reply"
         message={{
           id: 'error-1',
           sessionId: 'session-1',
@@ -164,9 +144,6 @@ describe('MessageBubble', () => {
           status: 'error',
         }}
         onRetryFailed={onRetryFailed}
-        retryActionLabel="Retry"
-        stopLabel="Stop reply"
-        youLabel="You"
       />,
     );
 

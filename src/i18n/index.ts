@@ -1,24 +1,23 @@
 import type { Locale } from '../types/app';
-import enUS from './en-US';
-import zhCN from './zh-CN';
+import { createAppIntl, createAppTranslator, getMessages } from './intl';
+import type { MessageCatalog, MessageId } from './messages/types';
+export { AppI18nProvider } from './provider';
+export { useI18n } from './useI18n';
+export { createAppIntl, createAppTranslator, getMessages };
+export type { AppTranslator } from './intl';
+export type { MessageCatalog, MessageId, MessageValues } from './messages/types';
 
-const dictionaries = {
-  'zh-CN': zhCN,
-  'en-US': enUS,
-};
-
-export type TranslationKey = keyof typeof zhCN;
-export type Translator = (key: string) => string;
+export type TranslationKey = MessageId;
+export type Translator = ReturnType<typeof createAppTranslator>;
 
 export function resolveLocale(locale?: string | null): Locale {
   return locale?.toLowerCase().startsWith('en') ? 'en-US' : 'zh-CN';
 }
 
 export function createTranslator(locale: Locale): Translator {
-  const dictionary = dictionaries[locale] ?? dictionaries['zh-CN'];
-  return (key) => dictionary[key as TranslationKey] ?? key;
+  return createAppTranslator(locale);
 }
 
-export function getMessages(locale: Locale) {
-  return dictionaries[locale] ?? dictionaries['zh-CN'];
+export function formatMessage(locale: Locale, id: MessageId, values?: Record<string, string | number | boolean>) {
+  return createAppIntl(locale).formatMessage({ id }, values);
 }

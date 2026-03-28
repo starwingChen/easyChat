@@ -1,6 +1,7 @@
 import { Bot, PanelLeftClose, Plus } from 'lucide-react';
 import { useState } from 'react';
 
+import { useI18n } from '../../i18n';
 import type { ViewState } from '../../types/app';
 import type { SessionSnapshot } from '../../types/session';
 import { SessionListItem } from './SessionListItem';
@@ -13,7 +14,6 @@ interface SessionSidebarProps {
   onSelectView: (view: ViewState) => void;
   onToggleSidebar: () => void;
   onToggleLocale: () => void;
-  t: (key: string) => string;
 }
 
 export function SessionSidebar({
@@ -24,9 +24,9 @@ export function SessionSidebar({
   onSelectView,
   onToggleSidebar,
   onToggleLocale,
-  t,
 }: SessionSidebarProps) {
   const [confirmingSnapshotId, setConfirmingSnapshotId] = useState<string | null>(null);
+  const { t } = useI18n();
 
   return (
     <aside className="flex w-[198px] shrink-0 flex-col border-r border-slate-200 bg-slate-50/80">
@@ -90,7 +90,6 @@ export function SessionSidebar({
               onDeleteRequest={() =>
                 setConfirmingSnapshotId((currentId) => (currentId === snapshot.id ? null : snapshot.id))
               }
-              t={t}
             />
           ))}
         </div>

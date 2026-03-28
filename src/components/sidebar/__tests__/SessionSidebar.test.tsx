@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import { renderWithI18n } from '../../../test/renderWithI18n';
 import { SessionSidebar } from '../SessionSidebar';
 
 describe('SessionSidebar', () => {
@@ -10,7 +11,7 @@ describe('SessionSidebar', () => {
     const onSelect = vi.fn();
     const onCreateSession = vi.fn();
 
-    render(
+    renderWithI18n(
       <SessionSidebar
         currentView={{ mode: 'active', sessionId: 'session-active' }}
         historySnapshots={[
@@ -30,14 +31,6 @@ describe('SessionSidebar', () => {
         onSelectView={onSelect}
         onToggleSidebar={vi.fn()}
         onToggleLocale={vi.fn()}
-        t={(key) => ({
-          'app.name': 'EasyChat',
-          'sidebar.current': 'Current',
-          'sidebar.activeSession': 'Active Session',
-          'sidebar.history': 'History',
-          'sidebar.newSession': 'New Session',
-          'sidebar.collapse': 'Collapse sidebar',
-        })[key] ?? key}
       />,
     );
 
@@ -50,7 +43,7 @@ describe('SessionSidebar', () => {
     const user = userEvent.setup();
     const onToggleLocale = vi.fn();
 
-    render(
+    renderWithI18n(
       <SessionSidebar
         currentView={{ mode: 'active', sessionId: 'session-active' }}
         historySnapshots={[]}
@@ -59,18 +52,8 @@ describe('SessionSidebar', () => {
         onSelectView={vi.fn()}
         onToggleSidebar={vi.fn()}
         onToggleLocale={onToggleLocale}
-        t={(key) =>
-          ({
-            'app.name': 'EasyChat',
-            'sidebar.current': 'Current',
-            'sidebar.activeSession': 'Active Session',
-            'sidebar.history': 'History',
-            'sidebar.newSession': 'New Session',
-            'sidebar.collapse': 'Collapse sidebar',
-            'locale.toggle': 'EN',
-          })[key] ?? key
-        }
       />,
+      { locale: 'zh-CN' },
     );
 
     await user.click(screen.getByRole('button', { name: 'EN' }));
@@ -82,7 +65,7 @@ describe('SessionSidebar', () => {
     const user = userEvent.setup();
     const onDeleteHistory = vi.fn();
 
-    render(
+    renderWithI18n(
       <SessionSidebar
         currentView={{ mode: 'history', sessionId: 'hist-1' }}
         historySnapshots={[
@@ -102,20 +85,6 @@ describe('SessionSidebar', () => {
         onSelectView={vi.fn()}
         onToggleSidebar={vi.fn()}
         onToggleLocale={vi.fn()}
-        t={(key) =>
-          ({
-            'app.name': 'EasyChat',
-            'sidebar.current': 'Current',
-            'sidebar.activeSession': 'Active Session',
-            'sidebar.history': 'History',
-            'sidebar.newSession': 'New Session',
-            'sidebar.collapse': 'Collapse sidebar',
-            'sidebar.deleteHistory': 'Delete history session',
-            'sidebar.deleteConfirm': 'Delete this snapshot?',
-            'sidebar.cancelDelete': 'Cancel',
-            'sidebar.confirmDelete': 'Delete',
-          })[key] ?? key
-        }
       />,
     );
 
@@ -140,7 +109,7 @@ describe('SessionSidebar', () => {
     const user = userEvent.setup();
     const onToggleSidebar = vi.fn();
 
-    render(
+    renderWithI18n(
       <SessionSidebar
         currentView={{ mode: 'active', sessionId: 'session-active' }}
         historySnapshots={[]}
@@ -149,17 +118,6 @@ describe('SessionSidebar', () => {
         onSelectView={vi.fn()}
         onToggleSidebar={onToggleSidebar}
         onToggleLocale={vi.fn()}
-        t={(key) =>
-          ({
-            'app.name': 'EasyChat',
-            'sidebar.current': 'Current',
-            'sidebar.activeSession': 'Active Session',
-            'sidebar.history': 'History',
-            'sidebar.newSession': 'New Session',
-            'sidebar.collapse': 'Collapse sidebar',
-            'locale.toggle': 'EN',
-          })[key] ?? key
-        }
       />,
     );
 

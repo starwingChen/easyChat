@@ -1,8 +1,15 @@
 import { mockBotDefinitions } from '../../mock/mock.js';
+import { createAppTranslator } from '../../i18n';
 import type { ApiBotConfigValue, BotDefinition, BotModel, BotResponse, SendMessageInput } from '../../types/bot';
 import { BaseBotAdapter } from '../BaseBotAdapter';
 import { sendDeepSeekPrompt } from './deepseekApiClient';
-import type { DeepSeekApiConfig, DeepSeekApiMessage, DeepSeekApiState, SendDeepSeekPrompt } from './types';
+import {
+  isDeepSeekApiClientError,
+  type DeepSeekApiConfig,
+  type DeepSeekApiMessage,
+  type DeepSeekApiState,
+  type SendDeepSeekPrompt,
+} from './types';
 
 interface DeepSeekApiBotAdapterOptions {
   now?: () => string;
@@ -79,12 +86,32 @@ export class DeepSeekApiBotAdapter extends BaseBotAdapter {
   }
 
   async sendMessage(input: SendMessageInput): Promise<BotResponse> {
+    const t = createAppTranslator(input.locale);
+
     if (!this.config?.apiKey || !this.config?.modelName) {
-      throw new Error('DeepSeek API 尚未配置。请先[配置 API](action://open-api-config)。');
+      throw new Error(t('bot.error.deepseekApi.missingConfig'));
     }
 
     const nextMessages = [...this.messages, { role: 'user' as const, content: input.content }];
-    const result = await this.sendPrompt(this.config, nextMessages, input.signal);
+    let result;
+
+    try {
+      result = await this.sendPrompt(this.config, nextMessages, input.signal);
+    } catch (error) {
+      if (isDeepSeekApiClientError(error)) {
+        const messageIdByCode = {
+          auth: 'bot.error.deepseekApi.auth',
+          quota: 'bot.error.deepseekApi.quota',
+          unavailable: 'bot.error.deepseekApi.unavailable',
+          emptyResponse: 'bot.error.deepseekApi.emptyResponse',
+        } as const;
+
+        throw new Error(t(messageIdByCode[error.code]));
+      }
+
+      throw error;
+    }
+
     const timestamp = this.now();
 
     this.messages = [...nextMessages, { role: 'assistant', content: result.text }];

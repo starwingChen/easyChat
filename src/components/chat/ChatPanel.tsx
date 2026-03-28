@@ -19,7 +19,6 @@ interface ChatPanelProps {
   onModelChange: (modelId: string) => void;
   onSaveApiConfig?: (config: { apiKey: string; modelName: string }) => void;
   selectedModelId: string;
-  t: (key: string) => string;
 }
 
 function filterMessagesForBot(messages: ChatMessage[], botId: string): ChatMessage[] {
@@ -44,7 +43,6 @@ export function ChatPanel({
   onModelChange,
   onSaveApiConfig,
   selectedModelId,
-  t,
 }: ChatPanelProps) {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
@@ -70,19 +68,13 @@ export function ChatPanel({
         onOpenApiConfig={() => setIsConfigOpen(true)}
         onSaveApiConfig={onSaveApiConfig}
         selectedModelId={selectedModelId}
-        t={t}
       />
       <MessageList
         botDefinition={botDefinition}
-        formatRetryLabel={(retryCount, retryLimit) => `${t('chat.retry')} ${retryCount}/${retryLimit}`}
-        loadingLabel={t('chat.loading')}
         messages={filterMessagesForBot(messages, botDefinition.id)}
         onCancelLoading={onCancelLoading}
         onMessageAction={handleMessageAction}
         onRetryFailed={onRetryFailed}
-        retryActionLabel={t('chat.retry')}
-        stopLabel={t('chat.stopReply')}
-        youLabel={t('chat.you')}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 import type { BotRegistry } from '../../bots/botRegistry';
-import { getMessages } from '../../i18n';
+import { createAppTranslator } from '../../i18n';
 import type { Locale } from '../../types/app';
 import type { ChatMessage } from '../../types/message';
 import type { ChatSession } from '../../types/session';
@@ -70,7 +70,7 @@ function createPendingAssistantMessage(
 }
 
 function getReplyFailureMessage(locale: Locale): string {
-  return getMessages(locale)['chat.replyFailed'];
+  return createAppTranslator(locale)('chat.replyFailed');
 }
 
 export function buildSelectedModels(registry: BotRegistry): Record<string, string> {
@@ -81,17 +81,18 @@ export function buildSelectedModels(registry: BotRegistry): Record<string, strin
 
 export function createInitialSession(
   registry: BotRegistry,
-  _locale: Locale,
+  locale: Locale,
   createdAt: string,
   layout: ChatSession['layout'] = '2v',
   activeBotIds = ['chatgpt', 'gemini', 'claude', 'copilot'],
 ): ChatSession {
   const sessionId = 'session-active';
   const selectedModels = buildSelectedModels(registry);
+  const t = createAppTranslator(locale);
 
   return {
     id: sessionId,
-    title: 'Active Session',
+    title: t('session.title.active'),
     layout,
     activeBotIds,
     selectedModels,

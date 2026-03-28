@@ -1,10 +1,4 @@
-import type { Locale } from '../../src/types/app';
 import type { ApiConfigDefinition, BotDefinition, BotModel } from '../../src/types/bot';
-
-const defaultGreeting: Record<Locale, string> = {
-  'en-US': 'Hello!',
-  'zh-CN': '你好！',
-};
 
 const defaultModels: BotModel[] = [{ id: 'model-default', label: 'Default Model', isDefault: true }];
 
@@ -32,6 +26,5 @@ export function createBotDefinition(overrides: Partial<BotDefinition> = {}): Bot
     models: models.map((model) => ({ ...model })),
     defaultModel,
     capabilities: [...(overrides.capabilities ?? [])],
-    greeting: { ...defaultGreeting, ...(overrides.greeting ?? {}) },
   };
 }

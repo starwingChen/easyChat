@@ -18,6 +18,20 @@ describe('DeepSeekApiBotAdapter', () => {
     ).rejects.toThrow('DeepSeek API 尚未配置。请先[配置 API](action://open-api-config)。');
   });
 
+  it('localizes the missing-config message for english locale', async () => {
+    const adapter = new DeepSeekApiBotAdapter();
+
+    await expect(
+      adapter.sendMessage({
+        sessionId: 'session-1',
+        content: 'hello',
+        locale: 'en-US',
+        modelId: 'deepseek-chat',
+        targetBotIds: ['deepseek-api'],
+      }),
+    ).rejects.toThrow('DeepSeek API is not configured yet. Please [configure API](action://open-api-config) first.');
+  });
+
   it('uses the saved api config and returns the configured runtime model name', async () => {
     const sendPrompt = vi.fn<SendDeepSeekPrompt>().mockResolvedValue({ text: 'DeepSeek says hi' });
     const adapter = new DeepSeekApiBotAdapter({
@@ -130,5 +144,25 @@ describe('DeepSeekApiBotAdapter', () => {
         { role: 'assistant', content: 'second reply' },
       ],
     });
+  });
+
+  it('translates structured client errors using the request locale', async () => {
+    const sendPrompt = vi.fn<SendDeepSeekPrompt>().mockRejectedValue({ code: 'quota' });
+    const adapter = new DeepSeekApiBotAdapter({ sendPrompt });
+
+    adapter.setApiConfig({
+      apiKey: 'sk-demo',
+      modelName: 'deepseek-chat',
+    });
+
+    await expect(
+      adapter.sendMessage({
+        sessionId: 'session-1',
+        content: 'hello',
+        locale: 'en-US',
+        modelId: 'ignored',
+        targetBotIds: ['deepseek-api'],
+      }),
+    ).rejects.toThrow('DeepSeek API quota is exhausted or requests are too frequent. Check the account status.');
   });
 });

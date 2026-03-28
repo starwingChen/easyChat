@@ -1,4 +1,6 @@
 import type { ReactElement } from 'react';
+
+import { useI18n } from '../../i18n';
 import type { LayoutType } from '../../types/session';
 
 const icons: Record<LayoutType, ReactElement> = {
@@ -40,12 +42,13 @@ interface LayoutSwitcherProps {
   currentLayout: LayoutType;
   disabled?: boolean;
   onChange: (layout: LayoutType) => void;
-  t: (key: string) => string;
 }
 
 const layoutOrder: LayoutType[] = ['1', '2v', '2h', '3', '4'];
 
-export function LayoutSwitcher({ currentLayout, disabled = false, onChange, t }: LayoutSwitcherProps) {
+export function LayoutSwitcher({ currentLayout, disabled = false, onChange }: LayoutSwitcherProps) {
+  const { t } = useI18n();
+
   return (
     <div className="flex items-center gap-1 rounded-xl bg-slate-50 p-1">
       {layoutOrder.map((layout) => (

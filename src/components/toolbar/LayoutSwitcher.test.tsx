@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import { renderWithI18n } from '../../test/renderWithI18n';
 import { LayoutSwitcher } from './LayoutSwitcher';
 
 describe('LayoutSwitcher', () => {
@@ -9,21 +10,7 @@ describe('LayoutSwitcher', () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
 
-    render(
-      <LayoutSwitcher
-        currentLayout="2h"
-        onChange={onChange}
-        t={(key) =>
-          ({
-            'layout.1': 'Single',
-            'layout.2v': 'Split Vertical',
-            'layout.2h': 'Split Horizontal',
-            'layout.3': 'Three Columns',
-            'layout.4': 'Grid',
-          })[key] ?? key
-        }
-      />,
-    );
+    renderWithI18n(<LayoutSwitcher currentLayout="2h" onChange={onChange} />);
 
     await user.click(screen.getByRole('button', { name: /grid/i }));
 

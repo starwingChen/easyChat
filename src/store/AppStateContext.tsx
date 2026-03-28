@@ -2,13 +2,13 @@ import {
   createContext,
   useContext,
   useEffect,
-  useMemo,
   useReducer,
+  useRef,
   type PropsWithChildren,
 } from 'react';
 
 import { createBotRegistry } from '../bots/botRegistry';
-import { createTranslator, resolveLocale } from '../i18n';
+import { createAppTranslator, resolveLocale } from '../i18n';
 import { mockHistorySnapshots } from '../mock/mock.js';
 import type { AppState, Locale, ViewState } from '../types/app';
 import type { ApiBotConfigValue } from '../types/bot';
@@ -69,7 +69,6 @@ interface AppStateContextValue {
   isComposerDisabled: boolean;
   visibleBotIds: string[];
   isReadonly: boolean;
-  t: ReturnType<typeof createTranslator>;
   registry: typeof registry;
   selectView: (view: ViewState) => void;
   setLayout: (layout: AppState['activeSession']['layout']) => void;
@@ -87,7 +86,7 @@ const AppStateContext = createContext<AppStateContextValue | null>(null);
 
 export function AppStateProvider({ children }: PropsWithChildren) {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const pendingReplyControllers = useMemo(() => new Map<string, AbortController>(), []);
+  const pendingReplyControllers = useRef(new Map<string, AbortController>()).current;
 
   useEffect(() => {
     loadPersistedPreferences().then((persisted) => {
@@ -131,71 +130,170 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   const currentSession = selectCurrentSessionRecord(state);
   const hasVisibleLoadingMessages = selectHasVisibleLoadingMessages(state);
   const visibleBotIds = selectVisibleBotIds(state);
-  const t = useMemo(() => createTranslator(state.locale), [state.locale]);
+  const t = createAppTranslator(state.locale);
 
-  const value = useMemo<AppStateContextValue>(
-    () => ({
-      state,
-      currentSession,
-      cancelReply(messageId) {
-        pendingReplyControllers.get(messageId)?.abort();
-        pendingReplyControllers.delete(messageId);
+  const value: AppStateContextValue = {
+    state,
+    currentSession,
+    cancelReply(messageId) {
+      pendingReplyControllers.get(messageId)?.abort();
+      pendingReplyControllers.delete(messageId);
 
-        const loadingMessage = state.activeSession.messages.find(
-          (message) => message.id === messageId && message.status === 'loading',
-        );
+      const loadingMessage = state.activeSession.messages.find(
+        (message) => message.id === messageId && message.status === 'loading',
+      );
 
-        if (!loadingMessage) {
+      if (!loadingMessage) {
+        return;
+      }
+
+      dispatch({
+        type: 'replace-active-message',
+        payload: {
+          message: {
+            ...loadingMessage,
+            content: t('chat.replyStopped'),
+            status: 'cancelled',
+          },
+          updatedAt: new Date().toISOString(),
+        },
+      });
+    },
+    retryReply(messageId) {
+      const failedMessage = state.activeSession.messages.find(
+        (message) => message.id === messageId && message.status === 'error',
+      );
+
+      if (!failedMessage) {
+        return;
+      }
+
+      const request = createRetryReplyRequest({
+        locale: state.locale,
+        message: failedMessage,
+        registry,
+        sessionId: state.activeSession.id,
+      });
+
+      if (!request) {
+        return;
+      }
+
+      dispatch({
+        type: 'replace-active-message',
+        payload: {
+          message: {
+            ...failedMessage,
+            content: '',
+            status: 'loading',
+            retryCount: 0,
+            retryLimit: BOT_REPLY_RETRY_LIMIT,
+          },
+          updatedAt: new Date().toISOString(),
+        },
+      });
+
+      void (async () => {
+        const abortController = new AbortController();
+        pendingReplyControllers.set(request.messageId, abortController);
+
+        const message = await resolvePendingBotReply({
+          ...request,
+          onRetry(retryingMessage) {
+            if (pendingReplyControllers.get(request.messageId) !== abortController) {
+              return;
+            }
+
+            dispatch({
+              type: 'replace-active-message',
+              payload: {
+                message: retryingMessage,
+                updatedAt: new Date().toISOString(),
+              },
+            });
+          },
+          signal: abortController.signal,
+        });
+
+        if (pendingReplyControllers.get(request.messageId) !== abortController) {
           return;
         }
+
+        pendingReplyControllers.delete(request.messageId);
 
         dispatch({
           type: 'replace-active-message',
           payload: {
-            message: {
-              ...loadingMessage,
-              content: t('chat.replyStopped'),
-              status: 'cancelled',
-            },
+            message,
             updatedAt: new Date().toISOString(),
           },
         });
-      },
-      retryReply(messageId) {
-        const failedMessage = state.activeSession.messages.find(
-          (message) => message.id === messageId && message.status === 'error',
-        );
+      })();
+    },
+    isComposerDisabled: hasVisibleLoadingMessages,
+    visibleBotIds,
+    isReadonly: state.currentView.mode === 'history',
+    registry,
+    selectView(view) {
+      dispatch({ type: 'set-view', payload: view });
+    },
+    setLayout(layout) {
+      dispatch({ type: 'set-layout', payload: { layout, allBotIds } });
+    },
+    toggleSidebar() {
+      dispatch({ type: 'toggle-sidebar' });
+    },
+    replaceBot(index, botId) {
+      dispatch({ type: 'replace-active-bot', payload: { index, botId } });
+    },
+    setModel(botId, modelId) {
+      dispatch({ type: 'set-selected-model', payload: { botId, modelId } });
+    },
+    async saveApiConfig(botId, config) {
+      registry.getBot(botId).setApiConfig(config);
+      const updatedAt = new Date().toISOString();
 
-        if (!failedMessage) {
-          return;
-        }
+      dispatch({
+        type: 'touch-active-session',
+        payload: { updatedAt },
+      });
 
-        const request = createRetryReplyRequest({
-          locale: state.locale,
-          message: failedMessage,
-          registry,
-          sessionId: state.activeSession.id,
-        });
+      await persistPreferences({
+        locale: state.locale,
+        historySnapshots: state.historySnapshots,
+        layout: state.activeSession.layout,
+        selectedModels: state.activeSession.selectedModels,
+        currentView: state.currentView,
+        activeSession: {
+          ...state.activeSession,
+          updatedAt,
+        },
+        botStates: collectBotStates(),
+        sidebar: state.sidebar,
+      }).catch(() => undefined);
+    },
+    async sendMessage(content) {
+      const draft = createBroadcastDraft({
+        session: state.activeSession,
+        registry,
+        locale: state.locale,
+        content,
+      });
 
-        if (!request) {
-          return;
-        }
+      if (!draft) {
+        return;
+      }
 
-        dispatch({
-          type: 'replace-active-message',
-          payload: {
-            message: {
-              ...failedMessage,
-              content: '',
-              status: 'loading',
-              retryCount: 0,
-              retryLimit: BOT_REPLY_RETRY_LIMIT,
-            },
-            updatedAt: new Date().toISOString(),
-          },
-        });
+      dispatch({
+        type: 'append-active-messages',
+        payload: {
+          messages: draft.messages,
+          updatedAt: draft.updatedAt,
+        },
+      });
 
-        void (async () => {
+      await Promise.all(
+        draft.requests.map(async (request) => {
           const abortController = new AbortController();
           pendingReplyControllers.set(request.messageId, abortController);
 
@@ -230,157 +328,54 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               updatedAt: new Date().toISOString(),
             },
           });
-        })();
-      },
-      isComposerDisabled: hasVisibleLoadingMessages,
-      visibleBotIds,
-      isReadonly: state.currentView.mode === 'history',
-      t,
-      registry,
-      selectView(view) {
-        dispatch({ type: 'set-view', payload: view });
-      },
-      setLayout(layout) {
-        dispatch({ type: 'set-layout', payload: { layout, allBotIds } });
-      },
-      toggleSidebar() {
-        dispatch({ type: 'toggle-sidebar' });
-      },
-      replaceBot(index, botId) {
-        dispatch({ type: 'replace-active-bot', payload: { index, botId } });
-      },
-      setModel(botId, modelId) {
-        dispatch({ type: 'set-selected-model', payload: { botId, modelId } });
-      },
-      async saveApiConfig(botId, config) {
-        registry.getBot(botId).setApiConfig(config);
-        const updatedAt = new Date().toISOString();
+        }),
+      );
+    },
+    createNewSession() {
+      const timestamp = new Date().toISOString();
 
+      if (hasConversationMessages(state.activeSession.messages)) {
         dispatch({
-          type: 'touch-active-session',
-          payload: { updatedAt },
-        });
-
-        await persistPreferences({
-          locale: state.locale,
-          historySnapshots: state.historySnapshots,
-          layout: state.activeSession.layout,
-          selectedModels: state.activeSession.selectedModels,
-          currentView: state.currentView,
-          activeSession: {
-            ...state.activeSession,
-            updatedAt,
-          },
-          botStates: collectBotStates(),
-          sidebar: state.sidebar,
-        }).catch(() => undefined);
-      },
-      async sendMessage(content) {
-        const draft = createBroadcastDraft({
-          session: state.activeSession,
-          registry,
-          locale: state.locale,
-          content,
-        });
-
-        if (!draft) {
-          return;
-        }
-
-        dispatch({
-          type: 'append-active-messages',
-          payload: {
-            messages: draft.messages,
-            updatedAt: draft.updatedAt,
-          },
-        });
-
-        await Promise.all(
-          draft.requests.map(async (request) => {
-            const abortController = new AbortController();
-            pendingReplyControllers.set(request.messageId, abortController);
-
-            const message = await resolvePendingBotReply({
-              ...request,
-              onRetry(retryingMessage) {
-                if (pendingReplyControllers.get(request.messageId) !== abortController) {
-                  return;
-                }
-
-                dispatch({
-                  type: 'replace-active-message',
-                  payload: {
-                    message: retryingMessage,
-                    updatedAt: new Date().toISOString(),
-                  },
-                });
-              },
-              signal: abortController.signal,
-            });
-
-            if (pendingReplyControllers.get(request.messageId) !== abortController) {
-              return;
-            }
-
-            pendingReplyControllers.delete(request.messageId);
-
-            dispatch({
-              type: 'replace-active-message',
-              payload: {
-                message,
-                updatedAt: new Date().toISOString(),
-              },
-            });
-          }),
-        );
-      },
-      createNewSession() {
-        const timestamp = new Date().toISOString();
-
-        if (hasConversationMessages(state.activeSession.messages)) {
-          dispatch({
-            type: 'push-history-snapshot',
-            payload: createSnapshotFromSession(
-              state.activeSession,
-              `snapshot-${timestamp}`,
-              timestamp,
-            ),
-          });
-        }
-
-        pendingReplyControllers.forEach((controller) => {
-          controller.abort();
-        });
-        pendingReplyControllers.clear();
-
-        registry.getAllBots().forEach((bot) => {
-          bot.resetConversation();
-        });
-
-        dispatch({
-          type: 'replace-active-session',
-          payload: createInitialSession(
-            registry,
-            state.locale,
+          type: 'push-history-snapshot',
+          payload: createSnapshotFromSession(
+            state.activeSession,
+            `snapshot-${timestamp}`,
             timestamp,
-            state.activeSession.layout,
-            state.activeSession.activeBotIds,
           ),
         });
-      },
-      deleteHistorySnapshot(snapshotId) {
-        dispatch({
-          type: 'delete-history-snapshot',
-          payload: { snapshotId },
-        });
-      },
-      toggleLocale() {
-        const nextLocale: Locale = state.locale === 'zh-CN' ? 'en-US' : 'zh-CN';
-        dispatch({ type: 'set-locale', payload: nextLocale });
-      },
-    }),
-    [currentSession, hasVisibleLoadingMessages, pendingReplyControllers, state, t, visibleBotIds],
-  );
+      }
+
+      pendingReplyControllers.forEach((controller) => {
+        controller.abort();
+      });
+      pendingReplyControllers.clear();
+
+      registry.getAllBots().forEach((bot) => {
+        bot.resetConversation();
+      });
+
+      dispatch({
+        type: 'replace-active-session',
+        payload: createInitialSession(
+          registry,
+          state.locale,
+          timestamp,
+          state.activeSession.layout,
+          state.activeSession.activeBotIds,
+        ),
+      });
+    },
+    deleteHistorySnapshot(snapshotId) {
+      dispatch({
+        type: 'delete-history-snapshot',
+        payload: { snapshotId },
+      });
+    },
+    toggleLocale() {
+      const nextLocale: Locale = state.locale === 'zh-CN' ? 'en-US' : 'zh-CN';
+      dispatch({ type: 'set-locale', payload: nextLocale });
+    },
+  };
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
 }

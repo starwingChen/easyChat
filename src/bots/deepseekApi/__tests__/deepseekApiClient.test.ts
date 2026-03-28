@@ -69,6 +69,6 @@ describe('deepseekApiClient', () => {
         },
         [{ role: 'user', content: 'hello' }],
       ),
-    ).rejects.toThrow('DeepSeek API 认证失败，请检查 API Key 或账户状态。');
+    ).rejects.toMatchObject({ code: 'auth' });
   });
 });
