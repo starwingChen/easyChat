@@ -1,3 +1,4 @@
+import { isBotUserFacingError } from '../../types/bot';
 import type { BotRegistry } from '../../bots/botRegistry';
 import { createAppTranslator } from '../../i18n';
 import type { Locale } from '../../types/app';
@@ -221,7 +222,7 @@ export async function resolvePendingBotReply(request: PendingBotReplyRequest): P
         });
       }
 
-      if (isActionableBotError(error)) {
+      if (isBotUserFacingError(error) || isActionableBotError(error)) {
         return createPendingAssistantMessage(request, {
           content: error.message,
           status: 'error',

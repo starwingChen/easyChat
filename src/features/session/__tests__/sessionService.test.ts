@@ -327,4 +327,57 @@ describe('sessionService', () => {
       content: 'Qwen - API 尚未配置。请先[配置 API](action://open-api-config)。',
     });
   });
+
+  it('preserves user-facing Copilot auth prompts instead of replacing them with a generic failure', async () => {
+    const successRegistry = createBotRegistry();
+    const failingRegistry: BotRegistry = {
+      ...successRegistry,
+      getBot(botId) {
+        if (botId !== 'copilot') {
+          return successRegistry.getBot(botId);
+        }
+
+        const originalBot = successRegistry.getBot(botId);
+
+        return new (class extends BaseBotAdapter {
+          readonly definition = originalBot.definition;
+
+          listModels() {
+            return originalBot.listModels();
+          }
+
+          getDefaultModel() {
+            return originalBot.getDefaultModel();
+          }
+
+          async sendMessage(_input: SendMessageInput): Promise<BotResponse> {
+            throw Object.assign(
+              new Error('Copilot 需要先完成网页访问验证。请先访问 https://copilot.microsoft.com/'),
+              {
+                userFacing: true,
+              },
+            );
+          }
+        })();
+      },
+    };
+
+    const failedReply = await resolvePendingBotReply({
+      botId: 'copilot',
+      content: 'hello',
+      createdAt: '2026-03-25T12:00:00.000Z',
+      locale: 'zh-CN',
+      messageId: 'copilot-2026-03-25T12:00:00.000Z',
+      modelId: 'copilot-smart',
+      registry: failingRegistry,
+      sessionId: 'session-1',
+      targetBotIds: ['copilot'],
+    });
+
+    expect(failedReply).toMatchObject({
+      botId: 'copilot',
+      status: 'error',
+      content: 'Copilot 需要先完成网页访问验证。请先访问 https://copilot.microsoft.com/',
+    });
+  });
 });

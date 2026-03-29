@@ -160,6 +160,30 @@ describe('copilotClient', () => {
     );
   });
 
+  it('throws an auth-required error when Copilot returns a challenge event', async () => {
+    const socket = new FakeWebSocket('ignored');
+    const client = createCopilotClient({
+      postConversation: vi.fn(),
+      createClientSessionId: () => 'client-session-1',
+      createWebSocket: () => socket as unknown as WebSocket,
+    });
+
+    const pendingResult = client.sendMessage({
+      conversationId: 'conversation-1',
+      prompt: '你好',
+    });
+
+    socket.emitOpen();
+    socket.emitMessage({
+      event: 'challenge',
+      id: 'challenge-1',
+    });
+
+    await expect(pendingResult).rejects.toEqual(
+      new CopilotClientError('authRequired', 'Copilot requires browser verification.'),
+    );
+  });
+
   it('throws a structured error when done arrives without any accumulated text', async () => {
     const socket = new FakeWebSocket('ignored');
     const client = createCopilotClient({

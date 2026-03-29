@@ -3,6 +3,7 @@ import { ofetch } from 'ofetch';
 import type {
   CopilotClient,
   CopilotClientErrorCode,
+  CopilotChallengeEvent,
   CopilotCreateConversationResult,
   CopilotDoneEvent,
   CopilotSendMessageInput,
@@ -58,6 +59,16 @@ function isDoneEvent(value: unknown): value is CopilotDoneEvent {
   );
 }
 
+function isChallengeEvent(value: unknown): value is CopilotChallengeEvent {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    (value as CopilotChallengeEvent).event === 'challenge' &&
+    (typeof (value as CopilotChallengeEvent).id === 'string' ||
+      typeof (value as CopilotChallengeEvent).id === 'undefined')
+  );
+}
+
 function isAppendTextEvent(value: unknown): value is Extract<CopilotStreamEvent, { event: 'appendText' }> {
   return (
     !!value &&
@@ -87,6 +98,10 @@ function parseCopilotEvent(data: string): CopilotStreamEvent | null {
   }
 
   if (isDoneEvent(parsed)) {
+    return parsed;
+  }
+
+  if (isChallengeEvent(parsed)) {
     return parsed;
   }
 
@@ -219,6 +234,11 @@ export function createCopilotClient(options: CopilotClientOptions = {}): Copilot
 
           if (parsedEvent.event === 'appendText') {
             text += parsedEvent.text;
+            return;
+          }
+
+          if (parsedEvent.event === 'challenge') {
+            fail(new CopilotClientError('authRequired', 'Copilot requires browser verification.'));
             return;
           }
 

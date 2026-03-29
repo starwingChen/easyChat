@@ -9,7 +9,6 @@
     "https://chatgpt.com/*",
     "https://copilot.microsoft.com/*",
     "wss://copilot.microsoft.com/*",
-    "https://api.deepseek.com/*",
     "https://www.perplexity.ai/*"
   ],
   "declarative_net_request": {

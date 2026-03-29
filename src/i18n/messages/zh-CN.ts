@@ -46,6 +46,7 @@ const zhCNMessages = {
   'bot.replyTemplate.claude': 'Claude（{model}）会用更平衡的文字组织来回答：“{prompt}”。',
   'bot.replyTemplate.copilot': 'Copilot（{model}）会把“{prompt}”转成偏工程实践的建议。',
   'bot.replyTemplate.perplexity': 'Perplexity（{model}）会围绕“{prompt}”给出检索导向的总结。',
+  'bot.error.copilot.authRequired': 'Copilot 需要完成网页访问验证。请先访问 [https://copilot.microsoft.com](https://copilot.microsoft.com) 发送任意消息',
   'bot.error.deepseekApi.missingConfig': 'DeepSeek - API 尚未配置。请先[配置 API](action://open-api-config)。',
   'bot.error.deepseekApi.auth': 'DeepSeek - API 认证失败，请检查 API Key 或账户状态。',
   'bot.error.deepseekApi.quota': 'DeepSeek - API 配额不足或请求过于频繁，请检查账户状态。',

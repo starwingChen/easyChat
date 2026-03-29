@@ -14,11 +14,6 @@
           "header": "referer",
           "operation": "set",
           "value": "https://copilot.microsoft.com/"
-        },
-        {
-          "header": "Cookie",
-          "operation": "set",
-          "value": "__Host-copilot-anon=<token>"
         }
       ]
     },

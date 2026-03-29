@@ -51,3 +51,16 @@ export interface BotResponse {
   createdAt: string;
   status: 'done';
 }
+
+export class BotUserFacingError extends Error {
+  readonly userFacing = true;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'BotUserFacingError';
+  }
+}
+
+export function isBotUserFacingError(error: unknown): error is Error & { userFacing: true } {
+  return error instanceof Error && (error as { userFacing?: unknown }).userFacing === true;
+}
