@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        {
+          "header": "origin",
+          "operation": "set",
+          "value": "https://copilot.microsoft.com"
+        },
+        {
+          "header": "referer",
+          "operation": "set",
+          "value": "https://copilot.microsoft.com/"
+        },
+        {
+          "header": "Cookie",
+          "operation": "set",
+          "value": "__Host-copilot-anon=<token>"
+        }
+      ]
+    },
+    "condition": {
+      "requestDomains": ["copilot.microsoft.com"],
+      "resourceTypes": ["websocket"]
+    }
+  }
+]

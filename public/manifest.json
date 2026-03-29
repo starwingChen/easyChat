@@ -3,13 +3,24 @@
   "name": "EasyChat",
   "description": "Compare multiple AI assistants in one Chrome side panel.",
   "version": "0.1.0",
-  "permissions": ["sidePanel", "storage", "tabs"],
+  "permissions": ["sidePanel", "storage", "tabs", "declarativeNetRequest", "cookies"],
   "host_permissions": [
     "https://gemini.google.com/*",
     "https://chatgpt.com/*",
+    "https://copilot.microsoft.com/*",
+    "wss://copilot.microsoft.com/*",
     "https://api.deepseek.com/*",
     "https://www.perplexity.ai/*"
   ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "copilot_websocket_headers",
+        "enabled": true,
+        "path": "rules/copilot-websocket-headers.json"
+      }
+    ]
+  },
   "background": {
     "service_worker": "background.js",
     "type": "module"
