@@ -35,8 +35,8 @@ describe('sessionService', () => {
     expect(enSession.title).toBe('Active Session');
     expect(zhSession.messages).toEqual([]);
     expect(enSession.messages).toEqual([]);
-    expect(zhSession.activeBotIds).toEqual(['chatgpt', 'gemini', 'perplexity', 'deepseek-api']);
-    expect(enSession.activeBotIds).toEqual(['chatgpt', 'gemini', 'perplexity', 'deepseek-api']);
+    expect(zhSession.activeBotIds).toEqual(['chatgpt', 'gemini', 'perplexity', 'copilot']);
+    expect(enSession.activeBotIds).toEqual(['chatgpt', 'gemini', 'perplexity', 'copilot']);
   });
 
   it('creates a user message and loading placeholders for visible bots before replies resolve', () => {

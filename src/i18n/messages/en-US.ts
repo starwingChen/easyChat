@@ -52,6 +52,8 @@ const enUSMessages = {
     'Perplexity ({model}) frames "{prompt}" as a search-first summary.',
   'bot.error.copilot.authRequired':
     'Copilot requires a browser verification first. Please visit [https://copilot.microsoft.com](https://copilot.microsoft.com) first and send any message.',
+  'bot.error.chatgpt.authRequired':
+    'ChatGPT is not logged in. Please visit [https://chatgpt.com](https://chatgpt.com) and sign in first.',
   'bot.error.deepseekApi.missingConfig':
     'DeepSeek - API is not configured yet. Please [configure API](action://open-api-config) first.',
   'bot.error.deepseekApi.auth':

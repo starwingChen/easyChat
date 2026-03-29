@@ -22,11 +22,11 @@ export function createBotRegistry(): BotRegistry {
   const qwenApiAdapter = new QwenApiBotAdapter();
   const adapters = [
     chatgptAdapter,
-    deepseekApiAdapter,
-    qwenApiAdapter,
     geminiAdapter,
     perplexityAdapter,
     copilotAdapter,
+    deepseekApiAdapter,
+    qwenApiAdapter,
   ];
   const adapterMap = new Map(adapters.map((adapter) => [adapter.definition.id, adapter]));
 

@@ -15,7 +15,7 @@ describe('botRegistry', () => {
     const allBotIds = allBots.map((bot) => bot.definition.id);
 
     expect(new Set(allBotIds).size).toBe(allBotIds.length);
-    expect(allBotIds).toEqual(['chatgpt', 'deepseek-api', 'qwen-api', 'gemini', 'perplexity', 'copilot']);
+    expect(allBotIds).toEqual(['chatgpt', 'gemini', 'perplexity', 'copilot', 'deepseek-api', 'qwen-api']);
     expect(allBotIds).not.toEqual(expect.arrayContaining(['claude', 'deepseek']));
     expect(registry.getBot('chatgpt')).toBeInstanceOf(ChatGPTBotAdapter);
     expect(registry.getBot('gemini')).toBeInstanceOf(GeminiBotAdapter);

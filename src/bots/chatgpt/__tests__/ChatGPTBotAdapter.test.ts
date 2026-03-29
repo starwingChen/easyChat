@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ChatGPTBotAdapter } from '../ChatGPTBotAdapter';
+import { ChatGPTAuthRequiredError } from '../chatgptErrors';
 import type { ChatGPTClient, ChatGPTConversationResult, ChatGPTRequirements } from '../types';
 
 function createRequirements(): ChatGPTRequirements {

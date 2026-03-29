@@ -5,10 +5,11 @@ import { useI18n } from '../../i18n';
 
 interface MessageComposerProps {
   disabled: boolean;
+  sendDisabled: boolean;
   onSend: (content: string) => void;
 }
 
-export function MessageComposer({ disabled, onSend }: MessageComposerProps) {
+export function MessageComposer({ disabled, sendDisabled, onSend }: MessageComposerProps) {
   const [value, setValue] = useState('');
   const [isComposing, setIsComposing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -49,7 +50,7 @@ export function MessageComposer({ disabled, onSend }: MessageComposerProps) {
   function handleSend() {
     const trimmedValue = value.trim();
 
-    if (!trimmedValue || disabled) {
+    if (!trimmedValue || disabled || sendDisabled) {
       return;
     }
 
@@ -92,7 +93,7 @@ export function MessageComposer({ disabled, onSend }: MessageComposerProps) {
         <button
           aria-label={t('composer.send')}
           className="rounded-full bg-slate-200 p-2 text-slate-500 transition hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={disabled}
+          disabled={disabled || sendDisabled}
           onClick={handleSend}
           type="button"
         >

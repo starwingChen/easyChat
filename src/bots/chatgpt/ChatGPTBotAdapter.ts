@@ -1,7 +1,15 @@
-import type { BotDefinition, BotModel, BotResponse, SendMessageInput } from '../../types/bot';
+import { createAppTranslator } from '../../i18n';
+import {
+  BotUserFacingError,
+  type BotDefinition,
+  type BotModel,
+  type BotResponse,
+  type SendMessageInput,
+} from '../../types/bot';
 import { BaseBotAdapter } from '../BaseBotAdapter';
 import { chatgptDefinition } from '../definitions';
 import { createChatGPTClient } from './chatgptClient';
+import { isChatGPTAuthRequiredError } from './chatgptErrors';
 import type { ChatGPTClient, ChatGPTConversationState } from './types';
 
 interface ChatGPTBotAdapterOptions {
@@ -50,14 +58,15 @@ export class ChatGPTBotAdapter extends BaseBotAdapter {
   }
 
   async sendMessage(input: SendMessageInput): Promise<BotResponse> {
-    if (!this.accessToken) {
-      this.accessToken = await this.client.getAccessToken();
-    }
-
+    const t = createAppTranslator(input.locale);
     const revision = this.conversationRevision;
     const activeState = { ...this.conversationState };
 
     try {
+      if (!this.accessToken) {
+        this.accessToken = await this.client.getAccessToken();
+      }
+
       const requirements = await this.client.getChatRequirements(this.accessToken);
       const result = await this.client.sendConversationMessage({
         accessToken: this.accessToken,
@@ -86,8 +95,12 @@ export class ChatGPTBotAdapter extends BaseBotAdapter {
         status: 'done',
       };
     } catch (error) {
-      if (isAuthenticationError(error)) {
+      if (isAuthenticationError(error) || isChatGPTAuthRequiredError(error)) {
         this.accessToken = undefined;
+      }
+
+      if (isChatGPTAuthRequiredError(error)) {
+        throw new BotUserFacingError(t('bot.error.chatgpt.authRequired'));
       }
 
       throw error;

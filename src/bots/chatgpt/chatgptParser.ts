@@ -3,6 +3,7 @@ import type {
   ChatGPTProofOfWork,
   ChatGPTRequirements,
 } from './types';
+import { ChatGPTAuthRequiredError } from './chatgptErrors';
 
 const CITATION_PATTERN = /[\ue200-\ue299](cite|entity|turn\d+|search\d+|news\d+)*/gi;
 
@@ -66,13 +67,13 @@ function parseEventDataChunks(streamText: string): string[] {
 
 export function parseChatGPTSession(payload: unknown): string {
   if (!payload || typeof payload !== 'object') {
-    throw new Error('Please login to ChatGPT before sending messages.');
+    throw new ChatGPTAuthRequiredError();
   }
 
   const { accessToken } = payload as { accessToken?: unknown };
 
   if (typeof accessToken !== 'string' || !accessToken) {
-    throw new Error('Please login to ChatGPT before sending messages.');
+    throw new ChatGPTAuthRequiredError();
   }
 
   return accessToken;

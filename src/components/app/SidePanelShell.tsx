@@ -73,7 +73,9 @@ export function SidePanelShell() {
           onSaveApiConfig={saveApiConfig}
           visibleBotIds={visibleBotIds}
         />
-        {!isReadonly ? <MessageComposer disabled={isComposerDisabled} onSend={sendMessage} /> : null}
+        {!isReadonly ? (
+          <MessageComposer disabled={false} sendDisabled={isComposerDisabled} onSend={sendMessage} />
+        ) : null}
       </div>
     </div>
   );

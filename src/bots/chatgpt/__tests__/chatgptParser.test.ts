@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { ChatGPTAuthRequiredError } from '../chatgptErrors';
 import {
   parseChatGPTConversationStream,
   parseChatGPTRequirements,
@@ -12,7 +13,7 @@ describe('chatgptParser', () => {
   });
 
   it('throws when the ChatGPT session response has no access token', () => {
-    expect(() => parseChatGPTSession({})).toThrow(/login to chatgpt/i);
+    expect(() => parseChatGPTSession({})).toThrow(ChatGPTAuthRequiredError);
   });
 
   it('returns chat requirements and preserves proof-of-work data', () => {

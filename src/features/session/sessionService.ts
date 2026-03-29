@@ -89,7 +89,7 @@ export function createInitialSession(
   locale: Locale,
   createdAt: string,
   layout: ChatSession['layout'] = '2v',
-  activeBotIds = ['chatgpt', 'gemini', 'perplexity', 'deepseek-api'],
+  activeBotIds = ['chatgpt', 'gemini', 'perplexity', 'copilot'],
 ): ChatSession {
   const sessionId = 'session-active';
   const selectedModels = buildSelectedModels(registry);
