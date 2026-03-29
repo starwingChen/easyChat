@@ -118,7 +118,7 @@ Fixtures must:
 - express scenario meaning for that domain
 - stay local unless they are truly generic
 
-Runtime seed/config files such as `src/mock/mock.js` must not be used as the main source of unit-test fixture data.
+Runtime configuration modules such as `src/bots/definitions/*` must not be used as the main source of unit-test fixture data.
 
 ### 6. Each test must protect a single clear contract
 
@@ -206,7 +206,7 @@ If the answer to question 1 is “no”, or the answer to question 7 is “no”
 
 ## Repository-specific Guardrails
 
-- Do not import `src/mock/mock.js` into new unit tests unless the test is explicitly about validating that runtime configuration module itself.
+- Do not import `src/bots/definitions/*` into new unit tests unless the test is explicitly about validating runtime bot-definition contracts.
 - Do not let large context/provider tests become the main protection for reducer or selector behavior.
 - Do not add style-detail assertions to compensate for missing behavior tests.
 - Do not keep broad component tests once equivalent lower-level tests exist.

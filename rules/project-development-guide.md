@@ -1,6 +1,6 @@
 # EasyChat 项目开发指导
 
-Date: 2026-03-28
+Date: 2026-03-29
 
 本文件面向后续 agent 和工程师，用于在不重新通读整个仓库的前提下，快速理解 EasyChat 的产品边界、当前实现、代码落点和开发规范。
 
@@ -33,8 +33,9 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 
 ### 1.3 当前项目相对原始设计的关键演进
 
-- 原设计以 mock 为主；当前实现已经接入 `ChatGPT` 和 `Gemini` 的 Web 会话适配器
-- `mock.js` 仍然是其他机器人定义、回复模板、历史快照的重要数据源
+- 当前运行时已接入 6 个 bot：`chatgpt`、`gemini`、`perplexity`、`copilot`、`deepseek-api`、`qwen-api`
+- 默认新会话使用 `['chatgpt', 'gemini', 'perplexity', 'deepseek-api']` 作为 `activeBotIds`，默认布局是 `2v`
+- 运行时 bot 元数据已经统一收敛到 `src/bots/definitions/*`
 - 当前新会话默认不注入欢迎语，`createInitialSession()` 返回空消息列表
 - API 模式机器人已经形成真实调用链路、配置持久化与本地会话上下文持久化
 - `deepseek-api` 与 `qwen-api` 已统一抽象到共享的 OpenAI-compatible API bot 基座
@@ -45,9 +46,13 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - React 19
 - TypeScript
 - Vite
-- Tailwind CSS + SCSS
+- Tailwind CSS v4 + SCSS
+- `react-intl`
 - `react-resizable-panels`
 - `ofetch`
+- `openai`
+- `lucide-react`
+- `js-sha3`
 - Vitest + React Testing Library
 
 关键入口：
@@ -66,10 +71,11 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - `src/store`: 全局状态、reducer、selector、Provider
 - `src/features`: 领域服务逻辑，优先放纯函数和状态转换规则
 - `src/bots`: 机器人 adapter、client、parser、registry
-- `src/mock`: mock 机器人定义、模板回复、历史快照
+- `src/bots/definitions`: runtime bot 元数据与默认模型定义
 - `src/i18n`: 中英文词典和翻译函数
 - `src/types`: 领域类型
-- `test/factories`: 测试工厂
+- `src/test`: 测试公共 setup 与 render helper
+- `public`: Manifest、静态资源、declarativeNetRequest 规则
 - `rules`: 仓库规则文档
 
 ### 3.2 修改应该落在哪一层
@@ -101,7 +107,8 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - `currentView.mode === 'active'` 时主区域读取 `activeSession`
 - `currentView.mode === 'history'` 时主区域读取选中的 `SessionSnapshot`
 - Provider 启动时会从 `chrome.storage.local` 或 `localStorage` hydrate
-- 状态变化后会自动持久化，包括 bot adapter 的持久状态
+- hydrate 时会过滤掉 `sourceSessionId` 以 `session-previous-` 开头的旧快照；若持久化的 `currentView` 指向不存在的历史快照，会回退到 active view
+- 状态变化后会自动持久化，包括 `botStates` 与 `sidebar.isOpen`
 
 ### 4.2 视图与布局不变量
 
@@ -115,9 +122,10 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - 用户消息只创建一条，但携带 `targetBotIds`
 - 每个可见 bot 会先生成一条 `assistant/loading` 占位消息
 - 各 bot 回复是并发独立解析和替换的，单个 bot 失败不能中断整次广播
+- 每个 bot 回复最多重试 `BOT_REPLY_RETRY_LIMIT = 3` 次；重试进度会直接写回对应 loading message
 - 若 bot 返回带 `action://open-api-config` 的可操作错误文案，消息面板必须透传该文案，不要降级成通用“回复失败”
-- 历史快照中不保留 `loading` 消息
-- 历史视图必须只读，因此不能发送消息、切换 bot、切换模型
+- 历史快照只保留用户消息和 `assistant/done` 消息；`loading / error / cancelled` assistant 消息不会进入快照
+- 历史视图必须只读，因此不能发送消息、切换 bot、打开 API 配置；布局切换也会被禁用
 
 ### 4.4 新建会话不变量
 
@@ -138,6 +146,9 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
   - `getPersistedState()`
   - `restorePersistedState()`
   - `resetConversation()`
+- 需要 API 配置的 adapter，必须实现：
+  - `getApiConfig()`
+  - `setApiConfig()`
 
 ## 5. 当前机器人实现现实
 
@@ -149,14 +160,14 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - `DeepSeekApiBotAdapter`
 - `QwenApiBotAdapter`
 - `GeminiBotAdapter`
-- 基于 `mockBotDefinitions` 动态生成的其他 `MockBotAdapter`
+- `PerplexityBotAdapter`
+- `CopilotBotAdapter`
 
 注意：
 
-- `gemini` adapter 自己定义了 `BotDefinition`，不来自 `mock.js`
-- `chatgpt` definition 仍来自 `mock.js`
-- `deepseek-api` 与 `qwen-api` 是显式注册的 API adapter，不再走 mock adapter
-- mock adapter 只负责模板回复，不维护真实远端上下文
+- 注册顺序本身有意义：`ensureBotsForLayout()` 补 bot 时按 `chatgpt -> deepseek-api -> qwen-api -> gemini -> perplexity -> copilot` 顺序补齐
+- 所有 runtime bot 的 `BotDefinition` 都来自 `src/bots/definitions/*`
+- adapter 负责协议、上下文状态和 provider 行为，不再承载 bot 元数据来源分发
 
 ### 5.2 ChatGPT 约束
 
@@ -186,7 +197,33 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - `src/bots/gemini/geminiParser.ts`
 - `src/bots/gemini/GeminiBotAdapter.ts`
 
-### 5.4 OpenAI-compatible API Bot 约束
+### 5.4 Perplexity 约束
+
+- 通过 `https://www.perplexity.ai/rest/sse/perplexity_ask` 发请求
+- adapter 会维护并持久化 `lastBackendUuid`，作为后续追问上下文
+- 运行时只暴露单模型 `pplx-pro`
+
+相关文件：
+
+- `src/bots/definitions/perplexity.ts`
+- `src/bots/perplexity/perplexityClient.ts`
+- `src/bots/perplexity/perplexityParser.ts`
+- `src/bots/perplexity/PerplexityBotAdapter.ts`
+
+### 5.5 Copilot 约束
+
+- 先通过 `https://copilot.microsoft.com/c/api/conversations` 创建会话
+- 再通过 `wss://copilot.microsoft.com/c/api/chat` 走 websocket 收流式回复
+- adapter 会维护并持久化 `conversationId`
+- 运行时只暴露单模型 `copilot-smart`
+- 当前实现依赖 `public/rules/copilot-websocket-headers.json` 的 declarativeNetRequest 规则改写 websocket 头
+
+相关文件：
+
+- `src/bots/copilot/copilotClient.ts`
+- `src/bots/copilot/CopilotBotAdapter.ts`
+
+### 5.6 OpenAI-compatible API Bot 约束
 
 - 共享基座位于 `src/bots/openAiCompatibleApi/*`
 - 共享 client 负责：
@@ -198,13 +235,15 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
   - 本地 conversation messages 累积
   - `getPersistedState()` / `restorePersistedState()` 持久化
   - provider 级 i18n 错误映射
+- API bot 的真实请求模型来自已保存配置里的 `modelName`，不是 `activeSession.selectedModels[botId]`
 - provider 专属 adapter 只应保留：
   - `BotDefinition`
   - `baseURL`
   - provider 自己的 i18n message ids
 - 当前 `deepseek-api` 与 `qwen-api` 都必须沿用这套基座，不要再各自复制一套 OpenAI SDK client / state / error mapping
+- `deepseek-api` 的 host permission 已在 manifest 中声明；`qwen-api` 的 `dashscope.aliyuncs.com` 当前代码已接入，但 manifest 还没有对应 host permission，若要确保扩展内真实可用，改动时必须一并补齐
 
-### 5.5 新增机器人时必须遵守
+### 5.7 新增机器人时必须遵守
 
 1. 先决定是 `session` 还是 `api` 模式
 2. 新建 adapter class，继承 `BaseBotAdapter`
@@ -219,7 +258,7 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 
 ### 6.1 页面骨架
 
-`SidePanelShell` 负责拼装三大区域：
+`SidePanelShell` 负责拼装四块区域：
 
 - `SessionSidebar`
 - `WorkspaceHeader`
@@ -230,18 +269,21 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 
 - `ChatWorkspace`: 按 `panelPresets` 递归渲染布局树
 - `ChatPanel`: 单 bot 面板，负责拼 header 和消息列表
-- `ChatPanelHeader`: bot/model 选择及 API 配置弹窗入口
+- `ChatPanelHeader`: bot 选择与 API 配置弹窗入口；当前没有 session bot 的模型下拉 UI
 - `MessageList` / `MessageBubble`: 面向单 bot 的消息展示
-- `RichTextMessage`: markdown 渲染
-- `SessionSidebar`: 当前会话、历史快照、语言切换
+- `RichTextMessage`: markdown 渲染，同时拦截 `action://open-api-config`
+- `SessionSidebar`: 当前会话、历史快照、语言切换、新建会话、侧边栏折叠
+- `WorkspaceHeader`: 标题、只读提示、布局切换
+- `MessageComposer`: 输入框自动增高，`Enter` 发送，`Shift+Enter` 换行
 - `LayoutSwitcher`: 五种布局切换
 
 ### 6.3 UI 改动规则
 
 - 业务约束优先抽到 `features` 或 `store`，不要让组件承担状态推导
-- `ChatPanel` 只展示“当前 bot 相关消息”，过滤逻辑已在组件内封装
+- `ChatPanel` 只展示“当前 bot 相关消息”，过滤逻辑已在组件内封装；它依赖 `targetBotIds` 与 `botId` 做消息筛选
 - 只读能力必须由上层显式传入，不能靠组件内部猜测
 - 修改 markdown 展示时，优先改 `RichTextMessage`，不要在各气泡组件里重复处理
+- API 配置弹窗逻辑优先收敛在 `ChatPanelHeader`，不要把配置表单散落到其他组件
 
 ## 7. 扩展与 Chrome 约束
 
@@ -250,7 +292,8 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 `src/entry/background/service-worker.ts` 负责：
 
 - 安装后配置 action 点击打开 side panel
-- 跟踪每个窗口 side panel 是否已打开
+- 跟踪每个窗口 side panel 是否已打开，并把窗口 id 集合持久化到 `chrome.storage.session`
+- 窗口焦点切换时从 `chrome.storage.session` 重新同步打开状态
 - 处理快捷键开关 side panel
 
 后续改动时：
@@ -265,11 +308,15 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - `sidePanel`
 - `storage`
 - `tabs`
-- `host_permissions` for `chatgpt.com` and `gemini.google.com`
+- `declarativeNetRequest`
+- `cookies`
+- `host_permissions` for `chatgpt.com`、`gemini.google.com`、`copilot.microsoft.com`、`wss://copilot.microsoft.com`、`api.deepseek.com`、`www.perplexity.ai`
+- `public/rules/copilot-websocket-headers.json` 作为 Copilot websocket 头改写规则
 
 如果新增真实 Web 机器人或跨域请求：
 
 - 同步检查 `public/manifest.json` 的 `host_permissions`
+- 如涉及 websocket 或特殊请求头，连同 `declarative_net_request` 规则一起评估
 - 不要只改客户端代码却漏掉扩展权限
 
 ## 8. 测试与验证规则
@@ -294,7 +341,8 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 
 ### 8.3 仓库内已有测试习惯
 
-- 使用 `test/factories/*` 构造最小有效数据
+- 共享测试 helper 在 `src/test/*`，当前没有统一的 `test/factories/*` 目录
+- 局部 fixture 直接放在对应测试旁边，例如 `src/store/__tests__/fixtures/*`
 - 组件测试只覆盖真实交互契约
 - 站点协议解析逻辑使用窄而明确的单元测试保护
 - service worker 通过 stub `chrome` 全局对象测试

@@ -1,22 +1,12 @@
-import { mockBotDefinitions } from '../../mock/mock.js';
 import type { BotDefinition } from '../../types/bot';
+import { deepseekApiDefinition } from '../definitions';
 import {
   OpenAiCompatibleApiBotAdapter,
   type OpenAiCompatibleApiBotAdapterOptions,
 } from '../openAiCompatibleApi/OpenAiCompatibleApiBotAdapter';
 
-function getDeepSeekApiDefinition(): BotDefinition {
-  const definition = mockBotDefinitions.find((candidate) => candidate.id === 'deepseek-api');
-
-  if (!definition) {
-    throw new Error('Missing DeepSeek - API bot definition.');
-  }
-
-  return definition;
-}
-
 export class DeepSeekApiBotAdapter extends OpenAiCompatibleApiBotAdapter {
-  readonly definition: BotDefinition = getDeepSeekApiDefinition();
+  readonly definition: BotDefinition = deepseekApiDefinition;
 
   protected readonly provider = {
     definition: this.definition,

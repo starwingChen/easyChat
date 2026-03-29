@@ -1,22 +1,12 @@
-import { mockBotDefinitions } from '../../mock/mock.js';
 import type { BotDefinition } from '../../types/bot';
+import { qwenApiDefinition } from '../definitions';
 import {
   OpenAiCompatibleApiBotAdapter,
   type OpenAiCompatibleApiBotAdapterOptions,
 } from '../openAiCompatibleApi/OpenAiCompatibleApiBotAdapter';
 
-function getQwenApiDefinition(): BotDefinition {
-  const definition = mockBotDefinitions.find((candidate) => candidate.id === 'qwen-api');
-
-  if (!definition) {
-    throw new Error('Missing Qwen - API bot definition.');
-  }
-
-  return definition;
-}
-
 export class QwenApiBotAdapter extends OpenAiCompatibleApiBotAdapter {
-  readonly definition: BotDefinition = getQwenApiDefinition();
+  readonly definition: BotDefinition = qwenApiDefinition;
 
   protected readonly provider = {
     definition: this.definition,

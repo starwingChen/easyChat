@@ -1,18 +1,8 @@
 import type { BotDefinition, BotModel, BotResponse, SendMessageInput } from '../../types/bot';
 import { BaseBotAdapter } from '../BaseBotAdapter';
+import { copilotDefinition } from '../definitions';
 import { createCopilotClient } from './copilotClient';
 import type { CopilotClient, CopilotConversationState } from './types';
-
-const copilotDefinition: BotDefinition = {
-  id: 'copilot',
-  name: 'Copilot',
-  brand: 'Microsoft',
-  themeColor: '#2563eb',
-  accessMode: 'session',
-  defaultModel: 'copilot-smart',
-  capabilities: ['general', 'implementation'],
-  models: [{ id: 'copilot-smart', label: 'Copilot Smart', isDefault: true }],
-};
 
 interface CopilotBotAdapterOptions {
   client?: CopilotClient;

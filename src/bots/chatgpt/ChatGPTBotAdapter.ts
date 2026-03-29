@@ -1,22 +1,12 @@
-import { mockBotDefinitions } from '../../mock/mock.js';
 import type { BotDefinition, BotModel, BotResponse, SendMessageInput } from '../../types/bot';
 import { BaseBotAdapter } from '../BaseBotAdapter';
+import { chatgptDefinition } from '../definitions';
 import { createChatGPTClient } from './chatgptClient';
 import type { ChatGPTClient, ChatGPTConversationState } from './types';
 
 interface ChatGPTBotAdapterOptions {
   client?: ChatGPTClient;
   now?: () => string;
-}
-
-function getChatGPTDefinition(): BotDefinition {
-  const definition = mockBotDefinitions.find((candidate) => candidate.id === 'chatgpt');
-
-  if (!definition) {
-    throw new Error('Missing ChatGPT bot definition.');
-  }
-
-  return definition;
 }
 
 function isChatGPTConversationState(value: unknown): value is ChatGPTConversationState {
@@ -37,7 +27,7 @@ function isAuthenticationError(error: unknown): boolean {
 }
 
 export class ChatGPTBotAdapter extends BaseBotAdapter {
-  readonly definition: BotDefinition = getChatGPTDefinition();
+  readonly definition: BotDefinition = chatgptDefinition;
 
   private readonly client: ChatGPTClient;
 

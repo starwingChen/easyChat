@@ -1,18 +1,8 @@
 import type { BotDefinition, BotModel, BotResponse, SendMessageInput } from '../../types/bot';
 import { BaseBotAdapter } from '../BaseBotAdapter';
+import { perplexityDefinition } from '../definitions';
 import { createPerplexityClient } from './perplexityClient';
 import type { PerplexityClient, PerplexityConversationState } from './types';
-
-const perplexityDefinition: BotDefinition = {
-  id: 'perplexity',
-  name: 'Perplexity',
-  brand: 'Perplexity',
-  themeColor: '#20808d',
-  accessMode: 'session',
-  defaultModel: 'pplx-pro',
-  capabilities: ['research'],
-  models: [{ id: 'pplx-pro', label: 'Perplexity Pro', isDefault: true }],
-};
 
 interface PerplexityBotAdapterOptions {
   client?: PerplexityClient;

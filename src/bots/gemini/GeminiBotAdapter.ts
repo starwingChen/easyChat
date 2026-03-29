@@ -1,22 +1,9 @@
 import type { BotDefinition, BotModel, BotResponse, SendMessageInput } from '../../types/bot';
 import { BaseBotAdapter } from '../BaseBotAdapter';
+import { geminiDefinition } from '../definitions';
 import { EMPTY_CONTEXT_IDS } from './constants';
 import { createGeminiClient } from './geminiClient';
 import type { GeminiClient, GeminiConversationContext } from './types';
-
-const geminiDefinition: BotDefinition = {
-  id: 'gemini',
-  name: 'Gemini',
-  brand: 'Google',
-  themeColor: '#3b82f6',
-  accessMode: 'session',
-  defaultModel: 'gemini-1.5-pro',
-  capabilities: ['multimodal', 'research'],
-  models: [
-    { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', isDefault: true },
-    { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
-  ],
-};
 
 interface GeminiBotAdapterOptions {
   client?: GeminiClient;
