@@ -95,7 +95,7 @@ describe('ChatPanel', () => {
       defaultModel: 'deepseek-chat',
       apiConfig: {
         apiKeyLabel: 'API Key',
-        modelNameLabel: 'Runtime Model',
+        modelNameLabel: 'Model',
       },
       capabilities: [],
       models: [
@@ -138,10 +138,10 @@ describe('ChatPanel', () => {
 
     expect(screen.getByText('API Configuration')).toBeInTheDocument();
     expect(screen.getByLabelText('API Key')).toHaveValue('sk-demo');
-    expect(screen.getByLabelText('Runtime Model')).toHaveValue('deepseek-chat');
+    expect(screen.getByLabelText('Model')).toHaveValue('deepseek-chat');
 
-    await user.clear(screen.getByLabelText('Runtime Model'));
-    await user.type(screen.getByLabelText('Runtime Model'), 'deepseek-reasoner');
+    await user.clear(screen.getByLabelText('Model'));
+    await user.type(screen.getByLabelText('Model'), 'deepseek-reasoner');
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(onSaveApiConfig).toHaveBeenCalledWith({

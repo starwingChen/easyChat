@@ -37,7 +37,7 @@ const enUSMessages = {
   'layout.4': 'Grid',
   'config.title': 'API Configuration',
   'config.apiKey': 'API Key',
-  'config.modelName': 'Runtime Model',
+  'config.modelName': 'Model',
   'config.unset': 'Unset',
   'config.cancel': 'Cancel',
   'config.save': 'Save',

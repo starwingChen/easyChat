@@ -8,7 +8,7 @@ export const deepseekApiDefinition: BotDefinition = {
   accessMode: 'api',
   apiConfig: {
     apiKeyLabel: 'API Key',
-    modelNameLabel: 'Runtime Model',
+    modelNameLabel: 'Model',
   },
   defaultModel: 'deepseek-chat',
   capabilities: ['api', 'reasoning'],
