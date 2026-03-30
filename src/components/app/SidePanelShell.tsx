@@ -1,9 +1,10 @@
-import { Bot, PanelLeftOpen, Settings2 } from 'lucide-react';
+import { Clock3, MessageSquare, PanelLeftOpen, Plus, Settings2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { useI18n } from '../../i18n';
 import { selectDisabledHistoryLayouts } from '../../store/selectors';
 import { useAppState } from '../../store/AppStateContext';
+import { CollapsedSidebarItem } from '../sidebar/CollapsedSidebarItem';
 import { SessionSidebar } from '../sidebar/SessionSidebar';
 import { SidebarSettingsDialog } from '../sidebar/SidebarSettingsDialog';
 import { ChatWorkspace } from '../chat/ChatWorkspace';
@@ -34,6 +35,7 @@ export function SidePanelShell() {
   } = useAppState();
   const { t } = useI18n();
   const disabledHistoryLayouts = selectDisabledHistoryLayouts(state);
+  const collapsedHistorySnapshots = state.historySnapshots.slice(0, 10);
   const currentViewBotOptions =
     state.currentView.mode === 'history'
       ? (() => {
@@ -63,29 +65,44 @@ export function SidePanelShell() {
         />
       ) : (
         <>
-          <aside className="flex w-14 shrink-0 flex-col items-center border-r border-slate-200 bg-slate-50/80 py-4">
-            <button
-              aria-label={t('sidebar.expand')}
-              className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-200 hover:text-slate-900"
-              onClick={toggleSidebar}
-              type="button"
-            >
-              <PanelLeftOpen className="h-4 w-4" />
-            </button>
-            <Bot className="mt-4 h-5 w-5 text-blue-500" />
+          <aside className="flex w-14 shrink-0 flex-col overflow-x-hidden border-r border-slate-200 bg-slate-50/80 py-4">
+            <div className="flex min-h-0 flex-1 flex-col px-2">
+              <div className="flex flex-col items-center gap-2">
+                <CollapsedSidebarItem icon={PanelLeftOpen} label={t('sidebar.expand')} onClick={toggleSidebar} />
+                <div className="h-px w-full bg-slate-200" data-testid="collapsed-sidebar-section-divider" />
+                <CollapsedSidebarItem icon={Plus} label={t('sidebar.newSession')} onClick={createNewSession} />
+                <div className="h-px w-full bg-slate-200" data-testid="collapsed-sidebar-section-divider" />
+                <CollapsedSidebarItem
+                  icon={MessageSquare}
+                  isActive={state.currentView.mode === 'active'}
+                  label={t('sidebar.activeSession')}
+                  onClick={() => selectView({ mode: 'active', sessionId: 'session-active' })}
+                />
+                <div className="h-px w-full bg-slate-200" data-testid="collapsed-sidebar-section-divider" />
+              </div>
+              <div className="mt-2 flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto overflow-x-hidden pb-3">
+                {collapsedHistorySnapshots.map((snapshot) => (
+                  <CollapsedSidebarItem
+                    icon={Clock3}
+                    isActive={state.currentView.mode === 'history' && state.currentView.sessionId === snapshot.id}
+                    key={snapshot.id}
+                    label={snapshot.title}
+                    onClick={() => selectView({ mode: 'history', sessionId: snapshot.id })}
+                    title={snapshot.title}
+                  />
+                ))}
+              </div>
+            </div>
             <div className="mt-auto flex w-full flex-col items-center px-2">
               <div
                 className="mb-3 h-px w-full bg-slate-200"
                 data-testid="collapsed-sidebar-settings-divider"
               />
-              <button
-                aria-label={t('sidebar.settings.open')}
-                className="rounded-2xl p-2 text-slate-500 transition hover:bg-slate-200 hover:text-slate-900"
+              <CollapsedSidebarItem
+                icon={Settings2}
+                label={t('sidebar.settings.open')}
                 onClick={() => setIsCollapsedSettingsOpen(true)}
-                type="button"
-              >
-                <Settings2 className="h-4 w-4" />
-              </button>
+              />
             </div>
           </aside>
           <SidebarSettingsDialog
