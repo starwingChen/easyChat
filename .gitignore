@@ -11,3 +11,4 @@ mydoc
 docs
 .worktrees/
 package-lock.json
+.rules/custom.md
