@@ -26,7 +26,8 @@ export function ensureBotsForLayout({
   allBotIds,
 }: EnsureBotsInput): string[] {
   const desiredCount = getBotCountForLayout(layout);
-  const uniqueActive = Array.from(new Set(activeBotIds));
+  const allowedBotIds = new Set(allBotIds);
+  const uniqueActive = Array.from(new Set(activeBotIds)).filter((botId) => allowedBotIds.has(botId));
   const nextBotIds = [...uniqueActive];
 
   for (const botId of allBotIds) {

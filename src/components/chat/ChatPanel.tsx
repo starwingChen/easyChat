@@ -7,6 +7,7 @@ import { MessageList } from './MessageList';
 
 interface ChatPanelProps {
   allBotDefinitions: BotDefinition[];
+  availableBotIds: string[];
   botDefinition: BotDefinition;
   configuredModelName: string | null;
   initialApiConfig: ApiBotConfigValue | null;
@@ -31,6 +32,7 @@ function filterMessagesForBot(messages: ChatMessage[], botId: string): ChatMessa
 
 export function ChatPanel({
   allBotDefinitions,
+  availableBotIds,
   botDefinition,
   configuredModelName,
   initialApiConfig,
@@ -63,6 +65,7 @@ export function ChatPanel({
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <ChatPanelHeader
         allBotDefinitions={allBotDefinitions}
+        availableBotIds={availableBotIds}
         botDefinition={botDefinition}
         botsInConversation={botsInConversation}
         configuredModelName={configuredModelName}

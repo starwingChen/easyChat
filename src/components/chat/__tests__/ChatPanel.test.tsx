@@ -6,7 +6,9 @@ import { renderWithI18n } from '../../../test/renderWithI18n';
 import { ChatPanel } from '../ChatPanel';
 
 describe('ChatPanel', () => {
-  it('renders only messages relevant to the panel bot and hides selectors in readonly mode', () => {
+  it('renders only messages relevant to the panel bot, keeps bot switching in readonly mode, and hides config actions', async () => {
+    const user = userEvent.setup();
+
     renderWithI18n(
       <ChatPanel
         allBotDefinitions={[
@@ -23,7 +25,18 @@ describe('ChatPanel', () => {
               { id: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
             ],
           },
+          {
+            id: 'gemini',
+            name: 'Gemini',
+            brand: 'Google',
+            themeColor: '#3b82f6',
+            accessMode: 'session',
+            defaultModel: 'gemini-1.5-pro',
+            capabilities: [],
+            models: [{ id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', isDefault: true }],
+          },
         ]}
+        availableBotIds={['chatgpt', 'gemini']}
         botDefinition={{
           id: 'chatgpt',
           name: 'ChatGPT',
@@ -80,7 +93,9 @@ describe('ChatPanel', () => {
     expect(screen.getByText('ChatGPT', { selector: 'strong' })).toBeInTheDocument();
     expect(screen.getByText('Hi back')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Gemini' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /select bot/i })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /select bot/i }));
+    expect(screen.getByRole('button', { name: /gemini/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /configure/i })).not.toBeInTheDocument();
   });
 
   it('opens the api config modal when an assistant message emits the open-api-config action', async () => {
@@ -107,6 +122,7 @@ describe('ChatPanel', () => {
     renderWithI18n(
       <ChatPanel
         allBotDefinitions={[deepseekApiBot]}
+        availableBotIds={['deepseek-api']}
         botDefinition={deepseekApiBot}
         configuredModelName="Unset"
         initialApiConfig={{
@@ -176,6 +192,7 @@ describe('ChatPanel', () => {
     renderWithI18n(
       <ChatPanel
         allBotDefinitions={[chatgptBot, geminiBot]}
+        availableBotIds={['chatgpt', 'gemini']}
         botDefinition={chatgptBot}
         configuredModelName={null}
         initialApiConfig={null}

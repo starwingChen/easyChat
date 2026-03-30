@@ -41,13 +41,20 @@ const icons: Record<LayoutType, ReactElement> = {
 interface LayoutSwitcherProps {
   currentLayout: LayoutType;
   disabled?: boolean;
+  disabledLayouts?: LayoutType[];
   onChange: (layout: LayoutType) => void;
 }
 
 const layoutOrder: LayoutType[] = ['1', '2v', '2h', '3', '4'];
 
-export function LayoutSwitcher({ currentLayout, disabled = false, onChange }: LayoutSwitcherProps) {
+export function LayoutSwitcher({
+  currentLayout,
+  disabled = false,
+  disabledLayouts = [],
+  onChange,
+}: LayoutSwitcherProps) {
   const { t } = useI18n();
+  const disabledLayoutSet = new Set(disabledLayouts);
 
   return (
     <div className="flex items-center gap-1 rounded-xl bg-slate-50 p-1">
@@ -58,7 +65,7 @@ export function LayoutSwitcher({ currentLayout, disabled = false, onChange }: La
           className={`rounded-lg p-2 transition ${
             currentLayout === layout ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:bg-white'
           } disabled:cursor-not-allowed disabled:opacity-50`}
-          disabled={disabled}
+          disabled={disabled || disabledLayoutSet.has(layout)}
           key={layout}
           onClick={() => onChange(layout)}
           type="button"

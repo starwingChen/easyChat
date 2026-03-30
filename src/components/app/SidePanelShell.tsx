@@ -1,6 +1,7 @@
 import { Bot, PanelLeftOpen } from 'lucide-react';
 
 import { useI18n } from '../../i18n';
+import { selectDisabledHistoryLayouts } from '../../store/selectors';
 import { useAppState } from '../../store/AppStateContext';
 import { SessionSidebar } from '../sidebar/SessionSidebar';
 import { ChatWorkspace } from '../chat/ChatWorkspace';
@@ -29,6 +30,21 @@ export function SidePanelShell() {
     toggleLocale,
   } = useAppState();
   const { t } = useI18n();
+  const disabledHistoryLayouts = selectDisabledHistoryLayouts(state);
+  const currentViewBotOptions =
+    state.currentView.mode === 'history'
+      ? (() => {
+          const repliedBotIds = Array.from(
+            new Set(
+              currentSession.messages
+                .filter((message) => message.role === 'assistant' && message.status === 'done' && message.botId)
+                .map((message) => message.botId as string),
+            ),
+          );
+
+          return repliedBotIds.length > 0 ? repliedBotIds : currentSession.activeBotIds;
+        })()
+      : registry.getAllBots().map((bot) => bot.definition.id);
 
   return (
     <div className="flex h-screen overflow-hidden bg-white text-slate-900">
@@ -58,6 +74,8 @@ export function SidePanelShell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <WorkspaceHeader
           currentLayout={currentSession.layout}
+          disableLayoutChange={false}
+          disabledLayouts={disabledHistoryLayouts}
           isReadonly={isReadonly}
           onChangeLayout={setLayout}
           title={state.currentView.mode === 'active' ? t('workspace.title.active') : currentSession.title}
@@ -71,6 +89,7 @@ export function SidePanelShell() {
           onRetryFailed={retryReply}
           onModelChange={setModel}
           onSaveApiConfig={saveApiConfig}
+          availableBotIds={currentViewBotOptions}
           visibleBotIds={visibleBotIds}
         />
         {!isReadonly ? (

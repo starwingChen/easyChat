@@ -11,7 +11,7 @@ import { createBotRegistry } from '../bots/botRegistry';
 import { createAppTranslator, resolveLocale } from '../i18n';
 import type { AppState, Locale, ViewState } from '../types/app';
 import type { ApiBotConfigValue } from '../types/bot';
-import { createSnapshotFromSession, hasConversationMessages } from '../features/history/historyService';
+import { createSnapshotFromSession, hasCompletedAssistantReplies } from '../features/history/historyService';
 import {
   getPreferredLocale,
   loadPersistedPreferences,
@@ -27,6 +27,7 @@ import {
 import { appReducer } from './appReducer';
 import {
   selectCurrentSessionRecord,
+  selectCurrentViewBotOptions,
   selectHasVisibleLoadingMessages,
   selectVisibleBotIds,
 } from './selectors';
@@ -55,6 +56,7 @@ const initialState: AppState = {
   },
   activeSession: createInitialSession(registry, initialLocale, initialSessionTimestamp),
   historySnapshots: [],
+  historyViewPreferences: {},
   sidebar: {
     isOpen: true,
   },
@@ -111,6 +113,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           selectedModels: persisted.selectedModels,
           currentView,
           activeSession: persisted.activeSession,
+          historyViewPreferences: persisted.historyViewPreferences,
           sidebar: persisted.sidebar,
           allBotIds,
         },
@@ -130,12 +133,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       selectedModels: state.activeSession.selectedModels,
       currentView: state.currentView,
       activeSession: state.activeSession,
+      historyViewPreferences: state.historyViewPreferences,
       botStates: collectBotStates(),
       sidebar: state.sidebar,
     }).catch(() => undefined);
   }, [state]);
 
   const currentSession = selectCurrentSessionRecord(state);
+  const currentViewBotOptions = selectCurrentViewBotOptions(state, allBotIds);
   const hasVisibleLoadingMessages = selectHasVisibleLoadingMessages(state);
   const visibleBotIds = selectVisibleBotIds(state);
   const t = createAppTranslator(state.locale);
@@ -246,13 +251,19 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       dispatch({ type: 'set-view', payload: view });
     },
     setLayout(layout) {
-      dispatch({ type: 'set-layout', payload: { layout, allBotIds } });
+      dispatch({
+        type: 'set-layout',
+        payload: {
+          layout,
+          allBotIds: currentViewBotOptions,
+        },
+      });
     },
     toggleSidebar() {
       dispatch({ type: 'toggle-sidebar' });
     },
     replaceBot(index, botId) {
-      dispatch({ type: 'replace-active-bot', payload: { index, botId } });
+      dispatch({ type: 'replace-bot', payload: { index, botId } });
     },
     setModel(botId, modelId) {
       dispatch({ type: 'set-selected-model', payload: { botId, modelId } });
@@ -276,6 +287,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           ...state.activeSession,
           updatedAt,
         },
+        historyViewPreferences: state.historyViewPreferences,
         botStates: collectBotStates(),
         sidebar: state.sidebar,
       }).catch(() => undefined);
@@ -342,7 +354,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     createNewSession() {
       const timestamp = new Date().toISOString();
 
-      if (hasConversationMessages(state.activeSession.messages)) {
+      if (hasCompletedAssistantReplies(state.activeSession.messages)) {
         dispatch({
           type: 'push-history-snapshot',
           payload: createSnapshotFromSession(

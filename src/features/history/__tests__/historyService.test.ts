@@ -161,7 +161,7 @@ describe('historyService', () => {
 
     const snapshot = createSnapshotFromSession(session, 'snapshot-2', '2026-03-25T00:05:00.000Z');
 
-    expect(snapshot.activeBotIds).toEqual(['chatgpt', 'gemini']);
+    expect(snapshot.activeBotIds).toEqual([]);
     expect(snapshot.layout).toBe('2h');
     expect(snapshot.messages).toEqual([
       expect.objectContaining({
@@ -252,6 +252,49 @@ describe('historyService', () => {
       expect.objectContaining({ id: 'm-1', role: 'user' }),
       expect.objectContaining({ id: 'm-2', botId: 'chatgpt', status: 'done' }),
     ]);
+  });
+
+  it('does not keep bots in history when they only had loading, cancelled, or error messages', () => {
+    const session = createSession({
+      id: 'session-active',
+      title: 'Active Session',
+      layout: '4',
+      activeBotIds: ['chatgpt', 'gemini', 'perplexity', 'copilot'],
+      messages: [
+        createMessage('user', {
+          id: 'm-1',
+          sessionId: 'session-active',
+          content: 'Compare them',
+          targetBotIds: ['chatgpt', 'gemini', 'perplexity', 'copilot'],
+        }),
+        createMessage('assistant', {
+          id: 'm-2',
+          sessionId: 'session-active',
+          botId: 'chatgpt',
+          status: 'loading',
+          content: '',
+        }),
+        createMessage('assistant', {
+          id: 'm-3',
+          sessionId: 'session-active',
+          botId: 'gemini',
+          status: 'cancelled',
+          content: 'stopped',
+        }),
+        createMessage('assistant', {
+          id: 'm-4',
+          sessionId: 'session-active',
+          botId: 'perplexity',
+          status: 'error',
+          content: 'failed',
+        }),
+      ],
+    });
+
+    const snapshot = createSnapshotFromSession(session, 'snapshot-4', '2026-03-25T00:05:00.000Z');
+
+    expect(snapshot.activeBotIds).toEqual([]);
+    expect(snapshot.messages).toEqual([expect.objectContaining({ id: 'm-1', role: 'user' })]);
   });
 
   it('creates a readonly history snapshot fixture without loading messages', () => {

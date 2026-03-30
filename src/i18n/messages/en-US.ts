@@ -25,6 +25,7 @@ const enUSMessages = {
   'chat.replyFailed': 'Reply failed',
   'chat.stopReply': 'Stop reply',
   'chat.replyStopped': 'Reply stopped',
+  'chat.emptySnapshotPanel': 'No reply in this snapshot.',
   'chat.inConversation': 'In Conversation',
   'chat.inUse': 'In Use',
   'chat.api': 'API',

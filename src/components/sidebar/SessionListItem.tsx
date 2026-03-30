@@ -36,6 +36,7 @@ export function SessionListItem({
           isActive ? 'bg-blue-100 text-blue-700' : 'text-slate-600 hover:bg-slate-100'
         }`}
         onClick={onClick}
+        title={label}
         type="button"
       >
         <Icon className="h-4 w-4 shrink-0" />

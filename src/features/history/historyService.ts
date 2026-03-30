@@ -17,8 +17,26 @@ function deriveSnapshotLayout(botCount: number): LayoutType {
   return '4';
 }
 
-export function hasConversationMessages(messages: ChatMessage[]): boolean {
-  return messages.some((message) => message.role === 'user');
+export function getSnapshotRepliedBotIds(
+  snapshot: Pick<SessionSnapshot, 'messages'> | Pick<ChatSession, 'messages'>,
+): string[] {
+  return Array.from(
+    new Set(
+      snapshot.messages
+        .filter((message) => message.role === 'assistant' && message.status === 'done' && message.botId)
+        .map((message) => message.botId as string),
+    ),
+  );
+}
+
+export function hasCompletedAssistantReplies(messages: ChatMessage[]): boolean {
+  return messages.some((message) => message.role === 'assistant' && message.status === 'done');
+}
+
+export function getSnapshotBrowseableBotIds(snapshot: Pick<SessionSnapshot, 'messages' | 'activeBotIds'>): string[] {
+  const repliedBotIds = getSnapshotRepliedBotIds(snapshot);
+
+  return repliedBotIds.length > 0 ? repliedBotIds : snapshot.activeBotIds;
 }
 
 export function createSnapshotFromSession(
@@ -37,15 +55,8 @@ export function createSnapshotFromSession(
 
     return message.status === 'done';
   });
-  const repliedBotIds = Array.from(
-    new Set(
-      snapshotMessages
-        .filter((message) => message.role === 'assistant' && message.status === 'done')
-        .map((message) => message.botId)
-        .filter((botId): botId is string => Boolean(botId)),
-    ),
-  );
-  const activeBotIds = repliedBotIds.length > 0 ? repliedBotIds : session.activeBotIds;
+  const repliedBotIds = getSnapshotRepliedBotIds({ messages: snapshotMessages });
+  const activeBotIds = repliedBotIds;
   const titleSeed =
     snapshotMessages.find((message) => message.role === 'user')?.content.trim() || session.title;
   const title = titleSeed.length > 32 ? `${titleSeed.slice(0, 32)}...` : titleSeed;

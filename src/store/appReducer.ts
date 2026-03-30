@@ -1,6 +1,13 @@
+import { getSnapshotBrowseableBotIds } from '../features/history/historyService';
 import type { AppState } from '../types/app';
 import { ensureBotsForLayout, replaceBotAtIndex } from '../features/layout/layoutService';
 import type { AppAction } from './actions';
+
+function normalizeHistoryBotIds(activeBotIds: string[], availableBotIds: string[]): string[] {
+  const availableBotIdSet = new Set(availableBotIds);
+
+  return Array.from(new Set(activeBotIds)).filter((botId) => availableBotIdSet.has(botId));
+}
 
 export function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
@@ -24,6 +31,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         locale: action.payload.locale ?? state.locale,
         currentView: action.payload.currentView ?? state.currentView,
         historySnapshots: action.payload.historySnapshots ?? state.historySnapshots,
+        historyViewPreferences: action.payload.historyViewPreferences ?? state.historyViewPreferences,
         sidebar: action.payload.sidebar ?? state.sidebar,
         activeSession: {
           ...baseActiveSession,
@@ -48,6 +56,31 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         locale: action.payload,
       };
     case 'set-layout':
+      if (state.currentView.mode === 'history') {
+        const snapshot = state.historySnapshots.find((item) => item.id === state.currentView.sessionId);
+
+        if (!snapshot) {
+          return state;
+        }
+
+        const browseableBotIds = getSnapshotBrowseableBotIds(snapshot);
+        const currentPreference = state.historyViewPreferences[snapshot.id];
+
+        return {
+          ...state,
+          historyViewPreferences: {
+            ...state.historyViewPreferences,
+            [snapshot.id]: {
+              layout: action.payload.layout,
+              activeBotIds: normalizeHistoryBotIds(
+                currentPreference?.activeBotIds ?? snapshot.activeBotIds,
+                browseableBotIds,
+              ),
+            },
+          },
+        };
+      }
+
       return {
         ...state,
         activeSession: {
@@ -102,7 +135,35 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         },
       };
     }
-    case 'replace-active-bot':
+    case 'replace-bot':
+      if (state.currentView.mode === 'history') {
+        const snapshot = state.historySnapshots.find((item) => item.id === state.currentView.sessionId);
+
+        if (!snapshot) {
+          return state;
+        }
+
+        const browseableBotIds = getSnapshotBrowseableBotIds(snapshot);
+        const currentPreference = state.historyViewPreferences[snapshot.id];
+        const layout = currentPreference?.layout ?? snapshot.layout;
+        const nextActiveBotIds = replaceBotAtIndex(
+          normalizeHistoryBotIds(currentPreference?.activeBotIds ?? snapshot.activeBotIds, browseableBotIds),
+          action.payload.index,
+          action.payload.botId,
+        );
+
+        return {
+          ...state,
+          historyViewPreferences: {
+            ...state.historyViewPreferences,
+            [snapshot.id]: {
+              layout,
+              activeBotIds: normalizeHistoryBotIds(nextActiveBotIds, browseableBotIds),
+            },
+          },
+        };
+      }
+
       return {
         ...state,
         activeSession: {
@@ -151,6 +212,9 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         currentView: isDeletingCurrentHistory
           ? { mode: 'active', sessionId: state.activeSession.id }
           : state.currentView,
+        historyViewPreferences: Object.fromEntries(
+          Object.entries(state.historyViewPreferences).filter(([snapshotId]) => snapshotId !== action.payload.snapshotId),
+        ),
         historySnapshots,
       };
     }

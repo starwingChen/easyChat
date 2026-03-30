@@ -301,6 +301,12 @@ describe('AppStateContext', () => {
         'cancelled',
       );
     });
+
+    await user.click(screen.getByRole('button', { name: 'New Session' }));
+
+    await waitFor(() => {
+      expect(readProbe().historyCount).toBe(0);
+    });
   });
 
   it('updates the visible loading message when a retry is triggered', async () => {

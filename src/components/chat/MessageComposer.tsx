@@ -1,4 +1,4 @@
-import { SendHorizontal } from 'lucide-react';
+import { Ban, SendHorizontal } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { useI18n } from '../../i18n';
@@ -97,7 +97,11 @@ export function MessageComposer({ disabled, sendDisabled, onSend }: MessageCompo
           onClick={handleSend}
           type="button"
         >
-          <SendHorizontal className="h-4 w-4" />
+          {sendDisabled ? (
+            <Ban className="h-4 w-4" data-testid="composer-blocked-icon" />
+          ) : (
+            <SendHorizontal className="h-4 w-4" data-testid="composer-send-icon" />
+          )}
         </button>
       </div>
     </div>

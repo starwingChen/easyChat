@@ -7,6 +7,7 @@ import { Dropdown } from '../common/Dropdown';
 
 interface ChatPanelHeaderProps {
   allBotDefinitions: BotDefinition[];
+  availableBotIds: string[];
   botDefinition: BotDefinition;
   botsInConversation: string[];
   configuredModelName: string | null;
@@ -24,6 +25,7 @@ interface ChatPanelHeaderProps {
 
 export function ChatPanelHeader({
   allBotDefinitions,
+  availableBotIds,
   botDefinition,
   botsInConversation,
   configuredModelName,
@@ -52,8 +54,8 @@ export function ChatPanelHeader({
   }, [initialApiConfig, isConfigOpen]);
 
   const sortedBotDefinitions = [
-    ...allBotDefinitions.filter((bot) => bot.accessMode !== 'api'),
-    ...allBotDefinitions.filter((bot) => bot.accessMode === 'api'),
+    ...allBotDefinitions.filter((bot) => availableBotIds.includes(bot.id) && bot.accessMode !== 'api'),
+    ...allBotDefinitions.filter((bot) => availableBotIds.includes(bot.id) && bot.accessMode === 'api'),
   ];
   const botOptions = sortedBotDefinitions.map((bot) => ({
     value: bot.id,
@@ -84,10 +86,12 @@ export function ChatPanelHeader({
     <>
       <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/70 px-3 py-2">
         {isReadonly ? (
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-            <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: botDefinition.themeColor }} />
-            {botDefinition.name}
-          </div>
+          <Dropdown
+            ariaLabel={t('chat.selectBot')}
+            onChange={onBotChange}
+            options={botOptions}
+            value={botDefinition.id}
+          />
         ) : (
           <Dropdown
             ariaLabel={t('chat.selectBot')}

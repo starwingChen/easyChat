@@ -1,4 +1,4 @@
-import type { Locale, ViewState } from '../types/app';
+import type { HistoryViewPreference, Locale, ViewState } from '../types/app';
 import type { ChatSession, LayoutType, SessionSnapshot } from '../types/session';
 
 export type AppAction =
@@ -11,6 +11,7 @@ export type AppAction =
         selectedModels: Record<string, string>;
         currentView: ViewState;
         activeSession: ChatSession;
+        historyViewPreferences: Record<string, HistoryViewPreference>;
         sidebar: {
           isOpen: boolean;
         };
@@ -54,7 +55,7 @@ export type AppAction =
       };
     }
   | {
-      type: 'replace-active-bot';
+      type: 'replace-bot';
       payload: {
         index: number;
         botId: string;

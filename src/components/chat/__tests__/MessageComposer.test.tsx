@@ -38,6 +38,8 @@ describe('MessageComposer', () => {
 
     expect(input).toHaveValue('hello while loading');
     expect(screen.getByRole('button', { name: /send/i })).toBeDisabled();
+    expect(screen.getByTestId('composer-blocked-icon')).toBeInTheDocument();
+    expect(screen.queryByTestId('composer-send-icon')).not.toBeInTheDocument();
     expect(onSend).not.toHaveBeenCalled();
   });
 

@@ -20,4 +20,20 @@ describe('LayoutSwitcher', () => {
       'true',
     );
   });
+
+  it('disables unsupported history layouts', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+
+    renderWithI18n(
+      <LayoutSwitcher currentLayout="2v" disabledLayouts={['3', '4']} onChange={onChange} />,
+    );
+
+    expect(screen.getByRole('button', { name: /three columns/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /grid/i })).toBeDisabled();
+
+    await user.click(screen.getByRole('button', { name: /grid/i }));
+
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });

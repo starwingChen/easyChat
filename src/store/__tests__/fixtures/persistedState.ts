@@ -11,6 +11,7 @@ export const persistedActiveState: PersistedPreferences = {
     mode: 'active',
     sessionId: 'session-active',
   },
+  historyViewPreferences: {},
   activeSession: {
     id: 'session-active',
     title: 'Active Session',
@@ -77,6 +78,7 @@ export const persistedHistoryState: PersistedPreferences = {
     mode: 'history',
     sessionId: 'hist-1',
   },
+  historyViewPreferences: {},
   activeSession: {
     id: 'session-active',
     title: 'Active Session',

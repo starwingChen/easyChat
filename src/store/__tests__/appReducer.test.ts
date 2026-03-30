@@ -14,6 +14,7 @@ function createState(overrides: Partial<AppState> = {}): AppState {
     currentView: { mode: 'active', sessionId: activeSession.id },
     activeSession,
     historySnapshots: [],
+    historyViewPreferences: {},
     sidebar: { isOpen: true },
     ...overrides,
   };
@@ -38,6 +39,12 @@ describe('appReducer', () => {
         sidebar: { isOpen: false },
         currentView: { mode: 'active', sessionId: 'session-active' },
         historySnapshots: [createSnapshot({ id: 'hist-1' })],
+        historyViewPreferences: {
+          'hist-1': {
+            layout: '1',
+            activeBotIds: ['gemini'],
+          },
+        },
         activeSession: createSession({
           id: 'session-active',
           layout: '2v',
@@ -52,6 +59,12 @@ describe('appReducer', () => {
     expect(next.sidebar.isOpen).toBe(false);
     expect(next.currentView).toEqual({ mode: 'active', sessionId: 'session-active' });
     expect(next.historySnapshots.map((snapshot) => snapshot.id)).toEqual(['hist-1']);
+    expect(next.historyViewPreferences).toEqual({
+      'hist-1': {
+        layout: '1',
+        activeBotIds: ['gemini'],
+      },
+    });
     expect(next.activeSession.layout).toBe('2v');
     expect(next.activeSession.activeBotIds).toEqual(['gemini', 'chatgpt']);
     expect(next.activeSession.selectedModels).toEqual({
@@ -110,6 +123,102 @@ describe('appReducer', () => {
     expect(next2.activeSession.activeBotIds).toEqual(['gemini', 'chatgpt', 'perplexity']);
   });
 
+  it('stores history-specific browsing layout without mutating the snapshot', () => {
+    const snapshot = createSnapshot({
+      id: 'hist-1',
+      layout: '1',
+      activeBotIds: ['chatgpt', 'gemini', 'perplexity'],
+      messages: [
+        createMessage('assistant', { id: 'assistant-1', botId: 'chatgpt', status: 'done' }),
+        createMessage('assistant', { id: 'assistant-2', botId: 'perplexity', status: 'done' }),
+      ],
+    });
+    const state = createState({
+      currentView: { mode: 'history', sessionId: snapshot.id },
+      historySnapshots: [snapshot],
+    });
+
+    const next = appReducer(state, {
+      type: 'set-layout',
+      payload: { layout: '2v', allBotIds: ['chatgpt', 'gemini', 'perplexity'] },
+    });
+
+    expect(next.historySnapshots[0]).toMatchObject({
+      id: 'hist-1',
+      layout: '1',
+      activeBotIds: ['chatgpt', 'gemini', 'perplexity'],
+    });
+    expect(next.historyViewPreferences).toEqual({
+      'hist-1': {
+        layout: '2v',
+        activeBotIds: ['chatgpt', 'perplexity'],
+      },
+    });
+  });
+
+  it('keeps the requested history layout even when there are fewer replied bots than the layout size', () => {
+    const snapshot = createSnapshot({
+      id: 'hist-1',
+      layout: '1',
+      activeBotIds: ['chatgpt'],
+      messages: [createMessage('assistant', { id: 'assistant-1', botId: 'chatgpt', status: 'done' })],
+    });
+    const state = createState({
+      currentView: { mode: 'history', sessionId: snapshot.id },
+      historySnapshots: [snapshot],
+    });
+
+    const next = appReducer(state, {
+      type: 'set-layout',
+      payload: { layout: '4', allBotIds: ['chatgpt', 'gemini', 'perplexity', 'copilot'] },
+    });
+
+    expect(next.historyViewPreferences).toEqual({
+      'hist-1': {
+        layout: '4',
+        activeBotIds: ['chatgpt'],
+      },
+    });
+  });
+
+  it('stores history-specific bot replacement and clears the preference when that snapshot is deleted', () => {
+    const snapshot = createSnapshot({
+      id: 'hist-1',
+      activeBotIds: ['chatgpt', 'gemini', 'perplexity'],
+      messages: [
+        createMessage('assistant', { id: 'assistant-1', botId: 'chatgpt', status: 'done' }),
+        createMessage('assistant', { id: 'assistant-2', botId: 'perplexity', status: 'done' }),
+        createMessage('assistant', { id: 'assistant-3', botId: 'gemini', status: 'error' }),
+      ],
+    });
+    const state = createState({
+      currentView: { mode: 'history', sessionId: snapshot.id },
+      historySnapshots: [snapshot],
+    });
+
+    const next = appReducer(state, {
+      type: 'replace-bot',
+      payload: {
+        index: 0,
+        botId: 'perplexity',
+      },
+    });
+
+    expect(next.historyViewPreferences).toEqual({
+      'hist-1': {
+        layout: '2v',
+        activeBotIds: ['perplexity'],
+      },
+    });
+
+    const afterDelete = appReducer(next, {
+      type: 'delete-history-snapshot',
+      payload: { snapshotId: 'hist-1' },
+    });
+
+    expect(afterDelete.historyViewPreferences).toEqual({});
+  });
+
   it('replaces an existing active message and updates updatedAt', () => {
     const target = createMessage('assistant', { id: 'assistant-1', content: 'old' });
     const untouched = createMessage('user', { id: 'user-1' });
@@ -157,6 +266,9 @@ describe('appReducer', () => {
     const state = createState({
       currentView: { mode: 'history', sessionId: 'hist-1' },
       historySnapshots: [snapshot1, snapshot2],
+      historyViewPreferences: {
+        'hist-1': { layout: '1', activeBotIds: ['chatgpt'] },
+      },
       activeSession: createSession({ id: 'session-active' }),
     });
 
@@ -166,6 +278,7 @@ describe('appReducer', () => {
     });
 
     expect(next.historySnapshots.map((snapshot) => snapshot.id)).toEqual(['hist-2']);
+    expect(next.historyViewPreferences).toEqual({});
     expect(next.currentView).toEqual({ mode: 'active', sessionId: 'session-active' });
   });
 

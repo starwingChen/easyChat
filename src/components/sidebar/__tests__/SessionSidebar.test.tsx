@@ -36,6 +36,11 @@ describe('SessionSidebar', () => {
 
     await user.click(screen.getByRole('button', { name: /react vs vue comparison/i }));
 
+    expect(screen.getByRole('button', { name: /react vs vue comparison/i })).toHaveAttribute(
+      'title',
+      'React vs Vue comparison',
+    );
+
     expect(onSelect).toHaveBeenCalledWith({ mode: 'history', sessionId: 'hist-1' });
   });
 
