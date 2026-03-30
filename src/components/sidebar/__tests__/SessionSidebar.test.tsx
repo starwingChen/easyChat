@@ -44,9 +44,8 @@ describe('SessionSidebar', () => {
     expect(onSelect).toHaveBeenCalledWith({ mode: 'history', sessionId: 'hist-1' });
   });
 
-  it('renders locale toggle in the bottom area and calls back on click', async () => {
+  it('opens the settings dialog from the bottom settings trigger', async () => {
     const user = userEvent.setup();
-    const onToggleLocale = vi.fn();
 
     renderWithI18n(
       <SessionSidebar
@@ -56,14 +55,15 @@ describe('SessionSidebar', () => {
         onDeleteHistory={vi.fn()}
         onSelectView={vi.fn()}
         onToggleSidebar={vi.fn()}
-        onToggleLocale={onToggleLocale}
+        onToggleLocale={vi.fn()}
       />,
       { locale: 'zh-CN' },
     );
 
-    await user.click(screen.getByRole('button', { name: 'EN' }));
+    await user.click(screen.getByRole('button', { name: '打开配置' }));
 
-    expect(onToggleLocale).toHaveBeenCalled();
+    expect(screen.getByRole('heading', { name: '配置' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '切换中英文' })).toBeInTheDocument();
   });
 
   it('shows a delete action for history sessions and requires confirmation', async () => {

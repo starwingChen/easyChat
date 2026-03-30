@@ -33,11 +33,11 @@
   "commands": {
     "open-side-panel": {
       "suggested_key": {
-        "default": "Alt+Shift+S",
-        "windows": "Alt+Shift+S",
-        "mac": "Command+Shift+S"
+        "default": "Alt+J",
+        "windows": "Alt+J",
+        "mac": "Alt+J"
       },
-      "description": "Open the EasyChat side panel"
+      "description": "Open sidebar"
     }
   }
 }
