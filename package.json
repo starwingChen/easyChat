@@ -10,6 +10,8 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-tooltip": "^1.2.8",
     "js-sha3": "^0.9.3",
     "lucide-react": "^0.546.0",
     "ofetch": "^1.4.1",

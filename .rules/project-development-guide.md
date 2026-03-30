@@ -1,6 +1,6 @@
 # EasyChat 项目开发指导
 
-Date: 2026-03-29
+Date: 2026-03-30
 
 本文件面向后续 agent 和工程师，用于在不重新通读整个仓库的前提下，快速理解 EasyChat 的产品边界、当前实现、代码落点和开发规范。
 
@@ -47,6 +47,8 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - TypeScript
 - Vite
 - Tailwind CSS v4 + SCSS
+- `@radix-ui/react-dialog`
+- `@radix-ui/react-tooltip`
 - `react-intl`
 - `react-resizable-panels`
 - `ofetch`
@@ -284,6 +286,10 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - 只读能力必须由上层显式传入，不能靠组件内部猜测
 - 修改 markdown 展示时，优先改 `RichTextMessage`，不要在各气泡组件里重复处理
 - API 配置弹窗逻辑优先收敛在 `ChatPanelHeader`，不要把配置表单散落到其他组件
+- 项目已引入 `@radix-ui/react-dialog` 与 `@radix-ui/react-tooltip` 作为轻量无样式交互 primitives；后续新增 modal、tooltip、popover 一类浮层时，优先复用 Radix，而不是继续手写底层焦点管理、dismiss、可访问性与分层逻辑
+- Radix 只提供交互与可访问性能力，视觉样式仍应保留在本项目组件层，通过 Tailwind class 与少量本地样式控制；不要把样式职责下沉到第三方组件主题系统
+- 如果某类 Radix 交互会在多个场景复用，优先先收敛到 `src/components/common/*` 的本地封装，再在业务组件里消费，避免不同页面各自拼装一套 API
+- 如果要使用新的常用组件，优先从 `@radix-ui` 中引入。
 
 ## 7. 扩展与 Chrome 约束
 
