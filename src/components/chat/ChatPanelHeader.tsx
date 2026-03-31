@@ -35,7 +35,7 @@ export function ChatPanelHeader({
   isReadonly,
   onBotChange,
   onCloseApiConfig,
-  onModelChange,
+  onModelChange: _onModelChange,
   onOpenApiConfig,
   onSaveApiConfig,
   selectedModelId,

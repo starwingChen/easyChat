@@ -192,7 +192,7 @@ export function createCopilotClient(
           {},
           { credentials: 'include', signal }
         );
-      } catch (error) {
+      } catch {
         if (signal?.aborted) {
           throw createAbortError();
         }

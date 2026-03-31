@@ -1,6 +1,6 @@
 import type { Locale } from '../types/app';
 import { createAppIntl, createAppTranslator, getMessages } from './intl';
-import type { MessageCatalog, MessageId } from './messages/types';
+import type { MessageId } from './messages/types';
 export { AppI18nProvider } from './provider';
 export { useI18n } from './useI18n';
 export { createAppIntl, createAppTranslator, getMessages };
