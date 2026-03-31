@@ -65,6 +65,15 @@ const enUSMessages = {
     'Copilot requires a browser verification first. Please visit [https://copilot.microsoft.com](https://copilot.microsoft.com) first and send any message.',
   'bot.error.chatgpt.authRequired':
     'ChatGPT is not logged in. Please visit [https://chatgpt.com](https://chatgpt.com) and sign in first.',
+  'bot.error.chatgptApi.missingConfig':
+    'ChatGPT - API is not configured yet. Please [configure API](action://open-api-config) first.',
+  'bot.error.chatgptApi.auth':
+    'ChatGPT - API authentication failed. Check the API key and account status.',
+  'bot.error.chatgptApi.quota':
+    'ChatGPT - API quota is exhausted or requests are too frequent. Check the account status.',
+  'bot.error.chatgptApi.unavailable':
+    'ChatGPT - API is temporarily unavailable. Please try again later.',
+  'bot.error.chatgptApi.emptyResponse': 'ChatGPT returned an empty response.',
   'bot.error.deepseekApi.missingConfig':
     'DeepSeek - API is not configured yet. Please [configure API](action://open-api-config) first.',
   'bot.error.deepseekApi.auth':
@@ -83,6 +92,15 @@ const enUSMessages = {
   'bot.error.qwenApi.unavailable':
     'Qwen - API is temporarily unavailable. Please try again later.',
   'bot.error.qwenApi.emptyResponse': 'Qwen returned an empty response.',
+  'bot.error.geminiApi.missingConfig':
+    'Gemini - API is not configured yet. Please [configure API](action://open-api-config) first.',
+  'bot.error.geminiApi.auth':
+    'Gemini - API authentication failed. Check the API key and account status.',
+  'bot.error.geminiApi.quota':
+    'Gemini - API quota is exhausted or requests are too frequent. Check the account status.',
+  'bot.error.geminiApi.unavailable':
+    'Gemini - API is temporarily unavailable. Please try again later.',
+  'bot.error.geminiApi.emptyResponse': 'Gemini returned an empty response.',
 } as const;
 
 export default enUSMessages;

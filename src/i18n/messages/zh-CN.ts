@@ -65,6 +65,15 @@ const zhCNMessages = {
     'Copilot 需要完成网页访问验证。请先访问 [https://copilot.microsoft.com](https://copilot.microsoft.com) 发送任意消息',
   'bot.error.chatgpt.authRequired':
     'ChatGPT 需要登录，请前往 [https://chatgpt.com](https://chatgpt.com) 登录后再试。',
+  'bot.error.chatgptApi.missingConfig':
+    'ChatGPT - API 尚未配置。请先[配置 API](action://open-api-config)。',
+  'bot.error.chatgptApi.auth':
+    'ChatGPT - API 认证失败，请检查 API Key 或账户状态。',
+  'bot.error.chatgptApi.quota':
+    'ChatGPT - API 配额不足或请求过于频繁，请检查账户状态。',
+  'bot.error.chatgptApi.unavailable':
+    'ChatGPT - API 暂时不可用，请稍后重试。',
+  'bot.error.chatgptApi.emptyResponse': 'ChatGPT 返回了空响应。',
   'bot.error.deepseekApi.missingConfig':
     'DeepSeek - API 尚未配置。请先[配置 API](action://open-api-config)。',
   'bot.error.deepseekApi.auth':
@@ -81,6 +90,15 @@ const zhCNMessages = {
     'Qwen - API 配额不足或请求过于频繁，请检查账户状态。',
   'bot.error.qwenApi.unavailable': 'Qwen - API 暂时不可用，请稍后重试。',
   'bot.error.qwenApi.emptyResponse': 'Qwen 返回了空响应。',
+  'bot.error.geminiApi.missingConfig':
+    'Gemini - API 尚未配置。请先[配置 API](action://open-api-config)。',
+  'bot.error.geminiApi.auth':
+    'Gemini - API 认证失败，请检查 API Key 或账户状态。',
+  'bot.error.geminiApi.quota':
+    'Gemini - API 配额不足或请求过于频繁，请检查账户状态。',
+  'bot.error.geminiApi.unavailable':
+    'Gemini - API 暂时不可用，请稍后重试。',
+  'bot.error.geminiApi.emptyResponse': 'Gemini 返回了空响应。',
 } as const;
 
 export default zhCNMessages;

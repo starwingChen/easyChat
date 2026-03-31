@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { CopilotBotAdapter } from '../copilot/CopilotBotAdapter';
 import { ChatGPTBotAdapter } from '../chatgpt/ChatGPTBotAdapter';
+import { ChatGPTApiBotAdapter } from '../chatgptApi/ChatGPTApiBotAdapter';
 import { DeepSeekApiBotAdapter } from '../deepseekApi/DeepSeekApiBotAdapter';
 import { GeminiBotAdapter } from '../gemini/GeminiBotAdapter';
+import { GeminiApiBotAdapter } from '../geminiApi/GeminiApiBotAdapter';
 import { PerplexityBotAdapter } from '../perplexity/PerplexityBotAdapter';
 import { QwenApiBotAdapter } from '../qwenApi/QwenApiBotAdapter';
 import { createBotRegistry } from '../botRegistry';
@@ -22,6 +24,8 @@ describe('botRegistry', () => {
       'copilot',
       'deepseek-api',
       'qwen-api',
+      'chatgpt-api',
+      'gemini-api',
     ]);
     expect(allBotIds).not.toEqual(
       expect.arrayContaining(['claude', 'deepseek'])
@@ -32,6 +36,10 @@ describe('botRegistry', () => {
       DeepSeekApiBotAdapter
     );
     expect(registry.getBot('qwen-api')).toBeInstanceOf(QwenApiBotAdapter);
+    expect(registry.getBot('chatgpt-api')).toBeInstanceOf(
+      ChatGPTApiBotAdapter
+    );
+    expect(registry.getBot('gemini-api')).toBeInstanceOf(GeminiApiBotAdapter);
     expect(registry.getBot('perplexity')).toBeInstanceOf(PerplexityBotAdapter);
     expect(registry.getBot('copilot')).toBeInstanceOf(CopilotBotAdapter);
     expect(() => registry.getBot('claude')).toThrow(/unknown bot/i);
@@ -43,6 +51,8 @@ describe('botRegistry', () => {
     );
     expect(registry.getAvailableModels('deepseek-api')).toEqual([]);
     expect(registry.getAvailableModels('qwen-api')).toEqual([]);
+    expect(registry.getAvailableModels('chatgpt-api')).toEqual([]);
+    expect(registry.getAvailableModels('gemini-api')).toEqual([]);
   });
 
   it('throws for an unknown bot id', () => {
