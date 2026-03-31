@@ -1,1 +1,1 @@
-export { default } from "./messages/en-US";
+export { default } from './messages/en-US';

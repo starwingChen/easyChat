@@ -5,43 +5,43 @@ import {
   useReducer,
   useRef,
   type PropsWithChildren,
-} from "react";
+} from 'react';
 
-import { createBotRegistry } from "../bots/botRegistry";
-import { createAppTranslator, resolveLocale } from "../i18n";
-import type { AppState, Locale, ViewState } from "../types/app";
-import type { ApiBotConfigValue } from "../types/bot";
+import { createBotRegistry } from '../bots/botRegistry';
+import { createAppTranslator, resolveLocale } from '../i18n';
+import type { AppState, Locale, ViewState } from '../types/app';
+import type { ApiBotConfigValue } from '../types/bot';
 import {
   createSnapshotFromSession,
   hasCompletedAssistantReplies,
-} from "../features/history/historyService";
+} from '../features/history/historyService';
 import {
   getPreferredLocale,
   loadPersistedPreferences,
   persistPreferences,
-} from "../features/locale/localeService";
+} from '../features/locale/localeService';
 import {
   BOT_REPLY_RETRY_LIMIT,
   createBroadcastDraft,
   createInitialSession,
   createRetryReplyRequest,
   resolvePendingBotReply,
-} from "../features/session/sessionService";
-import { appReducer } from "./appReducer";
+} from '../features/session/sessionService';
+import { appReducer } from './appReducer';
 import {
   selectCurrentSessionRecord,
   selectCurrentViewBotOptions,
   selectHasVisibleLoadingMessages,
   selectVisibleBotIds,
-} from "./selectors";
+} from './selectors';
 
 const registry = createBotRegistry();
 const initialLocale = resolveLocale(
-  typeof navigator !== "undefined"
+  typeof navigator !== 'undefined'
     ? getPreferredLocale(navigator.language)
-    : "zh-CN",
+    : 'zh-CN'
 );
-const initialSessionTimestamp = "2026-03-25T00:00:00.000Z";
+const initialSessionTimestamp = '2026-03-25T00:00:00.000Z';
 const allBotIds = registry.getAllBots().map((bot) => bot.definition.id);
 
 function collectBotStates() {
@@ -49,20 +49,20 @@ function collectBotStates() {
     registry
       .getAllBots()
       .map((bot) => [bot.definition.id, bot.getPersistedState()] as const)
-      .filter((entry) => entry[1] !== null),
+      .filter((entry) => entry[1] !== null)
   );
 }
 
 const initialState: AppState = {
   locale: initialLocale,
   currentView: {
-    mode: "active",
-    sessionId: "session-active",
+    mode: 'active',
+    sessionId: 'session-active',
   },
   activeSession: createInitialSession(
     registry,
     initialLocale,
-    initialSessionTimestamp,
+    initialSessionTimestamp
   ),
   historySnapshots: [],
   historyViewPreferences: {},
@@ -81,7 +81,7 @@ interface AppStateContextValue {
   isReadonly: boolean;
   registry: typeof registry;
   selectView: (view: ViewState) => void;
-  setLayout: (layout: AppState["activeSession"]["layout"]) => void;
+  setLayout: (layout: AppState['activeSession']['layout']) => void;
   toggleSidebar: () => void;
   replaceBot: (index: number, botId: string) => void;
   setModel: (botId: string, modelId: string) => void;
@@ -97,7 +97,7 @@ const AppStateContext = createContext<AppStateContextValue | null>(null);
 export function AppStateProvider({ children }: PropsWithChildren) {
   const [state, dispatch] = useReducer(appReducer, initialState);
   const pendingReplyControllers = useRef(
-    new Map<string, AbortController>(),
+    new Map<string, AbortController>()
   ).current;
 
   useEffect(() => {
@@ -107,18 +107,18 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       }
 
       const historySnapshots = persisted.historySnapshots?.filter(
-        (snapshot) => !snapshot.sourceSessionId.startsWith("session-previous-"),
+        (snapshot) => !snapshot.sourceSessionId.startsWith('session-previous-')
       );
       const currentView: ViewState | undefined =
-        persisted.currentView?.mode === "history" &&
+        persisted.currentView?.mode === 'history' &&
         !historySnapshots?.some(
-          (snapshot) => snapshot.id === persisted.currentView?.sessionId,
+          (snapshot) => snapshot.id === persisted.currentView?.sessionId
         )
-          ? { mode: "active", sessionId: "session-active" }
+          ? { mode: 'active', sessionId: 'session-active' }
           : persisted.currentView;
 
       dispatch({
-        type: "hydrate",
+        type: 'hydrate',
         payload: {
           locale: persisted.locale,
           historySnapshots,
@@ -166,7 +166,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       pendingReplyControllers.delete(messageId);
 
       const loadingMessage = state.activeSession.messages.find(
-        (message) => message.id === messageId && message.status === "loading",
+        (message) => message.id === messageId && message.status === 'loading'
       );
 
       if (!loadingMessage) {
@@ -174,12 +174,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       }
 
       dispatch({
-        type: "replace-active-message",
+        type: 'replace-active-message',
         payload: {
           message: {
             ...loadingMessage,
-            content: t("chat.replyStopped"),
-            status: "cancelled",
+            content: t('chat.replyStopped'),
+            status: 'cancelled',
           },
           updatedAt: new Date().toISOString(),
         },
@@ -187,7 +187,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     },
     retryReply(messageId) {
       const failedMessage = state.activeSession.messages.find(
-        (message) => message.id === messageId && message.status === "error",
+        (message) => message.id === messageId && message.status === 'error'
       );
 
       if (!failedMessage) {
@@ -206,12 +206,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       }
 
       dispatch({
-        type: "replace-active-message",
+        type: 'replace-active-message',
         payload: {
           message: {
             ...failedMessage,
-            content: "",
-            status: "loading",
+            content: '',
+            status: 'loading',
             retryCount: 0,
             retryLimit: BOT_REPLY_RETRY_LIMIT,
           },
@@ -233,7 +233,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
             }
 
             dispatch({
-              type: "replace-active-message",
+              type: 'replace-active-message',
               payload: {
                 message: retryingMessage,
                 updatedAt: new Date().toISOString(),
@@ -252,7 +252,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         pendingReplyControllers.delete(request.messageId);
 
         dispatch({
-          type: "replace-active-message",
+          type: 'replace-active-message',
           payload: {
             message,
             updatedAt: new Date().toISOString(),
@@ -262,14 +262,14 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     },
     isComposerDisabled: hasVisibleLoadingMessages,
     visibleBotIds,
-    isReadonly: state.currentView.mode === "history",
+    isReadonly: state.currentView.mode === 'history',
     registry,
     selectView(view) {
-      dispatch({ type: "set-view", payload: view });
+      dispatch({ type: 'set-view', payload: view });
     },
     setLayout(layout) {
       dispatch({
-        type: "set-layout",
+        type: 'set-layout',
         payload: {
           layout,
           allBotIds: currentViewBotOptions,
@@ -277,20 +277,20 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       });
     },
     toggleSidebar() {
-      dispatch({ type: "toggle-sidebar" });
+      dispatch({ type: 'toggle-sidebar' });
     },
     replaceBot(index, botId) {
-      dispatch({ type: "replace-bot", payload: { index, botId } });
+      dispatch({ type: 'replace-bot', payload: { index, botId } });
     },
     setModel(botId, modelId) {
-      dispatch({ type: "set-selected-model", payload: { botId, modelId } });
+      dispatch({ type: 'set-selected-model', payload: { botId, modelId } });
     },
     async saveApiConfig(botId, config) {
       registry.getBot(botId).setApiConfig(config);
       const updatedAt = new Date().toISOString();
 
       dispatch({
-        type: "touch-active-session",
+        type: 'touch-active-session',
         payload: { updatedAt },
       });
 
@@ -322,7 +322,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       }
 
       dispatch({
-        type: "append-active-messages",
+        type: 'append-active-messages',
         payload: {
           messages: draft.messages,
           updatedAt: draft.updatedAt,
@@ -345,7 +345,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               }
 
               dispatch({
-                type: "replace-active-message",
+                type: 'replace-active-message',
                 payload: {
                   message: retryingMessage,
                   updatedAt: new Date().toISOString(),
@@ -364,13 +364,13 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           pendingReplyControllers.delete(request.messageId);
 
           dispatch({
-            type: "replace-active-message",
+            type: 'replace-active-message',
             payload: {
               message,
               updatedAt: new Date().toISOString(),
             },
           });
-        }),
+        })
       );
     },
     createNewSession() {
@@ -378,11 +378,11 @@ export function AppStateProvider({ children }: PropsWithChildren) {
 
       if (hasCompletedAssistantReplies(state.activeSession.messages)) {
         dispatch({
-          type: "push-history-snapshot",
+          type: 'push-history-snapshot',
           payload: createSnapshotFromSession(
             state.activeSession,
             `snapshot-${timestamp}`,
-            timestamp,
+            timestamp
           ),
         });
       }
@@ -397,25 +397,25 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       });
 
       dispatch({
-        type: "replace-active-session",
+        type: 'replace-active-session',
         payload: createInitialSession(
           registry,
           state.locale,
           timestamp,
           state.activeSession.layout,
-          state.activeSession.activeBotIds,
+          state.activeSession.activeBotIds
         ),
       });
     },
     deleteHistorySnapshot(snapshotId) {
       dispatch({
-        type: "delete-history-snapshot",
+        type: 'delete-history-snapshot',
         payload: { snapshotId },
       });
     },
     toggleLocale() {
-      const nextLocale: Locale = state.locale === "zh-CN" ? "en-US" : "zh-CN";
-      dispatch({ type: "set-locale", payload: nextLocale });
+      const nextLocale: Locale = state.locale === 'zh-CN' ? 'en-US' : 'zh-CN';
+      dispatch({ type: 'set-locale', payload: nextLocale });
     },
   };
 
@@ -430,7 +430,7 @@ export function useAppState() {
   const context = useContext(AppStateContext);
 
   if (!context) {
-    throw new Error("useAppState must be used within AppStateProvider");
+    throw new Error('useAppState must be used within AppStateProvider');
   }
 
   return context;

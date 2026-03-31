@@ -1,11 +1,11 @@
-import { createAppTranslator } from "../../i18n";
+import { createAppTranslator } from '../../i18n';
 import type {
   ApiBotConfigValue,
   BotResponse,
   SendMessageInput,
-} from "../../types/bot";
-import { BaseBotAdapter } from "../BaseBotAdapter";
-import { sendOpenAiCompatiblePrompt } from "./openAiCompatibleApiClient";
+} from '../../types/bot';
+import { BaseBotAdapter } from '../BaseBotAdapter';
+import { sendOpenAiCompatiblePrompt } from './openAiCompatibleApiClient';
 import {
   isOpenAiCompatibleApiClientError,
   isOpenAiCompatibleApiConfigValue,
@@ -14,7 +14,7 @@ import {
   type OpenAiCompatibleApiProvider,
   type OpenAiCompatibleApiState,
   type SendOpenAiCompatiblePrompt,
-} from "./types";
+} from './types';
 
 export interface OpenAiCompatibleApiBotAdapterOptions {
   now?: () => string;
@@ -66,7 +66,7 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
 
     const nextMessages = [
       ...this.messages,
-      { role: "user" as const, content: input.content },
+      { role: 'user' as const, content: input.content },
     ];
     let result;
 
@@ -78,7 +78,7 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
           modelName: this.config.modelName,
         },
         nextMessages,
-        input.signal,
+        input.signal
       );
     } catch (error) {
       if (isOpenAiCompatibleApiClientError(error)) {
@@ -92,7 +92,7 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
 
     this.messages = [
       ...nextMessages,
-      { role: "assistant", content: result.text },
+      { role: 'assistant', content: result.text },
     ];
 
     return {
@@ -101,7 +101,7 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
       modelId: this.config.modelName,
       content: result.text,
       createdAt: timestamp,
-      status: "done",
+      status: 'done',
     };
   }
 

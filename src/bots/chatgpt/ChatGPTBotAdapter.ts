@@ -1,16 +1,16 @@
-import { createAppTranslator } from "../../i18n";
+import { createAppTranslator } from '../../i18n';
 import {
   BotUserFacingError,
   type BotDefinition,
   type BotModel,
   type BotResponse,
   type SendMessageInput,
-} from "../../types/bot";
-import { BaseBotAdapter } from "../BaseBotAdapter";
-import { chatgptDefinition } from "../definitions";
-import { createChatGPTClient } from "./chatgptClient";
-import { isChatGPTAuthRequiredError } from "./chatgptErrors";
-import type { ChatGPTClient, ChatGPTConversationState } from "./types";
+} from '../../types/bot';
+import { BaseBotAdapter } from '../BaseBotAdapter';
+import { chatgptDefinition } from '../definitions';
+import { createChatGPTClient } from './chatgptClient';
+import { isChatGPTAuthRequiredError } from './chatgptErrors';
+import type { ChatGPTClient, ChatGPTConversationState } from './types';
 
 interface ChatGPTBotAdapterOptions {
   client?: ChatGPTClient;
@@ -18,19 +18,19 @@ interface ChatGPTBotAdapterOptions {
 }
 
 function isChatGPTConversationState(
-  value: unknown,
+  value: unknown
 ): value is ChatGPTConversationState {
-  if (!value || typeof value !== "object") {
+  if (!value || typeof value !== 'object') {
     return false;
   }
 
   const candidate = value as ChatGPTConversationState;
 
   return (
-    (typeof candidate.conversationId === "string" ||
-      typeof candidate.conversationId === "undefined") &&
-    (typeof candidate.parentMessageId === "string" ||
-      typeof candidate.parentMessageId === "undefined")
+    (typeof candidate.conversationId === 'string' ||
+      typeof candidate.conversationId === 'undefined') &&
+    (typeof candidate.parentMessageId === 'string' ||
+      typeof candidate.parentMessageId === 'undefined')
   );
 }
 
@@ -75,7 +75,7 @@ export class ChatGPTBotAdapter extends BaseBotAdapter {
       }
 
       const requirements = await this.client.getChatRequirements(
-        this.accessToken,
+        this.accessToken
       );
       const result = await this.client.sendConversationMessage({
         accessToken: this.accessToken,
@@ -101,7 +101,7 @@ export class ChatGPTBotAdapter extends BaseBotAdapter {
         modelId: input.modelId,
         content: result.text,
         createdAt: this.now(),
-        status: "done",
+        status: 'done',
       };
     } catch (error) {
       if (isAuthenticationError(error) || isChatGPTAuthRequiredError(error)) {
@@ -109,7 +109,7 @@ export class ChatGPTBotAdapter extends BaseBotAdapter {
       }
 
       if (isChatGPTAuthRequiredError(error)) {
-        throw new BotUserFacingError(t("bot.error.chatgpt.authRequired"));
+        throw new BotUserFacingError(t('bot.error.chatgpt.authRequired'));
       }
 
       throw error;

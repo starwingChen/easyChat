@@ -4,18 +4,18 @@ import {
   PanelLeftOpen,
   Plus,
   Settings2,
-} from "lucide-react";
-import { useState } from "react";
+} from 'lucide-react';
+import { useState } from 'react';
 
-import { useI18n } from "../../i18n";
-import { selectDisabledHistoryLayouts } from "../../store/selectors";
-import { useAppState } from "../../store/AppStateContext";
-import { CollapsedSidebarItem } from "../sidebar/CollapsedSidebarItem";
-import { SessionSidebar } from "../sidebar/SessionSidebar";
-import { SidebarSettingsDialog } from "../sidebar/SidebarSettingsDialog";
-import { ChatWorkspace } from "../chat/ChatWorkspace";
-import { MessageComposer } from "../chat/MessageComposer";
-import { WorkspaceHeader } from "../toolbar/WorkspaceHeader";
+import { useI18n } from '../../i18n';
+import { selectDisabledHistoryLayouts } from '../../store/selectors';
+import { useAppState } from '../../store/AppStateContext';
+import { CollapsedSidebarItem } from '../sidebar/CollapsedSidebarItem';
+import { SessionSidebar } from '../sidebar/SessionSidebar';
+import { SidebarSettingsDialog } from '../sidebar/SidebarSettingsDialog';
+import { ChatWorkspace } from '../chat/ChatWorkspace';
+import { MessageComposer } from '../chat/MessageComposer';
+import { WorkspaceHeader } from '../toolbar/WorkspaceHeader';
 
 export function SidePanelShell() {
   const [isCollapsedSettingsOpen, setIsCollapsedSettingsOpen] = useState(false);
@@ -43,19 +43,19 @@ export function SidePanelShell() {
   const disabledHistoryLayouts = selectDisabledHistoryLayouts(state);
   const collapsedHistorySnapshots = state.historySnapshots.slice(0, 10);
   const currentViewBotOptions =
-    state.currentView.mode === "history"
+    state.currentView.mode === 'history'
       ? (() => {
           const repliedBotIds = Array.from(
             new Set(
               currentSession.messages
                 .filter(
                   (message) =>
-                    message.role === "assistant" &&
-                    message.status === "done" &&
-                    message.botId,
+                    message.role === 'assistant' &&
+                    message.status === 'done' &&
+                    message.botId
                 )
-                .map((message) => message.botId as string),
-            ),
+                .map((message) => message.botId as string)
+            )
           );
 
           return repliedBotIds.length > 0
@@ -83,7 +83,7 @@ export function SidePanelShell() {
               <div className="flex flex-col items-center gap-2">
                 <CollapsedSidebarItem
                   icon={PanelLeftOpen}
-                  label={t("sidebar.expand")}
+                  label={t('sidebar.expand')}
                   onClick={toggleSidebar}
                 />
                 <div
@@ -92,7 +92,7 @@ export function SidePanelShell() {
                 />
                 <CollapsedSidebarItem
                   icon={Plus}
-                  label={t("sidebar.newSession")}
+                  label={t('sidebar.newSession')}
                   onClick={createNewSession}
                 />
                 <div
@@ -101,10 +101,10 @@ export function SidePanelShell() {
                 />
                 <CollapsedSidebarItem
                   icon={MessageSquare}
-                  isActive={state.currentView.mode === "active"}
-                  label={t("sidebar.activeSession")}
+                  isActive={state.currentView.mode === 'active'}
+                  label={t('sidebar.activeSession')}
                   onClick={() =>
-                    selectView({ mode: "active", sessionId: "session-active" })
+                    selectView({ mode: 'active', sessionId: 'session-active' })
                   }
                 />
                 <div
@@ -117,13 +117,13 @@ export function SidePanelShell() {
                   <CollapsedSidebarItem
                     icon={Clock3}
                     isActive={
-                      state.currentView.mode === "history" &&
+                      state.currentView.mode === 'history' &&
                       state.currentView.sessionId === snapshot.id
                     }
                     key={snapshot.id}
                     label={snapshot.title}
                     onClick={() =>
-                      selectView({ mode: "history", sessionId: snapshot.id })
+                      selectView({ mode: 'history', sessionId: snapshot.id })
                     }
                     title={snapshot.title}
                   />
@@ -137,7 +137,7 @@ export function SidePanelShell() {
               />
               <CollapsedSidebarItem
                 icon={Settings2}
-                label={t("sidebar.settings.open")}
+                label={t('sidebar.settings.open')}
                 onClick={() => setIsCollapsedSettingsOpen(true)}
               />
             </div>
@@ -157,8 +157,8 @@ export function SidePanelShell() {
           isReadonly={isReadonly}
           onChangeLayout={setLayout}
           title={
-            state.currentView.mode === "active"
-              ? t("workspace.title.active")
+            state.currentView.mode === 'active'
+              ? t('workspace.title.active')
               : currentSession.title
           }
         />

@@ -1,93 +1,93 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from 'vitest';
 
-import { DeepSeekApiBotAdapter } from "../DeepSeekApiBotAdapter";
-import type { SendOpenAiCompatiblePrompt } from "../../openAiCompatibleApi/types";
+import { DeepSeekApiBotAdapter } from '../DeepSeekApiBotAdapter';
+import type { SendOpenAiCompatiblePrompt } from '../../openAiCompatibleApi/types';
 
-describe("DeepSeekApiBotAdapter", () => {
-  it("throws a configuration error with an action link when api key is missing", async () => {
+describe('DeepSeekApiBotAdapter', () => {
+  it('throws a configuration error with an action link when api key is missing', async () => {
     const adapter = new DeepSeekApiBotAdapter();
 
     await expect(
       adapter.sendMessage({
-        sessionId: "session-1",
-        content: "hello",
-        locale: "zh-CN",
-        modelId: "deepseek-chat",
-        targetBotIds: ["deepseek-api"],
-      }),
+        sessionId: 'session-1',
+        content: 'hello',
+        locale: 'zh-CN',
+        modelId: 'deepseek-chat',
+        targetBotIds: ['deepseek-api'],
+      })
     ).rejects.toThrow(
-      "DeepSeek - API 尚未配置。请先[配置 API](action://open-api-config)。",
+      'DeepSeek - API 尚未配置。请先[配置 API](action://open-api-config)。'
     );
   });
 
-  it("localizes the missing-config message for english locale", async () => {
+  it('localizes the missing-config message for english locale', async () => {
     const adapter = new DeepSeekApiBotAdapter();
 
     await expect(
       adapter.sendMessage({
-        sessionId: "session-1",
-        content: "hello",
-        locale: "en-US",
-        modelId: "deepseek-chat",
-        targetBotIds: ["deepseek-api"],
-      }),
+        sessionId: 'session-1',
+        content: 'hello',
+        locale: 'en-US',
+        modelId: 'deepseek-chat',
+        targetBotIds: ['deepseek-api'],
+      })
     ).rejects.toThrow(
-      "DeepSeek - API is not configured yet. Please [configure API](action://open-api-config) first.",
+      'DeepSeek - API is not configured yet. Please [configure API](action://open-api-config) first.'
     );
   });
 
-  it("uses the saved api config and returns the configured runtime model name", async () => {
+  it('uses the saved api config and returns the configured runtime model name', async () => {
     const sendPrompt = vi
       .fn<SendOpenAiCompatiblePrompt>()
-      .mockResolvedValue({ text: "DeepSeek says hi" });
+      .mockResolvedValue({ text: 'DeepSeek says hi' });
     const adapter = new DeepSeekApiBotAdapter({
-      now: () => "2026-03-28T12:00:00.000Z",
+      now: () => '2026-03-28T12:00:00.000Z',
       sendPrompt,
     });
 
     adapter.setApiConfig({
-      apiKey: "sk-demo",
-      modelName: "deepseek-chat",
+      apiKey: 'sk-demo',
+      modelName: 'deepseek-chat',
     });
 
     const response = await adapter.sendMessage({
-      sessionId: "session-1",
-      content: "hello",
-      locale: "zh-CN",
-      modelId: "ignored-by-api-bot",
-      targetBotIds: ["deepseek-api"],
+      sessionId: 'session-1',
+      content: 'hello',
+      locale: 'zh-CN',
+      modelId: 'ignored-by-api-bot',
+      targetBotIds: ['deepseek-api'],
     });
 
     expect(sendPrompt).toHaveBeenCalledWith(
       {
-        baseURL: "https://api.deepseek.com",
-        apiKey: "sk-demo",
-        modelName: "deepseek-chat",
+        baseURL: 'https://api.deepseek.com',
+        apiKey: 'sk-demo',
+        modelName: 'deepseek-chat',
       },
-      [{ role: "user", content: "hello" }],
-      undefined,
+      [{ role: 'user', content: 'hello' }],
+      undefined
     );
     expect(response).toEqual({
-      id: "deepseek-api-2026-03-28T12:00:00.000Z",
-      botId: "deepseek-api",
-      modelId: "deepseek-chat",
-      content: "DeepSeek says hi",
-      createdAt: "2026-03-28T12:00:00.000Z",
-      status: "done",
+      id: 'deepseek-api-2026-03-28T12:00:00.000Z',
+      botId: 'deepseek-api',
+      modelId: 'deepseek-chat',
+      content: 'DeepSeek says hi',
+      createdAt: '2026-03-28T12:00:00.000Z',
+      status: 'done',
     });
   });
 
-  it("serializes and restores the persisted api config", () => {
+  it('serializes and restores the persisted api config', () => {
     const adapter = new DeepSeekApiBotAdapter();
 
     adapter.setApiConfig({
-      apiKey: "sk-demo",
-      modelName: "deepseek-reasoner",
+      apiKey: 'sk-demo',
+      modelName: 'deepseek-reasoner',
     });
 
     expect(adapter.getPersistedState()).toEqual({
-      apiKey: "sk-demo",
-      modelName: "deepseek-reasoner",
+      apiKey: 'sk-demo',
+      modelName: 'deepseek-reasoner',
       messages: [],
     });
 
@@ -95,86 +95,86 @@ describe("DeepSeekApiBotAdapter", () => {
     reopenedAdapter.restorePersistedState(adapter.getPersistedState());
 
     expect(reopenedAdapter.getApiConfig()).toEqual({
-      apiKey: "sk-demo",
-      modelName: "deepseek-reasoner",
+      apiKey: 'sk-demo',
+      modelName: 'deepseek-reasoner',
     });
   });
 
-  it("persists local conversation messages across requests", async () => {
+  it('persists local conversation messages across requests', async () => {
     const sendPrompt = vi
       .fn<SendOpenAiCompatiblePrompt>()
-      .mockResolvedValueOnce({ text: "first reply" })
-      .mockResolvedValueOnce({ text: "second reply" });
+      .mockResolvedValueOnce({ text: 'first reply' })
+      .mockResolvedValueOnce({ text: 'second reply' });
     const adapter = new DeepSeekApiBotAdapter({ sendPrompt });
 
     adapter.setApiConfig({
-      apiKey: "sk-demo",
-      modelName: "deepseek-chat",
+      apiKey: 'sk-demo',
+      modelName: 'deepseek-chat',
     });
 
     await adapter.sendMessage({
-      sessionId: "session-1",
-      content: "hello",
-      locale: "zh-CN",
-      modelId: "ignored",
-      targetBotIds: ["deepseek-api"],
+      sessionId: 'session-1',
+      content: 'hello',
+      locale: 'zh-CN',
+      modelId: 'ignored',
+      targetBotIds: ['deepseek-api'],
     });
 
     await adapter.sendMessage({
-      sessionId: "session-1",
-      content: "continue",
-      locale: "zh-CN",
-      modelId: "ignored",
-      targetBotIds: ["deepseek-api"],
+      sessionId: 'session-1',
+      content: 'continue',
+      locale: 'zh-CN',
+      modelId: 'ignored',
+      targetBotIds: ['deepseek-api'],
     });
 
     expect(sendPrompt).toHaveBeenNthCalledWith(
       2,
       {
-        baseURL: "https://api.deepseek.com",
-        apiKey: "sk-demo",
-        modelName: "deepseek-chat",
+        baseURL: 'https://api.deepseek.com',
+        apiKey: 'sk-demo',
+        modelName: 'deepseek-chat',
       },
       [
-        { role: "user", content: "hello" },
-        { role: "assistant", content: "first reply" },
-        { role: "user", content: "continue" },
+        { role: 'user', content: 'hello' },
+        { role: 'assistant', content: 'first reply' },
+        { role: 'user', content: 'continue' },
       ],
-      undefined,
+      undefined
     );
     expect(adapter.getPersistedState()).toEqual({
-      apiKey: "sk-demo",
-      modelName: "deepseek-chat",
+      apiKey: 'sk-demo',
+      modelName: 'deepseek-chat',
       messages: [
-        { role: "user", content: "hello" },
-        { role: "assistant", content: "first reply" },
-        { role: "user", content: "continue" },
-        { role: "assistant", content: "second reply" },
+        { role: 'user', content: 'hello' },
+        { role: 'assistant', content: 'first reply' },
+        { role: 'user', content: 'continue' },
+        { role: 'assistant', content: 'second reply' },
       ],
     });
   });
 
-  it("translates structured client errors using the request locale", async () => {
+  it('translates structured client errors using the request locale', async () => {
     const sendPrompt = vi
       .fn<SendOpenAiCompatiblePrompt>()
-      .mockRejectedValue({ code: "quota" });
+      .mockRejectedValue({ code: 'quota' });
     const adapter = new DeepSeekApiBotAdapter({ sendPrompt });
 
     adapter.setApiConfig({
-      apiKey: "sk-demo",
-      modelName: "deepseek-chat",
+      apiKey: 'sk-demo',
+      modelName: 'deepseek-chat',
     });
 
     await expect(
       adapter.sendMessage({
-        sessionId: "session-1",
-        content: "hello",
-        locale: "en-US",
-        modelId: "ignored",
-        targetBotIds: ["deepseek-api"],
-      }),
+        sessionId: 'session-1',
+        content: 'hello',
+        locale: 'en-US',
+        modelId: 'ignored',
+        targetBotIds: ['deepseek-api'],
+      })
     ).rejects.toThrow(
-      "DeepSeek - API quota is exhausted or requests are too frequent. Check the account status.",
+      'DeepSeek - API quota is exhausted or requests are too frequent. Check the account status.'
     );
   });
 });

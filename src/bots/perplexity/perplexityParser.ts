@@ -1,4 +1,4 @@
-import type { PerplexityParseResult } from "./types";
+import type { PerplexityParseResult } from './types';
 
 interface PerplexityMarkdownBlock {
   answer?: unknown;
@@ -19,16 +19,16 @@ function parseEventDataChunks(streamText: string): string[] {
   return streamText.split(/\r?\n\r?\n/).flatMap((eventText) =>
     eventText
       .split(/\r?\n/)
-      .filter((line) => line.startsWith("data:"))
+      .filter((line) => line.startsWith('data:'))
       .map((line) => line.slice(5).trimStart())
-      .filter(Boolean),
+      .filter(Boolean)
   );
 }
 
 function extractTextFromBlock(block: PerplexityBlock): string | undefined {
   const usage = block.intended_usage;
 
-  if (usage !== "ask_text_0_markdown" && usage !== "ask_text") {
+  if (usage !== 'ask_text_0_markdown' && usage !== 'ask_text') {
     return undefined;
   }
 
@@ -38,7 +38,7 @@ function extractTextFromBlock(block: PerplexityBlock): string | undefined {
     return undefined;
   }
 
-  if (typeof markdownBlock.answer === "string" && markdownBlock.answer) {
+  if (typeof markdownBlock.answer === 'string' && markdownBlock.answer) {
     return markdownBlock.answer;
   }
 
@@ -47,21 +47,21 @@ function extractTextFromBlock(block: PerplexityBlock): string | undefined {
   }
 
   const chunks = markdownBlock.chunks.filter(
-    (chunk): chunk is string => typeof chunk === "string",
+    (chunk): chunk is string => typeof chunk === 'string'
   );
-  const text = chunks.join("");
+  const text = chunks.join('');
 
   return text || undefined;
 }
 
 export function parsePerplexityAskResponse(
-  streamText: string,
+  streamText: string
 ): PerplexityParseResult {
-  let finalText = "";
+  let finalText = '';
   let lastBackendUuid: string | undefined;
 
   for (const chunk of parseEventDataChunks(streamText)) {
-    if (chunk === "{}" || chunk === "[DONE]") {
+    if (chunk === '{}' || chunk === '[DONE]') {
       continue;
     }
 
@@ -70,10 +70,10 @@ export function parsePerplexityAskResponse(
     try {
       payload = JSON.parse(chunk) as PerplexityEventPayload;
     } catch {
-      throw new Error("Failed to parse Perplexity SSE payload.");
+      throw new Error('Failed to parse Perplexity SSE payload.');
     }
 
-    if (typeof payload.backend_uuid === "string" && payload.backend_uuid) {
+    if (typeof payload.backend_uuid === 'string' && payload.backend_uuid) {
       lastBackendUuid = payload.backend_uuid;
     }
 
@@ -90,7 +90,7 @@ export function parsePerplexityAskResponse(
 
   if (!finalText) {
     throw new Error(
-      "No assistant response was found in the Perplexity event stream.",
+      'No assistant response was found in the Perplexity event stream.'
     );
   }
 

@@ -1,25 +1,25 @@
-import { ofetch, type FetchOptions } from "ofetch";
+import { ofetch, type FetchOptions } from 'ofetch';
 
 import {
   parseChatGPTConversationStream,
   parseChatGPTRequirements,
   parseChatGPTSession,
-} from "./chatgptParser";
-import { createChatGPTSentinel } from "./chatgptSentinel";
+} from './chatgptParser';
+import { createChatGPTSentinel } from './chatgptSentinel';
 import type {
   ChatGPTClient,
   ChatGPTConversationResult,
   ChatGPTRequirements,
   ChatGPTSendConversationInput,
   ChatGPTSentinel,
-} from "./types";
+} from './types';
 
-const CHATGPT_BASE_URL = "https://chatgpt.com";
-const DEVICE_ID_STORAGE_KEY = "oai_device_id";
+const CHATGPT_BASE_URL = 'https://chatgpt.com';
+const DEVICE_ID_STORAGE_KEY = 'oai_device_id';
 
 type JsonFetcher = (
   request: string,
-  options?: FetchOptions,
+  options?: FetchOptions
 ) => Promise<unknown>;
 type NativeFetcher = (request: string, init?: RequestInit) => Promise<Response>;
 
@@ -34,8 +34,8 @@ interface ChatGPTClientOptions {
 
 function defaultMessageId(): string {
   if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
+    typeof crypto !== 'undefined' &&
+    typeof crypto.randomUUID === 'function'
   ) {
     return crypto.randomUUID();
   }
@@ -57,33 +57,33 @@ function defaultDeviceId(): string {
 }
 
 function defaultLanguage(): string {
-  return globalThis.navigator?.language || "en-US";
+  return globalThis.navigator?.language || 'en-US';
 }
 
 function buildHeaders(
   accessToken: string,
   deviceId: string,
-  language: string,
+  language: string
 ): HeadersInit {
   return {
     Authorization: `Bearer ${accessToken}`,
-    "Oai-Device-Id": deviceId,
-    "Oai-Language": language,
+    'Oai-Device-Id': deviceId,
+    'Oai-Language': language,
   };
 }
 
 function buildConversationBody(
   input: ChatGPTSendConversationInput,
-  createMessageId: () => string,
+  createMessageId: () => string
 ): string {
   return JSON.stringify({
-    action: "next",
+    action: 'next',
     conversation_mode: {
-      kind: "primary_assistant",
+      kind: 'primary_assistant',
     },
     force_nulligen: false,
     force_paragen: false,
-    force_paragen_model_slug: "",
+    force_paragen_model_slug: '',
     force_rate_limit: false,
     force_use_search: false,
     force_use_sse: true,
@@ -92,10 +92,10 @@ function buildConversationBody(
       {
         id: createMessageId(),
         author: {
-          role: "user",
+          role: 'user',
         },
         content: {
-          content_type: "text",
+          content_type: 'text',
           parts: [input.prompt],
         },
       },
@@ -112,7 +112,7 @@ function createAuthorizationError(status: number): Error {
 }
 
 export function createChatGPTClient(
-  options: ChatGPTClientOptions = {},
+  options: ChatGPTClientOptions = {}
 ): ChatGPTClient {
   const fetchJson =
     options.fetchJson ?? ((request, init) => ofetch(request, init));
@@ -124,27 +124,27 @@ export function createChatGPTClient(
 
   async function getAccessToken(): Promise<string> {
     const session = await fetchJson(`${CHATGPT_BASE_URL}/api/auth/session`, {
-      credentials: "include",
+      credentials: 'include',
     });
 
     return parseChatGPTSession(session);
   }
 
   async function getChatRequirements(
-    accessToken: string,
+    accessToken: string
   ): Promise<ChatGPTRequirements> {
     const requirementsToken = await sentinel.createRequirementsToken();
     const requirements = parseChatGPTRequirements(
       await fetchJson(
         `${CHATGPT_BASE_URL}/backend-api/sentinel/chat-requirements`,
         {
-          method: "POST",
+          method: 'POST',
           body: {
             p: requirementsToken,
           },
           headers: buildHeaders(accessToken, getDeviceId(), getLanguage()),
-        },
-      ),
+        }
+      )
     );
 
     if (requirements.proofofwork?.required) {
@@ -152,7 +152,7 @@ export function createChatGPTClient(
       const difficulty = requirements.proofofwork.difficulty;
 
       if (!seed || !difficulty) {
-        throw new Error("ChatGPT proof-of-work challenge is incomplete.");
+        throw new Error('ChatGPT proof-of-work challenge is incomplete.');
       }
 
       return {
@@ -165,27 +165,27 @@ export function createChatGPTClient(
   }
 
   async function sendConversationMessage(
-    input: ChatGPTSendConversationInput,
+    input: ChatGPTSendConversationInput
   ): Promise<ChatGPTConversationResult> {
     const response = await fetchNative(
       `${CHATGPT_BASE_URL}/backend-api/conversation`,
       {
-        method: "POST",
+        method: 'POST',
         signal: input.signal,
         headers: {
-          accept: "text/event-stream",
-          "Content-Type": "application/json",
+          accept: 'text/event-stream',
+          'Content-Type': 'application/json',
           ...buildHeaders(input.accessToken, getDeviceId(), getLanguage()),
-          "Openai-Sentinel-Chat-Requirements-Token":
+          'Openai-Sentinel-Chat-Requirements-Token':
             input.chatRequirementsToken,
           ...(input.proofToken
             ? {
-                "Openai-Sentinel-Proof-Token": input.proofToken,
+                'Openai-Sentinel-Proof-Token': input.proofToken,
               }
             : {}),
         },
         body: buildConversationBody(input, createMessageId),
-      },
+      }
     );
 
     if (response.status === 401 || response.status === 403) {
@@ -194,7 +194,7 @@ export function createChatGPTClient(
 
     if (!response.ok) {
       throw new Error(
-        `ChatGPT conversation request failed (${response.status})`,
+        `ChatGPT conversation request failed (${response.status})`
       );
     }
 

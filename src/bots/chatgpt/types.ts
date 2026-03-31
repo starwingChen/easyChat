@@ -41,6 +41,6 @@ export interface ChatGPTClient {
   getAccessToken(): Promise<string>;
   getChatRequirements(accessToken: string): Promise<ChatGPTRequirements>;
   sendConversationMessage(
-    input: ChatGPTSendConversationInput,
+    input: ChatGPTSendConversationInput
   ): Promise<ChatGPTConversationResult>;
 }

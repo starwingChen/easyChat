@@ -1,8 +1,8 @@
-import { sha3_512 } from "js-sha3";
+import { sha3_512 } from 'js-sha3';
 
-import type { ChatGPTSentinel } from "./types";
+import type { ChatGPTSentinel } from './types';
 
-const SENTINEL_CACHE_FALLBACK = "wQ8Lk5FbGpA2NcR9dShT6gYjU7VxZ4D";
+const SENTINEL_CACHE_FALLBACK = 'wQ8Lk5FbGpA2NcR9dShT6gYjU7VxZ4D';
 
 interface ChatGPTSentinelOptions {
   maxAttempts?: number;
@@ -25,8 +25,8 @@ type SentinelConfig = [
 function encodeBase64(value: string): string {
   const bytes = new TextEncoder().encode(value);
 
-  if (typeof btoa === "function") {
-    let binary = "";
+  if (typeof btoa === 'function') {
+    let binary = '';
 
     for (let index = 0; index < bytes.length; index += 0x8000) {
       binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
@@ -35,7 +35,7 @@ function encodeBase64(value: string): string {
     return btoa(binary);
   }
 
-  return Buffer.from(bytes).toString("base64");
+  return Buffer.from(bytes).toString('base64');
 }
 
 function getNavigatorLanguages(): string {
@@ -43,18 +43,18 @@ function getNavigatorLanguages(): string {
     Array.isArray(globalThis.navigator?.languages) &&
     globalThis.navigator.languages.length > 0
   ) {
-    return globalThis.navigator.languages.join(",");
+    return globalThis.navigator.languages.join(',');
   }
 
-  return globalThis.navigator?.language || "en-US";
+  return globalThis.navigator?.language || 'en-US';
 }
 
 function createConfig(now: Date): SentinelConfig {
   const hardwareConcurrency = globalThis.navigator?.hardwareConcurrency ?? 0;
   const width = globalThis.screen?.width ?? 0;
   const height = globalThis.screen?.height ?? 0;
-  const userAgent = globalThis.navigator?.userAgent || "";
-  const language = globalThis.navigator?.language || "en-US";
+  const userAgent = globalThis.navigator?.userAgent || '';
+  const language = globalThis.navigator?.language || 'en-US';
   const languages = getNavigatorLanguages();
   const performanceMemory = (
     globalThis.performance as Performance & {
@@ -70,8 +70,8 @@ function createConfig(now: Date): SentinelConfig {
     performanceMemory ?? 0,
     0,
     userAgent,
-    "",
-    "",
+    '',
+    '',
     language,
     languages,
     0,
@@ -79,7 +79,7 @@ function createConfig(now: Date): SentinelConfig {
 }
 
 export function createChatGPTSentinel(
-  options: ChatGPTSentinelOptions = {},
+  options: ChatGPTSentinelOptions = {}
 ): ChatGPTSentinel {
   const maxAttempts = options.maxAttempts ?? 500_000;
   const now = options.now ?? (() => new Date());
@@ -124,7 +124,7 @@ export function createChatGPTSentinel(
 
   return {
     async createRequirementsToken(seed = `${Math.random()}`): Promise<string> {
-      return `gAAAAAC${solve(seed, "0")}`;
+      return `gAAAAAC${solve(seed, '0')}`;
     },
     async createProofToken(seed: string, difficulty: string): Promise<string> {
       return `gAAAAAB${solve(seed, difficulty)}`;

@@ -1,8 +1,8 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from 'react';
 
-import type { BotDefinition, BotMessageAction } from "../../types/bot";
-import type { ChatMessage } from "../../types/message";
-import { MessageBubble } from "./MessageBubble";
+import type { BotDefinition, BotMessageAction } from '../../types/bot';
+import type { ChatMessage } from '../../types/message';
+import { MessageBubble } from './MessageBubble';
 
 interface MessageListProps {
   botDefinition: BotDefinition;
@@ -16,7 +16,7 @@ function getLastAssistantMessage(messages: ChatMessage[]) {
   for (let index = messages.length - 1; index >= 0; index -= 1) {
     const message = messages[index];
 
-    if (message.role === "assistant") {
+    if (message.role === 'assistant') {
       return message;
     }
   }
@@ -33,7 +33,7 @@ export function MessageList({
 }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const previousAssistantMessageRef = useRef<ChatMessage | null | undefined>(
-    undefined,
+    undefined
   );
   const lastAssistantMessage = getLastAssistantMessage(messages);
 

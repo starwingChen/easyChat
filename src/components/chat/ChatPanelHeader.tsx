@@ -1,9 +1,9 @@
-import { Settings2, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Settings2, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-import { useI18n } from "../../i18n";
-import type { ApiBotConfigValue, BotDefinition } from "../../types/bot";
-import { Dropdown } from "../common/Dropdown";
+import { useI18n } from '../../i18n';
+import type { ApiBotConfigValue, BotDefinition } from '../../types/bot';
+import { Dropdown } from '../common/Dropdown';
 
 interface ChatPanelHeaderProps {
   allBotDefinitions: BotDefinition[];
@@ -40,8 +40,8 @@ export function ChatPanelHeader({
   onSaveApiConfig,
   selectedModelId,
 }: ChatPanelHeaderProps) {
-  const [apiKey, setApiKey] = useState("");
-  const [modelName, setModelName] = useState("");
+  const [apiKey, setApiKey] = useState('');
+  const [modelName, setModelName] = useState('');
   const { t } = useI18n();
 
   useEffect(() => {
@@ -49,16 +49,16 @@ export function ChatPanelHeader({
       return;
     }
 
-    setApiKey(initialApiConfig?.apiKey ?? "");
-    setModelName(initialApiConfig?.modelName ?? "");
+    setApiKey(initialApiConfig?.apiKey ?? '');
+    setModelName(initialApiConfig?.modelName ?? '');
   }, [initialApiConfig, isConfigOpen]);
 
   const sortedBotDefinitions = [
     ...allBotDefinitions.filter(
-      (bot) => availableBotIds.includes(bot.id) && bot.accessMode !== "api",
+      (bot) => availableBotIds.includes(bot.id) && bot.accessMode !== 'api'
     ),
     ...allBotDefinitions.filter(
-      (bot) => availableBotIds.includes(bot.id) && bot.accessMode === "api",
+      (bot) => availableBotIds.includes(bot.id) && bot.accessMode === 'api'
     ),
   ];
   const botOptions = sortedBotDefinitions.map((bot) => ({
@@ -76,7 +76,7 @@ export function ChatPanelHeader({
         <span className="truncate">{bot.name}</span>
         {botsInConversation.includes(bot.id) ? (
           <span className="shrink-0 rounded-md border border-slate-200 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
-            {t("chat.inConversation")}
+            {t('chat.inConversation')}
           </span>
         ) : null}
       </div>
@@ -86,10 +86,10 @@ export function ChatPanelHeader({
     botDefinition.models.find((model) => model.id === selectedModelId) ??
     botDefinition.models[0];
   const currentModelText =
-    botDefinition.accessMode === "api"
+    botDefinition.accessMode === 'api'
       ? configuredModelName && configuredModelName.trim().length > 0
         ? configuredModelName
-        : t("config.unset")
+        : t('config.unset')
       : selectedModel.label;
 
   return (
@@ -97,21 +97,21 @@ export function ChatPanelHeader({
       <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/70 px-3 py-2">
         {isReadonly ? (
           <Dropdown
-            ariaLabel={t("chat.selectBot")}
+            ariaLabel={t('chat.selectBot')}
             onChange={onBotChange}
             options={botOptions}
             value={botDefinition.id}
           />
         ) : (
           <Dropdown
-            ariaLabel={t("chat.selectBot")}
+            ariaLabel={t('chat.selectBot')}
             onChange={onBotChange}
             options={botOptions}
             value={botDefinition.id}
           />
         )}
         <div className="flex items-center gap-2">
-          {!isReadonly && botDefinition.accessMode === "api" ? (
+          {!isReadonly && botDefinition.accessMode === 'api' ? (
             <>
               <div className="flex items-center gap-2 px-2 text-xs text-slate-500 shrink-0">
                 <span className="font-medium text-slate-700">
@@ -119,7 +119,7 @@ export function ChatPanelHeader({
                 </span>
               </div>
               <button
-                aria-label={t("chat.configure")}
+                aria-label={t('chat.configure')}
                 className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
                 onClick={onOpenApiConfig}
                 type="button"
@@ -136,14 +136,14 @@ export function ChatPanelHeader({
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-base font-semibold text-slate-900">
-                  {t("config.title")}
+                  {t('config.title')}
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
                   {botDefinition.name}
                 </p>
               </div>
               <button
-                aria-label={t("config.cancel")}
+                aria-label={t('config.cancel')}
                 className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                 onClick={onCloseApiConfig}
                 type="button"
@@ -154,11 +154,11 @@ export function ChatPanelHeader({
             <div className="space-y-4">
               <label className="block text-sm text-slate-600">
                 <span className="mb-1.5 block">
-                  {botDefinition.apiConfig.apiKeyLabel || t("config.apiKey")}
+                  {botDefinition.apiConfig.apiKeyLabel || t('config.apiKey')}
                 </span>
                 <input
                   aria-label={
-                    botDefinition.apiConfig.apiKeyLabel || t("config.apiKey")
+                    botDefinition.apiConfig.apiKeyLabel || t('config.apiKey')
                   }
                   className="w-full rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-blue-400"
                   onChange={(event) => setApiKey(event.target.value)}
@@ -168,12 +168,12 @@ export function ChatPanelHeader({
               <label className="block text-sm text-slate-600">
                 <span className="mb-1.5 block">
                   {botDefinition.apiConfig.modelNameLabel ||
-                    t("config.modelName")}
+                    t('config.modelName')}
                 </span>
                 <input
                   aria-label={
                     botDefinition.apiConfig.modelNameLabel ||
-                    t("config.modelName")
+                    t('config.modelName')
                   }
                   className="w-full rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-blue-400"
                   onChange={(event) => setModelName(event.target.value)}
@@ -187,7 +187,7 @@ export function ChatPanelHeader({
                 onClick={onCloseApiConfig}
                 type="button"
               >
-                {t("config.cancel")}
+                {t('config.cancel')}
               </button>
               <button
                 className="rounded-xl bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
@@ -197,7 +197,7 @@ export function ChatPanelHeader({
                 }}
                 type="button"
               >
-                {t("config.save")}
+                {t('config.save')}
               </button>
             </div>
           </div>

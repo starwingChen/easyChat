@@ -1,7 +1,7 @@
-import { Ban, SendHorizontal } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Ban, SendHorizontal } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
-import { useI18n } from "../../i18n";
+import { useI18n } from '../../i18n';
 
 interface MessageComposerProps {
   disabled: boolean;
@@ -14,7 +14,7 @@ export function MessageComposer({
   sendDisabled,
   onSend,
 }: MessageComposerProps) {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState('');
   const [isComposing, setIsComposing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const previousDisabledRef = useRef(disabled);
@@ -31,7 +31,7 @@ export function MessageComposer({
     const maxHeight = singleLineHeight * 6;
 
     textarea.style.height = `${singleLineHeight}px`;
-    textarea.style.overflowY = "hidden";
+    textarea.style.overflowY = 'hidden';
 
     if (!value) {
       return;
@@ -41,7 +41,7 @@ export function MessageComposer({
 
     textarea.style.height = `${nextHeight}px`;
     textarea.style.overflowY =
-      textarea.scrollHeight > maxHeight ? "auto" : "hidden";
+      textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
   }, [value]);
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export function MessageComposer({
     }
 
     onSend(trimmedValue);
-    setValue("");
+    setValue('');
   }
 
   return (
@@ -73,7 +73,7 @@ export function MessageComposer({
           onCompositionEnd={() => setIsComposing(false)}
           onCompositionStart={() => setIsComposing(true)}
           onKeyDown={(event) => {
-            if (event.key !== "Enter") {
+            if (event.key !== 'Enter') {
               return;
             }
 
@@ -90,13 +90,13 @@ export function MessageComposer({
               handleSend();
             }
           }}
-          placeholder={t("composer.placeholder")}
+          placeholder={t('composer.placeholder')}
           ref={textareaRef}
           rows={1}
           value={value}
         />
         <button
-          aria-label={t("composer.send")}
+          aria-label={t('composer.send')}
           className="rounded-full bg-slate-200 p-2 text-slate-500 transition hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={disabled || sendDisabled}
           onClick={handleSend}

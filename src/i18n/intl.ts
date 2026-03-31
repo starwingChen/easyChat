@@ -1,20 +1,20 @@
-import { createIntl, createIntlCache, type IntlShape } from "react-intl";
+import { createIntl, createIntlCache, type IntlShape } from 'react-intl';
 
-import type { Locale } from "../types/app";
-import enUSMessages from "./messages/en-US";
+import type { Locale } from '../types/app';
+import enUSMessages from './messages/en-US';
 import type {
   MessageCatalog,
   MessageId,
   MessageValues,
-} from "./messages/types";
-import { defaultLocale } from "./messages/types";
-import zhCNMessages from "./messages/zh-CN";
+} from './messages/types';
+import { defaultLocale } from './messages/types';
+import zhCNMessages from './messages/zh-CN';
 
 const cache = createIntlCache();
 
 const dictionaries: Record<Locale, MessageCatalog> = {
-  "zh-CN": zhCNMessages,
-  "en-US": enUSMessages,
+  'zh-CN': zhCNMessages,
+  'en-US': enUSMessages,
 };
 
 export type AppTranslator = (id: MessageId, values?: MessageValues) => string;
@@ -31,7 +31,7 @@ export function createAppIntl(locale: Locale): IntlShape {
       messages: getMessages(locale),
       onError: () => undefined,
     },
-    cache,
+    cache
   );
 }
 

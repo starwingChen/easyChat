@@ -1,10 +1,10 @@
-import { isBotUserFacingError } from "../../types/bot";
-import type { BotRegistry } from "../../bots/botRegistry";
-import { createAppTranslator } from "../../i18n";
-import type { Locale } from "../../types/app";
-import type { ChatMessage } from "../../types/message";
-import type { ChatSession } from "../../types/session";
-import { getVisibleBotIds } from "../layout/layoutService";
+import { isBotUserFacingError } from '../../types/bot';
+import type { BotRegistry } from '../../bots/botRegistry';
+import { createAppTranslator } from '../../i18n';
+import type { Locale } from '../../types/app';
+import type { ChatMessage } from '../../types/message';
+import type { ChatSession } from '../../types/session';
+import { getVisibleBotIds } from '../layout/layoutService';
 
 interface BroadcastMessageInput {
   session: ChatSession;
@@ -43,57 +43,57 @@ interface RetryReplyRequestInput {
   sessionId: string;
 }
 
-function createMessageId(prefix: string, stamp: string, suffix = ""): string {
+function createMessageId(prefix: string, stamp: string, suffix = ''): string {
   return `${prefix}-${stamp}${suffix}`;
 }
 
 function createPendingAssistantMessage(
   request: Pick<
     PendingBotReplyRequest,
-    | "botId"
-    | "content"
-    | "createdAt"
-    | "locale"
-    | "messageId"
-    | "modelId"
-    | "sessionId"
-    | "targetBotIds"
+    | 'botId'
+    | 'content'
+    | 'createdAt'
+    | 'locale'
+    | 'messageId'
+    | 'modelId'
+    | 'sessionId'
+    | 'targetBotIds'
   >,
-  overrides: Partial<ChatMessage>,
+  overrides: Partial<ChatMessage>
 ): ChatMessage {
   return {
     id: request.messageId,
     sessionId: request.sessionId,
-    role: "assistant",
+    role: 'assistant',
     botId: request.botId,
     modelId: request.modelId,
-    content: "",
+    content: '',
     createdAt: request.createdAt,
     requestContent: request.content,
     requestLocale: request.locale,
     requestTargetBotIds: request.targetBotIds,
-    status: "loading",
+    status: 'loading',
     ...overrides,
   };
 }
 
 function getReplyFailureMessage(locale: Locale): string {
-  return createAppTranslator(locale)("chat.replyFailed");
+  return createAppTranslator(locale)('chat.replyFailed');
 }
 
 function isActionableBotError(error: unknown): error is Error {
   return (
-    error instanceof Error && error.message.includes("action://open-api-config")
+    error instanceof Error && error.message.includes('action://open-api-config')
   );
 }
 
 export function buildSelectedModels(
-  registry: BotRegistry,
+  registry: BotRegistry
 ): Record<string, string> {
   return Object.fromEntries(
     registry
       .getAllBots()
-      .map((bot) => [bot.definition.id, bot.getDefaultModel()]),
+      .map((bot) => [bot.definition.id, bot.getDefaultModel()])
   );
 }
 
@@ -101,16 +101,16 @@ export function createInitialSession(
   registry: BotRegistry,
   locale: Locale,
   createdAt: string,
-  layout: ChatSession["layout"] = "2v",
-  activeBotIds = ["chatgpt", "gemini", "perplexity", "copilot"],
+  layout: ChatSession['layout'] = '2v',
+  activeBotIds = ['chatgpt', 'gemini', 'perplexity', 'copilot']
 ): ChatSession {
-  const sessionId = "session-active";
+  const sessionId = 'session-active';
   const selectedModels = buildSelectedModels(registry);
   const t = createAppTranslator(locale);
 
   return {
     id: sessionId,
-    title: t("session.title.active"),
+    title: t('session.title.active'),
     layout,
     activeBotIds,
     selectedModels,
@@ -136,13 +136,13 @@ export function createBroadcastDraft({
   const visibleBotIds = getVisibleBotIds(session.activeBotIds, session.layout);
   const createdAt = now();
   const userMessage: ChatMessage = {
-    id: createMessageId("user", createdAt),
+    id: createMessageId('user', createdAt),
     sessionId: session.id,
-    role: "user",
+    role: 'user',
     content: trimmedContent,
     targetBotIds: visibleBotIds,
     createdAt,
-    status: "done",
+    status: 'done',
   };
   const loadingMessages: ChatMessage[] = visibleBotIds.map((botId, index) => {
     const bot = registry.getBot(botId);
@@ -150,12 +150,12 @@ export function createBroadcastDraft({
     return {
       id: createMessageId(botId, createdAt, `-${index}`),
       sessionId: session.id,
-      role: "assistant",
+      role: 'assistant',
       botId,
       modelId: session.selectedModels[botId] ?? bot.getDefaultModel(),
-      content: "",
+      content: '',
       createdAt,
-      status: "loading",
+      status: 'loading',
       retryCount: 0,
       retryLimit: BOT_REPLY_RETRY_LIMIT,
       requestContent: trimmedContent,
@@ -188,9 +188,9 @@ export function createRetryReplyRequest({
   sessionId,
 }: RetryReplyRequestInput): PendingBotReplyRequest | null {
   if (
-    message.role !== "assistant" ||
+    message.role !== 'assistant' ||
     !message.botId ||
-    message.status !== "error" ||
+    message.status !== 'error' ||
     !message.requestContent ||
     !message.requestTargetBotIds?.length
   ) {
@@ -212,7 +212,7 @@ export function createRetryReplyRequest({
 }
 
 export async function resolvePendingBotReply(
-  request: PendingBotReplyRequest,
+  request: PendingBotReplyRequest
 ): Promise<ChatMessage> {
   for (
     let retryCount = 0;
@@ -234,27 +234,27 @@ export async function resolvePendingBotReply(
       return createPendingAssistantMessage(request, {
         modelId: response.modelId,
         content: response.content,
-        status: "done",
+        status: 'done',
       });
     } catch (error) {
       if (request.signal?.aborted) {
         return createPendingAssistantMessage(request, {
-          content: error instanceof Error ? error.message : "Unknown bot error",
-          status: "error",
+          content: error instanceof Error ? error.message : 'Unknown bot error',
+          status: 'error',
         });
       }
 
       if (isBotUserFacingError(error) || isActionableBotError(error)) {
         return createPendingAssistantMessage(request, {
           content: error.message,
-          status: "error",
+          status: 'error',
         });
       }
 
       if (retryCount === BOT_REPLY_RETRY_LIMIT) {
         return createPendingAssistantMessage(request, {
           content: getReplyFailureMessage(request.locale),
-          status: "error",
+          status: 'error',
           retryCount: BOT_REPLY_RETRY_LIMIT,
           retryLimit: BOT_REPLY_RETRY_LIMIT,
         });
@@ -264,14 +264,14 @@ export async function resolvePendingBotReply(
         createPendingAssistantMessage(request, {
           retryCount: retryCount + 1,
           retryLimit: BOT_REPLY_RETRY_LIMIT,
-        }),
+        })
       );
     }
   }
 
   return createPendingAssistantMessage(request, {
     content: getReplyFailureMessage(request.locale),
-    status: "error",
+    status: 'error',
     retryCount: BOT_REPLY_RETRY_LIMIT,
     retryLimit: BOT_REPLY_RETRY_LIMIT,
   });

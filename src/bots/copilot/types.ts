@@ -2,7 +2,7 @@ export interface CopilotConversationState {
   conversationId?: string;
 }
 
-export const COPILOT_AUTH_MESSAGE_TYPE = "prepare-copilot-auth";
+export const COPILOT_AUTH_MESSAGE_TYPE = 'prepare-copilot-auth';
 
 export interface PrepareCopilotAuthRequest {
   type: typeof COPILOT_AUTH_MESSAGE_TYPE;
@@ -14,7 +14,7 @@ export interface PrepareCopilotAuthSuccess {
 
 export interface PrepareCopilotAuthFailure {
   ok: false;
-  code: "authRequired";
+  code: 'authRequired';
 }
 
 export type PrepareCopilotAuthResponse =
@@ -38,15 +38,15 @@ export interface CopilotSendMessageResult {
 }
 
 export type CopilotClientErrorCode =
-  | "authRequired"
-  | "createConversationFailed"
-  | "socketOpenFailed"
-  | "socketClosedBeforeDone"
-  | "socketProtocolError"
-  | "emptyResponse";
+  | 'authRequired'
+  | 'createConversationFailed'
+  | 'socketOpenFailed'
+  | 'socketClosedBeforeDone'
+  | 'socketProtocolError'
+  | 'emptyResponse';
 
 export interface CopilotAppendTextEvent {
-  event: "appendText";
+  event: 'appendText';
   messageId?: string;
   partId?: string;
   text: string;
@@ -54,13 +54,13 @@ export interface CopilotAppendTextEvent {
 }
 
 export interface CopilotDoneEvent {
-  event: "done";
+  event: 'done';
   messageId?: string;
   id?: string;
 }
 
 export interface CopilotChallengeEvent {
-  event: "challenge";
+  event: 'challenge';
   id?: string;
 }
 
@@ -71,9 +71,9 @@ export type CopilotStreamEvent =
 
 export interface CopilotClient {
   createConversation(
-    signal?: AbortSignal,
+    signal?: AbortSignal
   ): Promise<CopilotCreateConversationResult>;
   sendMessage(
-    input: CopilotSendMessageInput,
+    input: CopilotSendMessageInput
   ): Promise<CopilotSendMessageResult>;
 }

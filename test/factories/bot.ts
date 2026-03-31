@@ -2,19 +2,19 @@ import type {
   ApiConfigDefinition,
   BotDefinition,
   BotModel,
-} from "../../src/types/bot";
+} from '../../src/types/bot';
 
 const defaultModels: BotModel[] = [
-  { id: "model-default", label: "Default Model", isDefault: true },
+  { id: 'model-default', label: 'Default Model', isDefault: true },
 ];
 
 const defaultApiConfig: ApiConfigDefinition = {
-  apiKeyLabel: "API Key",
-  modelNameLabel: "Model Name",
+  apiKeyLabel: 'API Key',
+  modelNameLabel: 'Model Name',
 };
 
 export function createBotDefinition(
-  overrides: Partial<BotDefinition> = {},
+  overrides: Partial<BotDefinition> = {}
 ): BotDefinition {
   const models =
     overrides.models && overrides.models.length > 0
@@ -26,14 +26,14 @@ export function createBotDefinition(
     models[0].id;
 
   return {
-    id: overrides.id ?? "bot",
-    name: overrides.name ?? "Bot",
-    brand: overrides.brand ?? "Brand",
-    themeColor: overrides.themeColor ?? "#111827",
-    accessMode: overrides.accessMode ?? "session",
+    id: overrides.id ?? 'bot',
+    name: overrides.name ?? 'Bot',
+    brand: overrides.brand ?? 'Brand',
+    themeColor: overrides.themeColor ?? '#111827',
+    accessMode: overrides.accessMode ?? 'session',
     apiConfig: overrides.apiConfig
       ? { ...overrides.apiConfig }
-      : overrides.accessMode === "api"
+      : overrides.accessMode === 'api'
         ? { ...defaultApiConfig }
         : undefined,
     models: models.map((model) => ({ ...model })),

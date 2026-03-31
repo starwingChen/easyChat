@@ -1,32 +1,32 @@
-import type { AppState } from "../types/app";
+import type { AppState } from '../types/app';
 import type {
   ChatSession,
   LayoutType,
   SessionSnapshot,
-} from "../types/session";
+} from '../types/session';
 import {
   getSnapshotBrowseableBotIds,
   getSnapshotRepliedBotIds,
-} from "../features/history/historyService";
+} from '../features/history/historyService';
 import {
   getBotCountForLayout,
   getVisibleBotIds,
-} from "../features/layout/layoutService";
+} from '../features/layout/layoutService';
 
 function normalizeHistoryBotIds(
   activeBotIds: string[],
-  availableBotIds: string[],
+  availableBotIds: string[]
 ): string[] {
   const availableBotIdSet = new Set(availableBotIds);
 
   return Array.from(new Set(activeBotIds)).filter((botId) =>
-    availableBotIdSet.has(botId),
+    availableBotIdSet.has(botId)
   );
 }
 
 function normalizeHistoryLayout(
   layout: LayoutType,
-  repliedBotCount: number,
+  repliedBotCount: number
 ): LayoutType {
   if (
     repliedBotCount === 0 ||
@@ -36,29 +36,29 @@ function normalizeHistoryLayout(
   }
 
   if (repliedBotCount <= 1) {
-    return "1";
+    return '1';
   }
 
   if (repliedBotCount === 2) {
-    return "2v";
+    return '2v';
   }
 
   if (repliedBotCount === 3) {
-    return "3";
+    return '3';
   }
 
-  return "4";
+  return '4';
 }
 
 function resolveHistorySessionRecord(
   state: AppState,
-  snapshot: SessionSnapshot,
+  snapshot: SessionSnapshot
 ): SessionSnapshot {
   const currentPreference = state.historyViewPreferences[snapshot.id];
   const repliedBotCount = getSnapshotRepliedBotIds(snapshot).length;
   const layout = normalizeHistoryLayout(
     currentPreference?.layout ?? snapshot.layout,
-    repliedBotCount,
+    repliedBotCount
   );
   const browseableBotIds = getSnapshotBrowseableBotIds(snapshot);
 
@@ -67,18 +67,18 @@ function resolveHistorySessionRecord(
     layout,
     activeBotIds: normalizeHistoryBotIds(
       currentPreference?.activeBotIds ?? snapshot.activeBotIds,
-      browseableBotIds,
+      browseableBotIds
     ),
   };
 }
 
 export function selectCurrentSessionRecord(
-  state: AppState,
+  state: AppState
 ): ChatSession | SessionSnapshot {
-  if (state.currentView.mode === "history") {
+  if (state.currentView.mode === 'history') {
     const snapshot =
       state.historySnapshots.find(
-        (item) => item.id === state.currentView.sessionId,
+        (item) => item.id === state.currentView.sessionId
       ) ?? state.historySnapshots[0];
 
     return snapshot
@@ -91,28 +91,28 @@ export function selectCurrentSessionRecord(
 
 export function selectCurrentViewBotOptions(
   state: AppState,
-  allBotIds: string[],
+  allBotIds: string[]
 ): string[] {
-  if (state.currentView.mode !== "history") {
+  if (state.currentView.mode !== 'history') {
     return allBotIds;
   }
 
   const snapshot =
     state.historySnapshots.find(
-      (item) => item.id === state.currentView.sessionId,
+      (item) => item.id === state.currentView.sessionId
     ) ?? state.historySnapshots[0];
 
   return snapshot ? getSnapshotBrowseableBotIds(snapshot) : allBotIds;
 }
 
 export function selectDisabledHistoryLayouts(state: AppState): LayoutType[] {
-  if (state.currentView.mode !== "history") {
+  if (state.currentView.mode !== 'history') {
     return [];
   }
 
   const snapshot =
     state.historySnapshots.find(
-      (item) => item.id === state.currentView.sessionId,
+      (item) => item.id === state.currentView.sessionId
     ) ?? state.historySnapshots[0];
 
   if (!snapshot) {
@@ -125,8 +125,8 @@ export function selectDisabledHistoryLayouts(state: AppState): LayoutType[] {
     return [];
   }
 
-  return (["1", "2v", "2h", "3", "4"] as LayoutType[]).filter(
-    (layout) => getBotCountForLayout(layout) > repliedBotCount,
+  return (['1', '2v', '2h', '3', '4'] as LayoutType[]).filter(
+    (layout) => getBotCountForLayout(layout) > repliedBotCount
   );
 }
 
@@ -136,20 +136,20 @@ export function selectVisibleBotIds(state: AppState): string[] {
 }
 
 export function selectHasVisibleLoadingMessages(state: AppState): boolean {
-  if (state.currentView.mode !== "active") {
+  if (state.currentView.mode !== 'active') {
     return false;
   }
 
   const visibleBotIds = getVisibleBotIds(
     state.activeSession.activeBotIds,
-    state.activeSession.layout,
+    state.activeSession.layout
   );
 
   return state.activeSession.messages.some(
     (message) =>
-      message.role === "assistant" &&
-      message.status === "loading" &&
+      message.role === 'assistant' &&
+      message.status === 'loading' &&
       !!message.botId &&
-      visibleBotIds.includes(message.botId),
+      visibleBotIds.includes(message.botId)
   );
 }

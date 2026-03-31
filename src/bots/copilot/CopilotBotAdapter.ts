@@ -1,20 +1,20 @@
-import { createAppTranslator } from "../../i18n";
+import { createAppTranslator } from '../../i18n';
 import {
   BotUserFacingError,
   type BotDefinition,
   type BotModel,
   type BotResponse,
   type SendMessageInput,
-} from "../../types/bot";
-import { BaseBotAdapter } from "../BaseBotAdapter";
-import { copilotDefinition } from "../definitions";
-import { CopilotClientError, createCopilotClient } from "./copilotClient";
+} from '../../types/bot';
+import { BaseBotAdapter } from '../BaseBotAdapter';
+import { copilotDefinition } from '../definitions';
+import { CopilotClientError, createCopilotClient } from './copilotClient';
 import {
   COPILOT_AUTH_MESSAGE_TYPE,
   type CopilotClient,
   type CopilotConversationState,
   type PrepareCopilotAuthResponse,
-} from "./types";
+} from './types';
 
 interface CopilotBotAdapterOptions {
   client?: CopilotClient;
@@ -27,7 +27,7 @@ type PrepareCopilotAuth = () => Promise<void>;
 function prepareCopilotAuth(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (!chrome.runtime?.sendMessage) {
-      reject(new Error("Copilot auth preparation is unavailable."));
+      reject(new Error('Copilot auth preparation is unavailable.'));
       return;
     }
 
@@ -42,15 +42,15 @@ function prepareCopilotAuth(): Promise<void> {
         if (!response?.ok) {
           reject(
             new CopilotClientError(
-              "authRequired",
-              "Copilot requires browser verification.",
-            ),
+              'authRequired',
+              'Copilot requires browser verification.'
+            )
           );
           return;
         }
 
         resolve();
-      },
+      }
     );
   });
 }
@@ -58,22 +58,22 @@ function prepareCopilotAuth(): Promise<void> {
 function isCopilotAuthError(error: unknown): error is CopilotClientError {
   return (
     error instanceof CopilotClientError &&
-    (error.code === "authRequired" || error.code === "socketOpenFailed")
+    (error.code === 'authRequired' || error.code === 'socketOpenFailed')
   );
 }
 
 function isCopilotConversationState(
-  value: unknown,
+  value: unknown
 ): value is CopilotConversationState {
-  if (!value || typeof value !== "object") {
+  if (!value || typeof value !== 'object') {
     return false;
   }
 
   const candidate = value as CopilotConversationState;
 
   return (
-    typeof candidate.conversationId === "string" ||
-    typeof candidate.conversationId === "undefined"
+    typeof candidate.conversationId === 'string' ||
+    typeof candidate.conversationId === 'undefined'
   );
 }
 
@@ -111,7 +111,7 @@ export class CopilotBotAdapter extends BaseBotAdapter {
 
       if (!conversationId) {
         const createdConversation = await this.client.createConversation(
-          input.signal,
+          input.signal
         );
         conversationId = createdConversation.conversationId;
       }
@@ -134,11 +134,11 @@ export class CopilotBotAdapter extends BaseBotAdapter {
         modelId: input.modelId,
         content: result.text,
         createdAt: this.now(),
-        status: "done",
+        status: 'done',
       };
     } catch (error) {
       if (isCopilotAuthError(error)) {
-        throw new BotUserFacingError(t("bot.error.copilot.authRequired"));
+        throw new BotUserFacingError(t('bot.error.copilot.authRequired'));
       }
 
       throw error;

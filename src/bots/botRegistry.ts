@@ -1,11 +1,11 @@
-import type { BaseBotAdapter } from "./BaseBotAdapter";
-import type { BotModel } from "../types/bot";
-import { ChatGPTBotAdapter } from "./chatgpt/ChatGPTBotAdapter";
-import { CopilotBotAdapter } from "./copilot/CopilotBotAdapter";
-import { DeepSeekApiBotAdapter } from "./deepseekApi/DeepSeekApiBotAdapter";
-import { GeminiBotAdapter } from "./gemini/GeminiBotAdapter";
-import { PerplexityBotAdapter } from "./perplexity/PerplexityBotAdapter";
-import { QwenApiBotAdapter } from "./qwenApi/QwenApiBotAdapter";
+import type { BaseBotAdapter } from './BaseBotAdapter';
+import type { BotModel } from '../types/bot';
+import { ChatGPTBotAdapter } from './chatgpt/ChatGPTBotAdapter';
+import { CopilotBotAdapter } from './copilot/CopilotBotAdapter';
+import { DeepSeekApiBotAdapter } from './deepseekApi/DeepSeekApiBotAdapter';
+import { GeminiBotAdapter } from './gemini/GeminiBotAdapter';
+import { PerplexityBotAdapter } from './perplexity/PerplexityBotAdapter';
+import { QwenApiBotAdapter } from './qwenApi/QwenApiBotAdapter';
 
 export interface BotRegistry {
   getBot(botId: string): BaseBotAdapter;
@@ -29,7 +29,7 @@ export function createBotRegistry(): BotRegistry {
     qwenApiAdapter,
   ];
   const adapterMap = new Map(
-    adapters.map((adapter) => [adapter.definition.id, adapter]),
+    adapters.map((adapter) => [adapter.definition.id, adapter])
   );
 
   return {

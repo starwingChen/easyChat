@@ -1,12 +1,12 @@
-import type { Locale } from "./app";
+import type { Locale } from './app';
 
-export type MessageRole = "user" | "assistant" | "system";
+export type MessageRole = 'user' | 'assistant' | 'system';
 export type MessageStatus =
-  | "loading"
-  | "done"
-  | "error"
-  | "welcome"
-  | "cancelled";
+  | 'loading'
+  | 'done'
+  | 'error'
+  | 'welcome'
+  | 'cancelled';
 
 export interface ChatMessage {
   id: string;

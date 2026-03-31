@@ -1,21 +1,21 @@
-import type { Locale } from "../types/app";
-import { createAppIntl, createAppTranslator, getMessages } from "./intl";
-import type { MessageCatalog, MessageId } from "./messages/types";
-export { AppI18nProvider } from "./provider";
-export { useI18n } from "./useI18n";
+import type { Locale } from '../types/app';
+import { createAppIntl, createAppTranslator, getMessages } from './intl';
+import type { MessageCatalog, MessageId } from './messages/types';
+export { AppI18nProvider } from './provider';
+export { useI18n } from './useI18n';
 export { createAppIntl, createAppTranslator, getMessages };
-export type { AppTranslator } from "./intl";
+export type { AppTranslator } from './intl';
 export type {
   MessageCatalog,
   MessageId,
   MessageValues,
-} from "./messages/types";
+} from './messages/types';
 
 export type TranslationKey = MessageId;
 export type Translator = ReturnType<typeof createAppTranslator>;
 
 export function resolveLocale(locale?: string | null): Locale {
-  return locale?.toLowerCase().startsWith("en") ? "en-US" : "zh-CN";
+  return locale?.toLowerCase().startsWith('en') ? 'en-US' : 'zh-CN';
 }
 
 export function createTranslator(locale: Locale): Translator {
@@ -25,7 +25,7 @@ export function createTranslator(locale: Locale): Translator {
 export function formatMessage(
   locale: Locale,
   id: MessageId,
-  values?: Record<string, string | number | boolean>,
+  values?: Record<string, string | number | boolean>
 ) {
   return createAppIntl(locale).formatMessage({ id }, values);
 }

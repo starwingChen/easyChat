@@ -1,4 +1,4 @@
-import type { GeminiGenerateResult, GeminiRequestParams } from "./types";
+import type { GeminiGenerateResult, GeminiRequestParams } from './types';
 
 function extractValue(source: string, key: string): string {
   const match = source.match(new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`));
@@ -36,18 +36,18 @@ function extractWrbPayloads(source: string): unknown[] {
 
 export function parseGeminiBootstrap(html: string): GeminiRequestParams {
   return {
-    atValue: extractOptionalValue(html, "SNlM0e"),
-    blValue: extractValue(html, "cfb2h"),
-    buildLabel: extractValue(html, "d2zJAe"),
+    atValue: extractOptionalValue(html, 'SNlM0e'),
+    blValue: extractValue(html, 'cfb2h'),
+    buildLabel: extractValue(html, 'd2zJAe'),
   };
 }
 
 export function parseGeminiGenerateResponse(
-  responseText: string,
+  responseText: string
 ): GeminiGenerateResult {
   const payloads = extractWrbPayloads(responseText);
 
-  let text = "";
+  let text = '';
   let contextIds: string[] | null = null;
 
   for (const payload of payloads) {
@@ -56,18 +56,18 @@ export function parseGeminiGenerateResponse(
     }
 
     const ids = Array.isArray(payload[1])
-      ? payload[1].filter((item): item is string => typeof item === "string")
+      ? payload[1].filter((item): item is string => typeof item === 'string')
       : [];
     const candidateBlocks = Array.isArray(payload[4]) ? payload[4] : [];
     const firstBlock = Array.isArray(candidateBlocks[0])
       ? candidateBlocks[0]
       : null;
-    const choiceId = typeof firstBlock?.[0] === "string" ? firstBlock[0] : null;
+    const choiceId = typeof firstBlock?.[0] === 'string' ? firstBlock[0] : null;
     const parts = Array.isArray(firstBlock?.[1]) ? firstBlock[1] : [];
-    const blockText = typeof parts[0] === "string" ? parts[0] : "";
+    const blockText = typeof parts[0] === 'string' ? parts[0] : '';
     const partialText =
-      payload[2] && typeof payload[2] === "object" && !Array.isArray(payload[2])
-        ? (payload[2] as Record<string, unknown>)["11"]
+      payload[2] && typeof payload[2] === 'object' && !Array.isArray(payload[2])
+        ? (payload[2] as Record<string, unknown>)['11']
         : null;
 
     if (blockText) {
@@ -75,7 +75,7 @@ export function parseGeminiGenerateResponse(
     } else if (
       !text &&
       Array.isArray(partialText) &&
-      typeof partialText[0] === "string"
+      typeof partialText[0] === 'string'
     ) {
       text = partialText[0];
     }
@@ -86,7 +86,7 @@ export function parseGeminiGenerateResponse(
   }
 
   if (!text || !contextIds) {
-    throw new Error("Failed to parse Gemini generate response");
+    throw new Error('Failed to parse Gemini generate response');
   }
 
   return {

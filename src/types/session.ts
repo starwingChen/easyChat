@@ -1,6 +1,6 @@
-import type { ChatMessage } from "./message";
+import type { ChatMessage } from './message';
 
-export type LayoutType = "1" | "2v" | "2h" | "3" | "4";
+export type LayoutType = '1' | '2v' | '2h' | '3' | '4';
 
 export interface ChatSession {
   id: string;

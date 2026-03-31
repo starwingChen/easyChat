@@ -1,7 +1,7 @@
-import * as Dialog from "@radix-ui/react-dialog";
-import { Globe, Keyboard, X } from "lucide-react";
+import * as Dialog from '@radix-ui/react-dialog';
+import { Globe, Keyboard, X } from 'lucide-react';
 
-import { useI18n } from "../../i18n";
+import { useI18n } from '../../i18n';
 
 interface SidebarSettingsDialogProps {
   open: boolean;
@@ -17,11 +17,11 @@ export function SidebarSettingsDialog({
   const { t } = useI18n();
 
   function handleOpenShortcutSettings() {
-    if (typeof chrome === "undefined" || !chrome.tabs?.create) {
+    if (typeof chrome === 'undefined' || !chrome.tabs?.create) {
       return;
     }
 
-    void chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
+    void chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
   }
 
   return (
@@ -34,10 +34,10 @@ export function SidebarSettingsDialog({
         >
           <div className="flex items-start justify-between gap-4">
             <Dialog.Title className="text-lg font-semibold text-slate-900">
-              {t("sidebar.settings.title")}
+              {t('sidebar.settings.title')}
             </Dialog.Title>
             <Dialog.Close
-              aria-label={t("sidebar.settings.close")}
+              aria-label={t('sidebar.settings.close')}
               className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
               type="button"
             >
@@ -53,14 +53,14 @@ export function SidebarSettingsDialog({
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-sm font-semibold text-slate-900">
-                    {t("sidebar.settings.language")}
+                    {t('sidebar.settings.language')}
                   </h3>
                   <button
                     className="mt-3 rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
                     onClick={onToggleLocale}
                     type="button"
                   >
-                    {t("sidebar.settings.language")}
+                    {t('sidebar.settings.language')}
                   </button>
                 </div>
               </div>
@@ -73,17 +73,17 @@ export function SidebarSettingsDialog({
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-sm font-semibold text-slate-900">
-                    {t("sidebar.settings.shortcuts")}
+                    {t('sidebar.settings.shortcuts')}
                   </h3>
                   <p className="mt-2 text-sm font-medium text-slate-700">
-                    {t("sidebar.settings.shortcutsDefault")}
+                    {t('sidebar.settings.shortcutsDefault')}
                   </p>
                   <button
                     className="mt-3 inline-flex text-sm font-medium text-blue-600 transition hover:text-blue-500"
                     onClick={handleOpenShortcutSettings}
                     type="button"
                   >
-                    {t("sidebar.settings.shortcutsManage")}
+                    {t('sidebar.settings.shortcutsManage')}
                   </button>
                 </div>
               </div>

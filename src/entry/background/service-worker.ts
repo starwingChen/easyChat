@@ -1,8 +1,8 @@
-const OPEN_WINDOW_IDS_STORAGE_KEY = "easy-chat:side-panel-open-window-ids";
-const COPILOT_AUTH_MESSAGE_TYPE = "prepare-copilot-auth";
+const OPEN_WINDOW_IDS_STORAGE_KEY = 'easy-chat:side-panel-open-window-ids';
+const COPILOT_AUTH_MESSAGE_TYPE = 'prepare-copilot-auth';
 const COPILOT_COOKIE_RULE_ID = 1001;
-const COPILOT_COOKIE_NAME = "__Host-copilot-anon";
-const COPILOT_URL = "https://copilot.microsoft.com";
+const COPILOT_COOKIE_NAME = '__Host-copilot-anon';
+const COPILOT_URL = 'https://copilot.microsoft.com';
 const openWindowIds = new Set<number>();
 
 function parseStoredOpenWindowIds(rawValue: unknown): Set<number> {
@@ -12,8 +12,8 @@ function parseStoredOpenWindowIds(rawValue: unknown): Set<number> {
 
   return new Set(
     rawValue.filter((windowId): windowId is number =>
-      Number.isInteger(windowId),
-    ),
+      Number.isInteger(windowId)
+    )
   );
 }
 
@@ -27,7 +27,7 @@ function syncOpenWindowIds(windowIds: Set<number>): void {
 }
 
 function loadPersistedOpenWindowIds(
-  callback: (windowIds: Set<number>) => void,
+  callback: (windowIds: Set<number>) => void
 ): void {
   if (!chrome.storage?.session) {
     callback(snapshotOpenWindowIds());
@@ -68,7 +68,7 @@ function persistOpenWindowIds(): void {
     },
     () => {
       void chrome.runtime.lastError;
-    },
+    }
   );
 }
 
@@ -102,14 +102,14 @@ function readCopilotAnonCookie(): Promise<string | null> {
 
         const value = cookie?.value?.trim();
         resolve(value ? value : null);
-      },
+      }
     );
   });
 }
 
 function updateCopilotCookieRule(cookieValue: string): Promise<void> {
   if (!chrome.declarativeNetRequest?.updateDynamicRules) {
-    return Promise.reject(new Error("Dynamic rules are unavailable."));
+    return Promise.reject(new Error('Dynamic rules are unavailable.'));
   }
   return chrome.declarativeNetRequest.updateDynamicRules({
     removeRuleIds: [COPILOT_COOKIE_RULE_ID],
@@ -118,18 +118,18 @@ function updateCopilotCookieRule(cookieValue: string): Promise<void> {
         id: COPILOT_COOKIE_RULE_ID,
         priority: 1,
         action: {
-          type: "modifyHeaders",
+          type: 'modifyHeaders',
           requestHeaders: [
             {
-              header: "Cookie",
-              operation: "set",
+              header: 'Cookie',
+              operation: 'set',
               value: `${COPILOT_COOKIE_NAME}=${cookieValue}`,
             },
           ],
         },
         condition: {
-          requestDomains: ["copilot.microsoft.com"],
-          resourceTypes: ["websocket"],
+          requestDomains: ['copilot.microsoft.com'],
+          resourceTypes: ['websocket'],
         },
       },
     ],
@@ -137,14 +137,14 @@ function updateCopilotCookieRule(cookieValue: string): Promise<void> {
 }
 
 async function handlePrepareCopilotAuth(): Promise<
-  { ok: true } | { ok: false; code: "authRequired" }
+  { ok: true } | { ok: false; code: 'authRequired' }
 > {
   const cookieValue = await readCopilotAnonCookie();
 
   if (!cookieValue) {
     return {
       ok: false,
-      code: "authRequired",
+      code: 'authRequired',
     };
   }
 
@@ -166,7 +166,7 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onMessage?.addListener((message, _sender, sendResponse) => {
   if (
     !message ||
-    typeof message !== "object" ||
+    typeof message !== 'object' ||
     (message as { type?: string }).type !== COPILOT_AUTH_MESSAGE_TYPE
   ) {
     return;
@@ -179,7 +179,7 @@ chrome.runtime.onMessage?.addListener((message, _sender, sendResponse) => {
     .catch(() => {
       sendResponse({
         ok: false,
-        code: "authRequired",
+        code: 'authRequired',
       });
     });
 
@@ -205,7 +205,7 @@ chrome.sidePanel?.onClosed?.addListener((info) => {
 });
 
 chrome.commands.onCommand.addListener((command) => {
-  if (command !== "open-side-panel" || !chrome.sidePanel?.open) {
+  if (command !== 'open-side-panel' || !chrome.sidePanel?.open) {
     return;
   }
 

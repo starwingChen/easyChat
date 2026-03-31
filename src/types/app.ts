@@ -1,7 +1,7 @@
-import type { ChatSession, LayoutType, SessionSnapshot } from "./session";
+import type { ChatSession, LayoutType, SessionSnapshot } from './session';
 
-export type Locale = "zh-CN" | "en-US";
-export type SessionViewMode = "active" | "history";
+export type Locale = 'zh-CN' | 'en-US';
+export type SessionViewMode = 'active' | 'history';
 export interface HistoryViewPreference {
   layout: LayoutType;
   activeBotIds: string[];

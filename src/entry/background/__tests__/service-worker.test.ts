@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-describe("background service worker", () => {
+describe('background service worker', () => {
   const onInstalledListeners: Array<() => void> = [];
   const onCommandListeners: Array<(command: string) => void | Promise<void>> =
     [];
@@ -8,7 +8,7 @@ describe("background service worker", () => {
     (
       message: unknown,
       sender: chrome.runtime.MessageSender,
-      sendResponse: (response: unknown) => void,
+      sendResponse: (response: unknown) => void
     ) => boolean | void | Promise<void>
   > = [];
   const onWindowFocusChangedListeners: Array<
@@ -26,7 +26,7 @@ describe("background service worker", () => {
   let gestureActive = false;
   const getLastFocused = vi.fn(
     (
-      callback?: (window: { id?: number }) => void,
+      callback?: (window: { id?: number }) => void
     ): Promise<{ id?: number }> | void => {
       const currentWindow = { id: 7 };
 
@@ -36,28 +36,28 @@ describe("background service worker", () => {
       }
 
       return Promise.resolve(currentWindow);
-    },
+    }
   );
   const sessionStorageState: Record<string, unknown> = {};
   const readSessionStorage = (
-    key?: string | string[] | Record<string, unknown>,
+    key?: string | string[] | Record<string, unknown>
   ) => {
-    if (typeof key === "string") {
+    if (typeof key === 'string') {
       return { [key]: sessionStorageState[key] };
     }
 
     if (Array.isArray(key)) {
       return Object.fromEntries(
-        key.map((item) => [item, sessionStorageState[item]]),
+        key.map((item) => [item, sessionStorageState[item]])
       );
     }
 
-    if (key && typeof key === "object") {
+    if (key && typeof key === 'object') {
       return Object.fromEntries(
         Object.entries(key).map(([item, fallback]) => [
           item,
           sessionStorageState[item] ?? fallback,
-        ]),
+        ])
       );
     }
 
@@ -66,7 +66,7 @@ describe("background service worker", () => {
   const storageSessionGet = vi.fn(
     (
       key?: string | string[] | Record<string, unknown>,
-      callback?: (items: Record<string, unknown>) => void,
+      callback?: (items: Record<string, unknown>) => void
     ): Promise<Record<string, unknown>> | void => {
       const items = readSessionStorage(key);
 
@@ -76,12 +76,12 @@ describe("background service worker", () => {
       }
 
       return Promise.resolve(items);
-    },
+    }
   );
   const storageSessionSet = vi.fn(
     (
       value: Record<string, unknown>,
-      callback?: () => void,
+      callback?: () => void
     ): Promise<void> | void => {
       Object.assign(sessionStorageState, value);
       callback?.();
@@ -89,7 +89,7 @@ describe("background service worker", () => {
       if (!callback) {
         return Promise.resolve();
       }
-    },
+    }
   );
   const storageSessionRemove = vi.fn(
     (key: string | string[], callback?: () => void): Promise<void> | void => {
@@ -102,25 +102,25 @@ describe("background service worker", () => {
       if (!callback) {
         return Promise.resolve();
       }
-    },
+    }
   );
   const cookiesGet = vi.fn(
     (
       details: { url: string; name: string },
-      callback?: (cookie?: chrome.cookies.Cookie | null) => void,
+      callback?: (cookie?: chrome.cookies.Cookie | null) => void
     ): Promise<chrome.cookies.Cookie | null> | void => {
       const cookie = {
-        domain: "copilot.microsoft.com",
+        domain: 'copilot.microsoft.com',
         expirationDate: 1,
         hostOnly: true,
         httpOnly: true,
-        name: "__Host-copilot-anon",
-        path: "/",
-        sameSite: "no_restriction" as chrome.cookies.SameSiteStatus,
+        name: '__Host-copilot-anon',
+        path: '/',
+        sameSite: 'no_restriction' as chrome.cookies.SameSiteStatus,
         secure: true,
         session: false,
-        storeId: "0",
-        value: "copilot-token",
+        storeId: '0',
+        value: 'copilot-token',
       };
 
       if (callback) {
@@ -129,23 +129,23 @@ describe("background service worker", () => {
       }
 
       return Promise.resolve(cookie);
-    },
+    }
   );
   const updateDynamicRules = vi.fn(
     (
       _options: chrome.declarativeNetRequest.UpdateRuleOptions,
-      callback?: () => void,
+      callback?: () => void
     ): Promise<void> | void => {
       callback?.();
 
       if (!callback) {
         return Promise.resolve();
       }
-    },
+    }
   );
 
   async function loadServiceWorker() {
-    await import("../service-worker");
+    await import('../service-worker');
   }
 
   async function flushMicrotasks() {
@@ -163,14 +163,14 @@ describe("background service worker", () => {
     const listener = onMessageListeners[0];
 
     if (!listener) {
-      throw new Error("runtime.onMessage listener not registered");
+      throw new Error('runtime.onMessage listener not registered');
     }
 
     return new Promise<unknown>((resolve) => {
       const result = listener(
         message,
         {} as chrome.runtime.MessageSender,
-        (response: unknown) => resolve(response),
+        (response: unknown) => resolve(response)
       );
 
       if (result !== true) {
@@ -193,7 +193,7 @@ describe("background service worker", () => {
     open.mockImplementation(async () => {
       if (!gestureActive) {
         throw new Error(
-          "sidePanel.open must be called during the command user gesture",
+          'sidePanel.open must be called during the command user gesture'
         );
       }
     });
@@ -205,20 +205,20 @@ describe("background service worker", () => {
     cookiesGet.mockImplementation(
       (
         _details: { url: string; name: string },
-        callback?: (cookie?: chrome.cookies.Cookie | null) => void,
+        callback?: (cookie?: chrome.cookies.Cookie | null) => void
       ): Promise<chrome.cookies.Cookie | null> | void => {
         const cookie = {
-          domain: "copilot.microsoft.com",
+          domain: 'copilot.microsoft.com',
           expirationDate: 1,
           hostOnly: true,
           httpOnly: true,
-          name: "__Host-copilot-anon",
-          path: "/",
-          sameSite: "no_restriction" as chrome.cookies.SameSiteStatus,
+          name: '__Host-copilot-anon',
+          path: '/',
+          sameSite: 'no_restriction' as chrome.cookies.SameSiteStatus,
           secure: true,
           session: false,
-          storeId: "0",
-          value: "copilot-token",
+          storeId: '0',
+          value: 'copilot-token',
         };
 
         if (callback) {
@@ -227,26 +227,26 @@ describe("background service worker", () => {
         }
 
         return Promise.resolve(cookie);
-      },
+      }
     );
     updateDynamicRules.mockReset();
     updateDynamicRules.mockImplementation(
       (
         _options: chrome.declarativeNetRequest.UpdateRuleOptions,
-        callback?: () => void,
+        callback?: () => void
       ): Promise<void> | void => {
         callback?.();
 
         if (!callback) {
           return Promise.resolve();
         }
-      },
+      }
     );
     Object.keys(sessionStorageState).forEach(
-      (key) => delete sessionStorageState[key],
+      (key) => delete sessionStorageState[key]
     );
 
-    vi.stubGlobal("chrome", {
+    vi.stubGlobal('chrome', {
       runtime: {
         lastError: undefined,
         onInstalled: {
@@ -258,8 +258,8 @@ describe("background service worker", () => {
             listener: (
               message: unknown,
               sender: chrome.runtime.MessageSender,
-              sendResponse: (response: unknown) => void,
-            ) => boolean | void,
+              sendResponse: (response: unknown) => void
+            ) => boolean | void
           ) => onMessageListeners.push(listener),
         },
       },
@@ -295,12 +295,12 @@ describe("background service worker", () => {
         setPanelBehavior,
         onOpened: {
           addListener: (
-            listener: (info: { windowId: number; path: string }) => void,
+            listener: (info: { windowId: number; path: string }) => void
           ) => onOpenedListeners.push(listener),
         },
         onClosed: {
           addListener: (
-            listener: (info: { windowId: number; path: string }) => void,
+            listener: (info: { windowId: number; path: string }) => void
           ) => onClosedListeners.push(listener),
         },
       },
@@ -309,25 +309,25 @@ describe("background service worker", () => {
     await loadServiceWorker();
   });
 
-  it("toggles the side panel closed when the command is triggered again for the same window", async () => {
-    await onOpenedListeners[0]?.({ windowId: 7, path: "index.html" });
+  it('toggles the side panel closed when the command is triggered again for the same window', async () => {
+    await onOpenedListeners[0]?.({ windowId: 7, path: 'index.html' });
 
-    triggerCommand("open-side-panel");
+    triggerCommand('open-side-panel');
     await flushMicrotasks();
 
     expect(close).toHaveBeenCalledWith({ windowId: 7 });
     expect(open).not.toHaveBeenCalled();
   });
 
-  it("opens the side panel when it is not tracked as open", async () => {
-    triggerCommand("open-side-panel");
+  it('opens the side panel when it is not tracked as open', async () => {
+    triggerCommand('open-side-panel');
     await flushMicrotasks();
 
     expect(open).toHaveBeenCalledWith({ windowId: 7 });
   });
 
-  it("closes the side panel after a service worker restart when the window is persisted as open", async () => {
-    await onOpenedListeners[0]?.({ windowId: 7, path: "index.html" });
+  it('closes the side panel after a service worker restart when the window is persisted as open', async () => {
+    await onOpenedListeners[0]?.({ windowId: 7, path: 'index.html' });
 
     vi.resetModules();
     onInstalledListeners.length = 0;
@@ -341,94 +341,94 @@ describe("background service worker", () => {
     onWindowFocusChangedListeners[0]?.(7);
     await flushMicrotasks();
 
-    triggerCommand("open-side-panel");
+    triggerCommand('open-side-panel');
     await flushMicrotasks();
 
     expect(close).toHaveBeenCalledWith({ windowId: 7 });
     expect(open).not.toHaveBeenCalled();
   });
 
-  it("opens the side panel before the command user gesture ends", async () => {
+  it('opens the side panel before the command user gesture ends', async () => {
     const errors: string[] = [];
 
     open.mockImplementation(async () => {
       if (!gestureActive) {
-        errors.push("gesture-lost");
+        errors.push('gesture-lost');
         throw new Error(
-          "sidePanel.open must be called during the command user gesture",
+          'sidePanel.open must be called during the command user gesture'
         );
       }
     });
 
-    triggerCommand("open-side-panel");
+    triggerCommand('open-side-panel');
     await flushMicrotasks();
 
     expect(errors).toEqual([]);
     expect(open).toHaveBeenCalledWith({ windowId: 7 });
   });
 
-  it("returns an auth-required result when the Copilot anon cookie is missing", async () => {
+  it('returns an auth-required result when the Copilot anon cookie is missing', async () => {
     cookiesGet.mockImplementation(
       (
         _details: { url: string; name: string },
-        callback?: (cookie?: chrome.cookies.Cookie | null) => void,
+        callback?: (cookie?: chrome.cookies.Cookie | null) => void
       ) => {
         callback?.(null);
-      },
+      }
     );
 
     await expect(
-      triggerRuntimeMessage({ type: "prepare-copilot-auth" }),
+      triggerRuntimeMessage({ type: 'prepare-copilot-auth' })
     ).resolves.toEqual({
       ok: false,
-      code: "authRequired",
+      code: 'authRequired',
     });
     expect(updateDynamicRules).not.toHaveBeenCalled();
   });
 
-  it("returns an auth-required result when the Copilot anon cookie is empty", async () => {
+  it('returns an auth-required result when the Copilot anon cookie is empty', async () => {
     cookiesGet.mockImplementation(
       (
         _details: { url: string; name: string },
-        callback?: (cookie?: chrome.cookies.Cookie | null) => void,
+        callback?: (cookie?: chrome.cookies.Cookie | null) => void
       ) => {
         callback?.({
-          domain: "copilot.microsoft.com",
+          domain: 'copilot.microsoft.com',
           expirationDate: 1,
           hostOnly: true,
           httpOnly: true,
-          name: "__Host-copilot-anon",
-          path: "/",
-          sameSite: "no_restriction" as chrome.cookies.SameSiteStatus,
+          name: '__Host-copilot-anon',
+          path: '/',
+          sameSite: 'no_restriction' as chrome.cookies.SameSiteStatus,
           secure: true,
           session: false,
-          storeId: "0",
-          value: "   ",
+          storeId: '0',
+          value: '   ',
         });
-      },
+      }
     );
 
     await expect(
-      triggerRuntimeMessage({ type: "prepare-copilot-auth" }),
+      triggerRuntimeMessage({ type: 'prepare-copilot-auth' })
     ).resolves.toEqual({
       ok: false,
-      code: "authRequired",
+      code: 'authRequired',
     });
     expect(updateDynamicRules).not.toHaveBeenCalled();
   });
 
-  it("updates the Copilot websocket cookie rule when the anon cookie is available", async () => {
+  it('updates the Copilot websocket cookie rule when the anon cookie is available', async () => {
     await expect(
-      triggerRuntimeMessage({ type: "prepare-copilot-auth" }),
+      triggerRuntimeMessage({ type: 'prepare-copilot-auth' })
     ).resolves.toEqual({
       ok: true,
     });
     expect(cookiesGet).toHaveBeenCalledWith(
       {
-        url: "https://copilot.microsoft.com",
-        name: "__Host-copilot-anon",
+        url: 'https://copilot.microsoft.com',
+        name: '__Host-copilot-anon',
       },
-      expect.any(Function),
+      expect.any(Function)
     );
     expect(updateDynamicRules).toHaveBeenCalledWith({
       removeRuleIds: [1001],
@@ -437,18 +437,18 @@ describe("background service worker", () => {
           id: 1001,
           priority: 1,
           action: {
-            type: "modifyHeaders",
+            type: 'modifyHeaders',
             requestHeaders: [
               {
-                header: "Cookie",
-                operation: "set",
-                value: "__Host-copilot-anon=copilot-token",
+                header: 'Cookie',
+                operation: 'set',
+                value: '__Host-copilot-anon=copilot-token',
               },
             ],
           },
           condition: {
-            requestDomains: ["copilot.microsoft.com"],
-            resourceTypes: ["websocket"],
+            requestDomains: ['copilot.microsoft.com'],
+            resourceTypes: ['websocket'],
           },
         },
       ],

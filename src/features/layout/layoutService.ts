@@ -1,4 +1,4 @@
-import type { LayoutType } from "../../types/session";
+import type { LayoutType } from '../../types/session';
 
 interface EnsureBotsInput {
   layout: LayoutType;
@@ -8,14 +8,14 @@ interface EnsureBotsInput {
 
 export function getBotCountForLayout(layout: LayoutType): number {
   switch (layout) {
-    case "1":
+    case '1':
       return 1;
-    case "2v":
-    case "2h":
+    case '2v':
+    case '2h':
       return 2;
-    case "3":
+    case '3':
       return 3;
-    case "4":
+    case '4':
       return 4;
   }
 }
@@ -28,7 +28,7 @@ export function ensureBotsForLayout({
   const desiredCount = getBotCountForLayout(layout);
   const allowedBotIds = new Set(allBotIds);
   const uniqueActive = Array.from(new Set(activeBotIds)).filter((botId) =>
-    allowedBotIds.has(botId),
+    allowedBotIds.has(botId)
   );
   const nextBotIds = [...uniqueActive];
 
@@ -47,7 +47,7 @@ export function ensureBotsForLayout({
 
 export function getVisibleBotIds(
   activeBotIds: string[],
-  layout: LayoutType,
+  layout: LayoutType
 ): string[] {
   return activeBotIds.slice(0, getBotCountForLayout(layout));
 }
@@ -55,7 +55,7 @@ export function getVisibleBotIds(
 export function replaceBotAtIndex(
   activeBotIds: string[],
   index: number,
-  botId: string,
+  botId: string
 ): string[] {
   const nextBotIds = [...activeBotIds];
   nextBotIds[index] = botId;
