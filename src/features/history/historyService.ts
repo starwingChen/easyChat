@@ -52,6 +52,24 @@ export function getSnapshotBrowseableBotIds(
   return repliedBotIds.length > 0 ? repliedBotIds : snapshot.activeBotIds;
 }
 
+export function normalizeHistoryBrowseableBotIds(
+  preferredBotIds: string[],
+  browseableBotIds: string[]
+): string[] {
+  const browseableBotIdSet = new Set(browseableBotIds);
+  const nextBotIds = Array.from(new Set(preferredBotIds)).filter((botId) =>
+    browseableBotIdSet.has(botId)
+  );
+
+  for (const botId of browseableBotIds) {
+    if (!nextBotIds.includes(botId)) {
+      nextBotIds.push(botId);
+    }
+  }
+
+  return nextBotIds;
+}
+
 export function createSnapshotFromSession(
   session: ChatSession,
   snapshotId: string,

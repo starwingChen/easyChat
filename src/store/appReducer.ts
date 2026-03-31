@@ -1,21 +1,13 @@
-import { getSnapshotBrowseableBotIds } from '../features/history/historyService';
+import {
+  getSnapshotBrowseableBotIds,
+  normalizeHistoryBrowseableBotIds,
+} from '../features/history/historyService';
 import type { AppState } from '../types/app';
 import {
   ensureBotsForLayout,
   replaceBotAtIndex,
 } from '../features/layout/layoutService';
 import type { AppAction } from './actions';
-
-function normalizeHistoryBotIds(
-  activeBotIds: string[],
-  availableBotIds: string[]
-): string[] {
-  const availableBotIdSet = new Set(availableBotIds);
-
-  return Array.from(new Set(activeBotIds)).filter((botId) =>
-    availableBotIdSet.has(botId)
-  );
-}
 
 export function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
@@ -90,7 +82,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
             ...state.historyViewPreferences,
             [snapshot.id]: {
               layout: action.payload.layout,
-              activeBotIds: normalizeHistoryBotIds(
+              activeBotIds: normalizeHistoryBrowseableBotIds(
                 currentPreference?.activeBotIds ?? snapshot.activeBotIds,
                 browseableBotIds
               ),
@@ -172,7 +164,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         const currentPreference = state.historyViewPreferences[snapshot.id];
         const layout = currentPreference?.layout ?? snapshot.layout;
         const nextActiveBotIds = replaceBotAtIndex(
-          normalizeHistoryBotIds(
+          normalizeHistoryBrowseableBotIds(
             currentPreference?.activeBotIds ?? snapshot.activeBotIds,
             browseableBotIds
           ),
@@ -186,7 +178,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
             ...state.historyViewPreferences,
             [snapshot.id]: {
               layout,
-              activeBotIds: normalizeHistoryBotIds(
+              activeBotIds: normalizeHistoryBrowseableBotIds(
                 nextActiveBotIds,
                 browseableBotIds
               ),

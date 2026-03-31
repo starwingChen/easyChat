@@ -6,23 +6,13 @@ import type {
 } from '../types/session';
 import {
   getSnapshotBrowseableBotIds,
+  normalizeHistoryBrowseableBotIds,
   getSnapshotRepliedBotIds,
 } from '../features/history/historyService';
 import {
   getBotCountForLayout,
   getVisibleBotIds,
 } from '../features/layout/layoutService';
-
-function normalizeHistoryBotIds(
-  activeBotIds: string[],
-  availableBotIds: string[]
-): string[] {
-  const availableBotIdSet = new Set(availableBotIds);
-
-  return Array.from(new Set(activeBotIds)).filter((botId) =>
-    availableBotIdSet.has(botId)
-  );
-}
 
 function normalizeHistoryLayout(
   layout: LayoutType,
@@ -65,7 +55,7 @@ function resolveHistorySessionRecord(
   return {
     ...snapshot,
     layout,
-    activeBotIds: normalizeHistoryBotIds(
+    activeBotIds: normalizeHistoryBrowseableBotIds(
       currentPreference?.activeBotIds ?? snapshot.activeBotIds,
       browseableBotIds
     ),

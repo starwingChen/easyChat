@@ -220,7 +220,7 @@ describe('appReducer', () => {
     });
   });
 
-  it('stores history-specific bot replacement and clears the preference when that snapshot is deleted', () => {
+  it('stores history-specific bot replacement without dropping other browseable bots and clears the preference when that snapshot is deleted', () => {
     const snapshot = createSnapshot({
       id: 'hist-1',
       activeBotIds: ['chatgpt', 'gemini', 'perplexity'],
@@ -258,7 +258,7 @@ describe('appReducer', () => {
     expect(next.historyViewPreferences).toEqual({
       'hist-1': {
         layout: '2v',
-        activeBotIds: ['perplexity'],
+        activeBotIds: ['perplexity', 'chatgpt'],
       },
     });
 
@@ -268,6 +268,75 @@ describe('appReducer', () => {
     });
 
     expect(afterDelete.historyViewPreferences).toEqual({});
+  });
+
+  it('keeps all browseable history bots after replacing a visible panel with a previously hidden bot', () => {
+    const snapshot = createSnapshot({
+      id: 'hist-1',
+      layout: '4',
+      activeBotIds: ['chatgpt', 'gemini', 'perplexity', 'copilot'],
+      messages: [
+        createMessage('assistant', {
+          id: 'assistant-1',
+          botId: 'chatgpt',
+          status: 'done',
+        }),
+        createMessage('assistant', {
+          id: 'assistant-2',
+          botId: 'gemini',
+          status: 'done',
+        }),
+        createMessage('assistant', {
+          id: 'assistant-3',
+          botId: 'perplexity',
+          status: 'done',
+        }),
+        createMessage('assistant', {
+          id: 'assistant-4',
+          botId: 'copilot',
+          status: 'done',
+        }),
+      ],
+    });
+    const state = createState({
+      currentView: { mode: 'history', sessionId: snapshot.id },
+      historySnapshots: [snapshot],
+    });
+
+    const narrowed = appReducer(state, {
+      type: 'set-layout',
+      payload: {
+        layout: '2v',
+        allBotIds: ['chatgpt', 'gemini', 'perplexity', 'copilot'],
+      },
+    });
+    const replaced = appReducer(narrowed, {
+      type: 'replace-bot',
+      payload: {
+        index: 1,
+        botId: 'perplexity',
+      },
+    });
+    const expanded = appReducer(replaced, {
+      type: 'set-layout',
+      payload: {
+        layout: '4',
+        allBotIds: ['chatgpt', 'gemini', 'perplexity', 'copilot'],
+      },
+    });
+
+    expect(expanded.historyViewPreferences['hist-1']?.layout).toBe('4');
+    expect(
+      expanded.historyViewPreferences['hist-1']?.activeBotIds.slice(0, 2)
+    ).toEqual(['chatgpt', 'perplexity']);
+    expect(expanded.historyViewPreferences['hist-1']?.activeBotIds).toHaveLength(
+      4
+    );
+    expect(
+      expanded.historyViewPreferences['hist-1']?.activeBotIds
+        .slice()
+        .sort()
+    ).toEqual(['chatgpt', 'copilot', 'gemini', 'perplexity']);
   });
 
   it('replaces an existing active message and updates updatedAt', () => {
