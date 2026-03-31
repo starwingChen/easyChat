@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -125,10 +126,6 @@ describe('ChatPanel', () => {
         modelNameLabel: 'Model',
       },
       capabilities: [],
-      models: [
-        { id: 'deepseek-chat', label: 'DeepSeek Chat', isDefault: true },
-        { id: 'deepseek-reasoner', label: 'DeepSeek Reasoner' },
-      ],
     };
 
     renderWithI18n(
@@ -177,6 +174,183 @@ describe('ChatPanel', () => {
       apiKey: 'sk-demo',
       modelName: 'deepseek-reasoner',
     });
+  });
+
+  it('shows empty state, lets users add, pick, and delete saved api models', async () => {
+    const user = userEvent.setup();
+    const deepseekApiBot = {
+      id: 'deepseek-api',
+      name: 'DeepSeek - API',
+      brand: 'DeepSeek',
+      themeColor: '#2563eb',
+      accessMode: 'api' as const,
+      defaultModel: 'deepseek-chat',
+      apiConfig: {
+        apiKeyLabel: 'API Key',
+        modelNameLabel: 'Model',
+      },
+      capabilities: [],
+    };
+
+    function Harness() {
+      const [savedModels, setSavedModels] = useState<string[]>([]);
+
+      return (
+        <ChatPanel
+          allBotDefinitions={[deepseekApiBot]}
+          availableBotIds={['deepseek-api']}
+          botDefinition={deepseekApiBot}
+          configuredModelName="Unset"
+          initialApiConfig={{
+            apiKey: 'sk-demo',
+            modelName: 'deepseek-chat',
+          }}
+          inUseBotIds={['deepseek-api']}
+          isReadonly={false}
+          messages={[
+            {
+              id: 'assistant-1',
+              sessionId: 'session-1',
+              role: 'assistant',
+              botId: 'deepseek-api',
+              modelId: 'deepseek-chat',
+              content:
+                'DeepSeek - API 尚未配置。请先[配置 API](action://open-api-config)。',
+              createdAt: '2026-03-28T00:00:00.000Z',
+              status: 'error',
+            },
+          ]}
+          onAddSavedApiModel={(modelName) =>
+            setSavedModels((current) =>
+              current.includes(modelName) ? current : [...current, modelName]
+            )
+          }
+          onBotChange={vi.fn()}
+          onModelChange={vi.fn()}
+          onRemoveSavedApiModel={(modelName) =>
+            setSavedModels((current) =>
+              current.filter((item) => item !== modelName)
+            )
+          }
+          onSaveApiConfig={vi.fn()}
+          savedApiModels={savedModels}
+          selectedModelId="deepseek-chat"
+        />
+      );
+    }
+
+    renderWithI18n(<Harness />);
+
+    await user.click(screen.getByRole('link', { name: '配置 API' }));
+
+    expect(
+      screen.queryByRole('button', { name: 'Toggle saved models' })
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Model')).toHaveClass('min-w-[200px]');
+
+    await user.click(screen.getByLabelText('Model'));
+
+    expect(screen.getByText('No saved models yet')).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText('Model'));
+    await user.type(screen.getByLabelText('Model'), 'deepseek-reasoner');
+    await user.click(screen.getByRole('button', { name: 'Add model' }));
+
+    expect(
+      screen.getByRole('button', { name: 'deepseek-reasoner' })
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'deepseek-reasoner' }));
+
+    expect(screen.getByLabelText('Model')).toHaveValue('deepseek-reasoner');
+
+    await user.click(screen.getByLabelText('Model'));
+    await user.click(screen.getByRole('button', { name: 'Remove model' }));
+
+    expect(
+      screen.queryByRole('button', { name: 'deepseek-reasoner' })
+    ).not.toBeInTheDocument();
+  });
+
+  it('keeps the current model input after reopening the dialog and adding a saved model', async () => {
+    const user = userEvent.setup();
+    const deepseekApiBot = {
+      id: 'deepseek-api',
+      name: 'DeepSeek - API',
+      brand: 'DeepSeek',
+      themeColor: '#2563eb',
+      accessMode: 'api' as const,
+      defaultModel: 'deepseek-chat',
+      apiConfig: {
+        apiKeyLabel: 'API Key',
+        modelNameLabel: 'Model',
+      },
+      capabilities: [],
+    };
+
+    function Harness() {
+      const [savedModels, setSavedModels] = useState<string[]>([]);
+      const [savedConfig, setSavedConfig] = useState({
+        apiKey: 'sk-demo',
+        modelName: 'deepseek-chat',
+      });
+
+      return (
+        <ChatPanel
+          allBotDefinitions={[deepseekApiBot]}
+          availableBotIds={['deepseek-api']}
+          botDefinition={deepseekApiBot}
+          configuredModelName={savedConfig.modelName}
+          initialApiConfig={{ ...savedConfig }}
+          inUseBotIds={['deepseek-api']}
+          isReadonly={false}
+          messages={[
+            {
+              id: 'assistant-1',
+              sessionId: 'session-1',
+              role: 'assistant',
+              botId: 'deepseek-api',
+              modelId: 'deepseek-chat',
+              content:
+                'DeepSeek - API 尚未配置。请先[配置 API](action://open-api-config)。',
+              createdAt: '2026-03-28T00:00:00.000Z',
+              status: 'error',
+            },
+          ]}
+          onAddSavedApiModel={(modelName) =>
+            setSavedModels((current) =>
+              current.includes(modelName) ? current : [...current, modelName]
+            )
+          }
+          onBotChange={vi.fn()}
+          onModelChange={vi.fn()}
+          onRemoveSavedApiModel={(modelName) =>
+            setSavedModels((current) =>
+              current.filter((item) => item !== modelName)
+            )
+          }
+          onSaveApiConfig={(nextConfig) => setSavedConfig(nextConfig)}
+          savedApiModels={savedModels}
+          selectedModelId="deepseek-chat"
+        />
+      );
+    }
+
+    renderWithI18n(<Harness />);
+
+    await user.click(screen.getByRole('link', { name: '配置 API' }));
+    await user.clear(screen.getByLabelText('Model'));
+    await user.type(screen.getByLabelText('Model'), 'deepseek-reasoner');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await user.click(screen.getByRole('link', { name: '配置 API' }));
+    expect(screen.getByLabelText('Model')).toHaveValue('deepseek-reasoner');
+
+    await user.clear(screen.getByLabelText('Model'));
+    await user.type(screen.getByLabelText('Model'), 'deepseek-v3');
+    await user.click(screen.getByRole('button', { name: 'Add model' }));
+
+    expect(screen.getByLabelText('Model')).toHaveValue('deepseek-v3');
   });
 
   it('marks only bots with completed assistant replies as in conversation in the bot dropdown', async () => {

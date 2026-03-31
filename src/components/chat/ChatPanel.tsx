@@ -18,11 +18,14 @@ interface ChatPanelProps {
   inUseBotIds: string[];
   isReadonly: boolean;
   messages: ChatMessage[];
+  onAddSavedApiModel?: (modelName: string) => void | Promise<void>;
   onBotChange: (botId: string) => void;
   onCancelLoading?: (messageId: string) => void;
   onRetryFailed?: (messageId: string) => void;
   onModelChange: (modelId: string) => void;
+  onRemoveSavedApiModel?: (modelName: string) => void | Promise<void>;
   onSaveApiConfig?: (config: { apiKey: string; modelName: string }) => void;
+  savedApiModels?: string[];
   selectedModelId: string;
 }
 
@@ -48,11 +51,14 @@ export function ChatPanel({
   inUseBotIds,
   isReadonly,
   messages,
+  onAddSavedApiModel,
   onBotChange,
   onCancelLoading,
   onRetryFailed,
   onModelChange,
+  onRemoveSavedApiModel,
   onSaveApiConfig,
+  savedApiModels,
   selectedModelId,
 }: ChatPanelProps) {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
@@ -87,11 +93,14 @@ export function ChatPanel({
         inUseBotIds={inUseBotIds}
         isConfigOpen={isConfigOpen}
         isReadonly={isReadonly}
+        onAddSavedApiModel={onAddSavedApiModel}
         onBotChange={onBotChange}
         onCloseApiConfig={() => setIsConfigOpen(false)}
         onModelChange={onModelChange}
         onOpenApiConfig={() => setIsConfigOpen(true)}
+        onRemoveSavedApiModel={onRemoveSavedApiModel}
         onSaveApiConfig={onSaveApiConfig}
+        savedApiModels={savedApiModels}
         selectedModelId={selectedModelId}
       />
       <MessageList

@@ -23,6 +23,11 @@ interface ChatWorkspaceProps {
   onCancelLoading?: (messageId: string) => void;
   onRetryFailed?: (messageId: string) => void;
   onModelChange: (botId: string, modelId: string) => void;
+  onAddSavedApiModel?: (botId: string, modelName: string) => void | Promise<void>;
+  onRemoveSavedApiModel?: (
+    botId: string,
+    modelName: string
+  ) => void | Promise<void>;
   onSaveApiConfig?: (
     botId: string,
     config: { apiKey: string; modelName: string }
@@ -90,11 +95,18 @@ function renderTree(
         isReadonly={props.isReadonly}
         key={botId}
         messages={props.currentSession.messages}
+        onAddSavedApiModel={(modelName) =>
+          props.onAddSavedApiModel?.(botId, modelName)
+        }
         onBotChange={(nextBotId) => props.onBotChange(tree.index, nextBotId)}
         onCancelLoading={props.onCancelLoading}
         onModelChange={(modelId) => props.onModelChange(botId, modelId)}
+        onRemoveSavedApiModel={(modelName) =>
+          props.onRemoveSavedApiModel?.(botId, modelName)
+        }
         onRetryFailed={props.onRetryFailed}
         onSaveApiConfig={(config) => props.onSaveApiConfig?.(botId, config)}
+        savedApiModels={botAdapter.getSavedModels()}
         selectedModelId={
           props.currentSession.selectedModels[botId] ??
           botDefinition.defaultModel

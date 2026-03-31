@@ -39,6 +39,8 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
 
   private messages: OpenAiCompatibleApiMessage[] = [];
 
+  private savedModels: string[] = [];
+
   constructor(options: OpenAiCompatibleApiBotAdapterOptions = {}) {
     super();
     this.now = options.now ?? (() => new Date().toISOString());
@@ -46,7 +48,7 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
   }
 
   listModels() {
-    return this.definition.models;
+    return this.definition.models ?? [];
   }
 
   getApiConfig(): ApiBotConfigValue | null {
@@ -55,6 +57,24 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
 
   setApiConfig(config: ApiBotConfigValue): void {
     this.config = normalizeConfig(config);
+  }
+
+  getSavedModels(): string[] {
+    return [...this.savedModels];
+  }
+
+  addSavedModel(modelName: string): void {
+    const normalized = modelName.trim();
+
+    if (!normalized || this.savedModels.includes(normalized)) {
+      return;
+    }
+
+    this.savedModels = [...this.savedModels, normalized];
+  }
+
+  removeSavedModel(modelName: string): void {
+    this.savedModels = this.savedModels.filter((item) => item !== modelName);
   }
 
   async sendMessage(input: SendMessageInput): Promise<BotResponse> {
@@ -117,6 +137,7 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
     return {
       ...this.config,
       messages: this.messages.map((message) => ({ ...message })),
+      savedModels: [...this.savedModels],
     };
   }
 
@@ -124,6 +145,7 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
     if (!isOpenAiCompatibleApiConfigValue(state)) {
       this.config = null;
       this.messages = [];
+      this.savedModels = [];
       return;
     }
 
@@ -133,6 +155,11 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
       ? candidate.messages
           .filter(isOpenAiCompatibleApiMessage)
           .map((message) => ({ ...message }))
+      : [];
+    this.savedModels = Array.isArray(candidate.savedModels)
+      ? candidate.savedModels.filter(
+          (modelName): modelName is string => typeof modelName === 'string'
+        )
       : [];
   }
 }

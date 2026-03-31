@@ -61,7 +61,7 @@ export class ChatGPTBotAdapter extends BaseBotAdapter {
   }
 
   listModels(): BotModel[] {
-    return this.definition.models;
+    return this.definition.models ?? [];
   }
 
   async sendMessage(input: SendMessageInput): Promise<BotResponse> {

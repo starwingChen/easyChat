@@ -12,8 +12,4 @@ export const qwenApiDefinition: BotDefinition = {
   },
   defaultModel: 'qwen-plus',
   capabilities: ['api', 'reasoning'],
-  models: [
-    { id: 'qwen-plus', label: 'Qwen Plus', isDefault: true },
-    { id: 'qwen-max', label: 'Qwen Max' },
-  ],
 };

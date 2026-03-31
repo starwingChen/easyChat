@@ -89,6 +89,7 @@ describe('DeepSeekApiBotAdapter', () => {
       apiKey: 'sk-demo',
       modelName: 'deepseek-reasoner',
       messages: [],
+      savedModels: [],
     });
 
     const reopenedAdapter = new DeepSeekApiBotAdapter();
@@ -151,6 +152,7 @@ describe('DeepSeekApiBotAdapter', () => {
         { role: 'user', content: 'continue' },
         { role: 'assistant', content: 'second reply' },
       ],
+      savedModels: [],
     });
   });
 

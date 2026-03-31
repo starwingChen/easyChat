@@ -30,4 +30,12 @@ export abstract class BaseBotAdapter {
   }
 
   setApiConfig(_config: ApiBotConfigValue): void {}
+
+  getSavedModels(): string[] {
+    return [];
+  }
+
+  addSavedModel(_modelName: string): void {}
+
+  removeSavedModel(_modelName: string): void {}
 }

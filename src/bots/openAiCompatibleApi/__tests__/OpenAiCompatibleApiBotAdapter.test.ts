@@ -19,7 +19,6 @@ const providerDefinition: BotDefinition = {
   },
   defaultModel: 'qwen-plus',
   capabilities: ['api', 'reasoning'],
-  models: [{ id: 'qwen-plus', label: 'Qwen Plus', isDefault: true }],
 };
 
 class TestOpenAiCompatibleApiBotAdapter extends OpenAiCompatibleApiBotAdapter {
@@ -114,7 +113,56 @@ describe('OpenAiCompatibleApiBotAdapter', () => {
         { role: 'user', content: 'continue' },
         { role: 'assistant', content: 'second reply' },
       ],
+      savedModels: [],
     });
+  });
+
+  it('stores saved models without duplicates and trims values', () => {
+    const adapter = new TestOpenAiCompatibleApiBotAdapter();
+
+    adapter.addSavedModel('  qwen-plus  ');
+    adapter.addSavedModel('qwen-plus');
+    adapter.addSavedModel(' ');
+
+    expect(adapter.getSavedModels()).toEqual(['qwen-plus']);
+  });
+
+  it('serializes and restores saved models from persisted state', () => {
+    const adapter = new TestOpenAiCompatibleApiBotAdapter();
+    const reopenedAdapter = new TestOpenAiCompatibleApiBotAdapter();
+
+    adapter.setApiConfig({
+      apiKey: 'sk-demo',
+      modelName: 'qwen-plus',
+    });
+    adapter.addSavedModel('qwen-plus');
+    adapter.addSavedModel('qwen-max');
+
+    expect(adapter.getPersistedState()).toEqual({
+      apiKey: 'sk-demo',
+      modelName: 'qwen-plus',
+      messages: [],
+      savedModels: ['qwen-plus', 'qwen-max'],
+    });
+
+    reopenedAdapter.restorePersistedState(adapter.getPersistedState());
+
+    expect(reopenedAdapter.getSavedModels()).toEqual([
+      'qwen-plus',
+      'qwen-max',
+    ]);
+  });
+
+  it('defaults missing savedModels to an empty list when restoring legacy state', () => {
+    const adapter = new TestOpenAiCompatibleApiBotAdapter();
+
+    adapter.restorePersistedState({
+      apiKey: 'sk-demo',
+      modelName: 'qwen-plus',
+      messages: [],
+    });
+
+    expect(adapter.getSavedModels()).toEqual([]);
   });
 
   it('maps structured client errors through provider message ids', async () => {

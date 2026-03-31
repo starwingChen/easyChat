@@ -12,8 +12,4 @@ export const deepseekApiDefinition: BotDefinition = {
   },
   defaultModel: 'deepseek-chat',
   capabilities: ['api', 'reasoning'],
-  models: [
-    { id: 'deepseek-chat', label: 'DeepSeek Chat', isDefault: true },
-    { id: 'deepseek-reasoner', label: 'DeepSeek Reasoner' },
-  ],
 };

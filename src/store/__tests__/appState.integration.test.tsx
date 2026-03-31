@@ -42,6 +42,8 @@ function StateProbe() {
     createNewSession,
     setLayout,
     saveApiConfig,
+    addSavedApiModel,
+    removeSavedApiModel,
     cancelReply,
     retryReply,
     deleteHistorySnapshot,
@@ -78,6 +80,18 @@ function StateProbe() {
       >
         Save API Config
       </button>
+      <button
+        onClick={() => addSavedApiModel('deepseek-api', 'deepseek-chat')}
+        type="button"
+      >
+        Add Saved Model
+      </button>
+      <button
+        onClick={() => removeSavedApiModel('deepseek-api', 'deepseek-chat')}
+        type="button"
+      >
+        Remove Saved Model
+      </button>
       <button onClick={() => deleteHistorySnapshot('hist-1')} type="button">
         Delete Hist 1
       </button>
@@ -105,6 +119,7 @@ function StateProbe() {
           historyCount: state.historySnapshots.length,
           deepseekApiConfig: registry.getBot('deepseek-api').getApiConfig(),
           deepseekApiState: registry.getBot('deepseek-api').getPersistedState(),
+          savedModels: registry.getBot('deepseek-api').getSavedModels(),
           messages: state.activeSession.messages.map((message) => ({
             id: message.id,
             botId: message.botId,
@@ -132,7 +147,9 @@ function readProbe() {
       apiKey: string;
       modelName: string;
       messages: Array<{ role: string; content: string }>;
+      savedModels: string[];
     } | null;
+    savedModels: string[];
     messages: Array<
       Pick<ChatMessage, 'id' | 'content' | 'status' | 'botId'> & {
         retryCount?: number;
@@ -245,6 +262,7 @@ describe('AppStateContext', () => {
           { role: 'user', content: 'hello' },
           { role: 'assistant', content: 'reply' },
         ],
+        savedModels: [],
       });
     });
 
@@ -261,7 +279,53 @@ describe('AppStateContext', () => {
                 { role: 'user', content: 'hello' },
                 { role: 'assistant', content: 'reply' },
               ],
+              savedModels: [],
             },
+          }),
+        })
+      );
+    });
+  });
+
+  it('persists saved api models immediately when adding and removing them', async () => {
+    const user = userEvent.setup();
+    localeMocks.loadPersistedPreferences.mockResolvedValue(null);
+
+    render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>
+    );
+
+    await waitFor(() => {
+      expect(localeMocks.persistPreferences).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Add Saved Model' }));
+
+    await waitFor(() => {
+      expect(readProbe().savedModels).toEqual(['deepseek-chat']);
+      expect(localeMocks.persistPreferences).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          botStates: expect.objectContaining({
+            'deepseek-api': expect.objectContaining({
+              savedModels: ['deepseek-chat'],
+            }),
+          }),
+        })
+      );
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Remove Saved Model' }));
+
+    await waitFor(() => {
+      expect(readProbe().savedModels).toEqual([]);
+      expect(localeMocks.persistPreferences).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          botStates: expect.objectContaining({
+            'deepseek-api': expect.objectContaining({
+              savedModels: [],
+            }),
           }),
         })
       );

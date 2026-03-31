@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useI18n } from '../../i18n';
 import type { ApiBotConfigValue, BotDefinition } from '../../types/bot';
 import { Dropdown } from '../common/Dropdown';
+import { ApiModelPicker } from './ApiModelPicker';
 
 interface ChatPanelHeaderProps {
   allBotDefinitions: BotDefinition[];
@@ -15,11 +16,14 @@ interface ChatPanelHeaderProps {
   inUseBotIds: string[];
   isConfigOpen: boolean;
   isReadonly: boolean;
+  onAddSavedApiModel?: (modelName: string) => void | Promise<void>;
   onBotChange: (botId: string) => void;
   onCloseApiConfig: () => void;
   onModelChange: (modelId: string) => void;
   onOpenApiConfig: () => void;
+  onRemoveSavedApiModel?: (modelName: string) => void | Promise<void>;
   onSaveApiConfig?: (config: { apiKey: string; modelName: string }) => void;
+  savedApiModels?: string[];
   selectedModelId: string;
 }
 
@@ -33,11 +37,14 @@ export function ChatPanelHeader({
   inUseBotIds,
   isConfigOpen,
   isReadonly,
+  onAddSavedApiModel,
   onBotChange,
   onCloseApiConfig,
   onModelChange: _onModelChange,
   onOpenApiConfig,
+  onRemoveSavedApiModel,
   onSaveApiConfig,
+  savedApiModels,
   selectedModelId,
 }: ChatPanelHeaderProps) {
   const [apiKey, setApiKey] = useState('');
@@ -51,7 +58,7 @@ export function ChatPanelHeader({
 
     setApiKey(initialApiConfig?.apiKey ?? '');
     setModelName(initialApiConfig?.modelName ?? '');
-  }, [initialApiConfig, isConfigOpen]);
+  }, [isConfigOpen]);
 
   const sortedBotDefinitions = [
     ...allBotDefinitions.filter(
@@ -83,14 +90,14 @@ export function ChatPanelHeader({
     ),
   }));
   const selectedModel =
-    botDefinition.models.find((model) => model.id === selectedModelId) ??
-    botDefinition.models[0];
+    botDefinition.models?.find((model) => model.id === selectedModelId) ??
+    botDefinition.models?.[0];
   const currentModelText =
     botDefinition.accessMode === 'api'
       ? configuredModelName && configuredModelName.trim().length > 0
         ? configuredModelName
         : t('config.unset')
-      : selectedModel.label;
+      : selectedModel?.label ?? selectedModelId;
 
   return (
     <>
@@ -165,21 +172,21 @@ export function ChatPanelHeader({
                   value={apiKey}
                 />
               </label>
-              <label className="block text-sm text-slate-600">
-                <span className="mb-1.5 block">
-                  {botDefinition.apiConfig.modelNameLabel ||
-                    t('config.modelName')}
-                </span>
-                <input
-                  aria-label={
-                    botDefinition.apiConfig.modelNameLabel ||
-                    t('config.modelName')
-                  }
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-blue-400"
-                  onChange={(event) => setModelName(event.target.value)}
-                  value={modelName}
-                />
-              </label>
+              <ApiModelPicker
+                label={
+                  botDefinition.apiConfig.modelNameLabel ||
+                  t('config.modelName')
+                }
+                onAddModel={(nextModelName) =>
+                  onAddSavedApiModel?.(nextModelName)
+                }
+                onChange={setModelName}
+                onRemoveModel={(nextModelName) =>
+                  onRemoveSavedApiModel?.(nextModelName)
+                }
+                savedModels={savedApiModels ?? []}
+                value={modelName}
+              />
             </div>
             <div className="mt-5 flex justify-end gap-2">
               <button

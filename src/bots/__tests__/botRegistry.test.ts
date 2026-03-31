@@ -41,6 +41,8 @@ describe('botRegistry', () => {
     expect(registry.getAvailableModels('copilot')).toEqual(
       registry.getBot('copilot').definition.models
     );
+    expect(registry.getAvailableModels('deepseek-api')).toEqual([]);
+    expect(registry.getAvailableModels('qwen-api')).toEqual([]);
   });
 
   it('throws for an unknown bot id', () => {

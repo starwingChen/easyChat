@@ -29,7 +29,7 @@ export interface BotDefinition {
   themeColor: string;
   accessMode: 'session' | 'api';
   apiConfig?: ApiConfigDefinition;
-  models: BotModel[];
+  models?: BotModel[];
   defaultModel: string;
   capabilities: string[];
 }

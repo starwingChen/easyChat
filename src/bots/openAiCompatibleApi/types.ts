@@ -22,6 +22,7 @@ export interface OpenAiCompatibleApiClientError extends Error {
 
 export interface OpenAiCompatibleApiState extends ApiBotConfigValue {
   messages: OpenAiCompatibleApiMessage[];
+  savedModels: string[];
 }
 
 export interface OpenAiCompatibleApiRequestConfig extends ApiBotConfigValue {

@@ -85,6 +85,8 @@ interface AppStateContextValue {
   toggleSidebar: () => void;
   replaceBot: (index: number, botId: string) => void;
   setModel: (botId: string, modelId: string) => void;
+  addSavedApiModel: (botId: string, modelName: string) => Promise<void>;
+  removeSavedApiModel: (botId: string, modelName: string) => Promise<void>;
   saveApiConfig: (botId: string, config: ApiBotConfigValue) => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
   createNewSession: () => void;
@@ -284,6 +286,54 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     },
     setModel(botId, modelId) {
       dispatch({ type: 'set-selected-model', payload: { botId, modelId } });
+    },
+    async addSavedApiModel(botId, modelName) {
+      registry.getBot(botId).addSavedModel(modelName);
+      const updatedAt = new Date().toISOString();
+
+      dispatch({
+        type: 'touch-active-session',
+        payload: { updatedAt },
+      });
+
+      await persistPreferences({
+        locale: state.locale,
+        historySnapshots: state.historySnapshots,
+        layout: state.activeSession.layout,
+        selectedModels: state.activeSession.selectedModels,
+        currentView: state.currentView,
+        activeSession: {
+          ...state.activeSession,
+          updatedAt,
+        },
+        historyViewPreferences: state.historyViewPreferences,
+        botStates: collectBotStates(),
+        sidebar: state.sidebar,
+      }).catch(() => undefined);
+    },
+    async removeSavedApiModel(botId, modelName) {
+      registry.getBot(botId).removeSavedModel(modelName);
+      const updatedAt = new Date().toISOString();
+
+      dispatch({
+        type: 'touch-active-session',
+        payload: { updatedAt },
+      });
+
+      await persistPreferences({
+        locale: state.locale,
+        historySnapshots: state.historySnapshots,
+        layout: state.activeSession.layout,
+        selectedModels: state.activeSession.selectedModels,
+        currentView: state.currentView,
+        activeSession: {
+          ...state.activeSession,
+          updatedAt,
+        },
+        historyViewPreferences: state.historyViewPreferences,
+        botStates: collectBotStates(),
+        sidebar: state.sidebar,
+      }).catch(() => undefined);
     },
     async saveApiConfig(botId, config) {
       registry.getBot(botId).setApiConfig(config);
