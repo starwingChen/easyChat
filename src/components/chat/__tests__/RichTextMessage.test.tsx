@@ -5,6 +5,20 @@ import { describe, expect, it, vi } from 'vitest';
 import { RichTextMessage } from '../RichTextMessage';
 
 describe('RichTextMessage', () => {
+  it('renders markdown tables as table elements', () => {
+    const { container } = render(
+      <RichTextMessage
+        content={'| Bot | Score |\n| --- | --- |\n| ChatGPT | 95 |'}
+      />
+    );
+
+    expect(container.querySelector('table')).toBeInTheDocument();
+    expect(screen.getByText('Bot')).toBeInTheDocument();
+    expect(screen.getByText('Score')).toBeInTheDocument();
+    expect(screen.getByText('ChatGPT')).toBeInTheDocument();
+    expect(screen.getByText('95')).toBeInTheDocument();
+  });
+
   it('renders markdown links and code blocks with safe link attributes', () => {
     const { container } = render(
       <RichTextMessage
