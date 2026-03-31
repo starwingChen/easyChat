@@ -1,9 +1,9 @@
-import { chatgptDefinition } from './chatgpt';
-import { copilotDefinition } from './copilot';
-import { deepseekApiDefinition } from './deepseekApi';
-import { geminiDefinition } from './gemini';
-import { perplexityDefinition } from './perplexity';
-import { qwenApiDefinition } from './qwenApi';
+import { chatgptDefinition } from "./chatgpt";
+import { copilotDefinition } from "./copilot";
+import { deepseekApiDefinition } from "./deepseekApi";
+import { geminiDefinition } from "./gemini";
+import { perplexityDefinition } from "./perplexity";
+import { qwenApiDefinition } from "./qwenApi";
 
 export {
   chatgptDefinition,

@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useState } from "react";
 
-import type { ApiBotConfigValue, BotDefinition, BotMessageAction } from '../../types/bot';
-import type { ChatMessage } from '../../types/message';
-import { ChatPanelHeader } from './ChatPanelHeader';
-import { MessageList } from './MessageList';
+import type {
+  ApiBotConfigValue,
+  BotDefinition,
+  BotMessageAction,
+} from "../../types/bot";
+import type { ChatMessage } from "../../types/message";
+import { ChatPanelHeader } from "./ChatPanelHeader";
+import { MessageList } from "./MessageList";
 
 interface ChatPanelProps {
   allBotDefinitions: BotDefinition[];
@@ -22,11 +26,16 @@ interface ChatPanelProps {
   selectedModelId: string;
 }
 
-function filterMessagesForBot(messages: ChatMessage[], botId: string): ChatMessage[] {
+function filterMessagesForBot(
+  messages: ChatMessage[],
+  botId: string,
+): ChatMessage[] {
   return messages.filter(
     (message) =>
-      (message.role === 'user' && message.targetBotIds?.includes(botId)) ||
-      (message.role === 'assistant' && message.botId === botId && message.status !== 'welcome'),
+      (message.role === "user" && message.targetBotIds?.includes(botId)) ||
+      (message.role === "assistant" &&
+        message.botId === botId &&
+        message.status !== "welcome"),
   );
 }
 
@@ -50,13 +59,18 @@ export function ChatPanel({
   const botsInConversation = Array.from(
     new Set(
       messages
-        .filter((message) => message.role === 'assistant' && message.status === 'done' && message.botId)
+        .filter(
+          (message) =>
+            message.role === "assistant" &&
+            message.status === "done" &&
+            message.botId,
+        )
         .map((message) => message.botId as string),
     ),
   );
 
   function handleMessageAction(action: BotMessageAction) {
-    if (action === 'open-api-config') {
+    if (action === "open-api-config") {
       setIsConfigOpen(true);
     }
   }

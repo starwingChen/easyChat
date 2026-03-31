@@ -1,8 +1,8 @@
-import type { ApiBotConfigValue, BotDefinition } from '../../types/bot';
-import type { MessageId } from '../../i18n';
+import type { ApiBotConfigValue, BotDefinition } from "../../types/bot";
+import type { MessageId } from "../../i18n";
 
 export interface OpenAiCompatibleApiMessage {
-  role: 'system' | 'user' | 'assistant';
+  role: "system" | "user" | "assistant";
   content: string;
 }
 
@@ -10,7 +10,11 @@ export interface OpenAiCompatibleApiPromptResult {
   text: string;
 }
 
-export type OpenAiCompatibleApiErrorCode = 'auth' | 'quota' | 'unavailable' | 'emptyResponse';
+export type OpenAiCompatibleApiErrorCode =
+  | "auth"
+  | "quota"
+  | "unavailable"
+  | "emptyResponse";
 
 export interface OpenAiCompatibleApiClientError extends Error {
   code: OpenAiCompatibleApiErrorCode;
@@ -50,34 +54,45 @@ export function createOpenAiCompatibleApiClientError(
   return Object.assign(new Error(code), { code });
 }
 
-export function isOpenAiCompatibleApiClientError(error: unknown): error is OpenAiCompatibleApiClientError {
+export function isOpenAiCompatibleApiClientError(
+  error: unknown,
+): error is OpenAiCompatibleApiClientError {
   return (
     !!error &&
-    typeof error === 'object' &&
-    'code' in error &&
-    typeof (error as OpenAiCompatibleApiClientError).code === 'string'
+    typeof error === "object" &&
+    "code" in error &&
+    typeof (error as OpenAiCompatibleApiClientError).code === "string"
   );
 }
 
-export function isOpenAiCompatibleApiConfigValue(value: unknown): value is ApiBotConfigValue {
-  if (!value || typeof value !== 'object') {
+export function isOpenAiCompatibleApiConfigValue(
+  value: unknown,
+): value is ApiBotConfigValue {
+  if (!value || typeof value !== "object") {
     return false;
   }
 
   const candidate = value as Partial<ApiBotConfigValue>;
 
-  return typeof candidate.apiKey === 'string' && typeof candidate.modelName === 'string';
+  return (
+    typeof candidate.apiKey === "string" &&
+    typeof candidate.modelName === "string"
+  );
 }
 
-export function isOpenAiCompatibleApiMessage(value: unknown): value is OpenAiCompatibleApiMessage {
-  if (!value || typeof value !== 'object') {
+export function isOpenAiCompatibleApiMessage(
+  value: unknown,
+): value is OpenAiCompatibleApiMessage {
+  if (!value || typeof value !== "object") {
     return false;
   }
 
   const candidate = value as Partial<OpenAiCompatibleApiMessage>;
 
   return (
-    (candidate.role === 'system' || candidate.role === 'user' || candidate.role === 'assistant') &&
-    typeof candidate.content === 'string'
+    (candidate.role === "system" ||
+      candidate.role === "user" ||
+      candidate.role === "assistant") &&
+    typeof candidate.content === "string"
   );
 }

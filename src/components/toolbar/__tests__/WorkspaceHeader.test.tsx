@@ -1,11 +1,11 @@
-import { screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
-import { renderWithI18n } from '../../../test/renderWithI18n';
-import { WorkspaceHeader } from '../WorkspaceHeader';
+import { renderWithI18n } from "../../../test/renderWithI18n";
+import { WorkspaceHeader } from "../WorkspaceHeader";
 
-describe('WorkspaceHeader', () => {
-  it('exposes the full title on hover while keeping the readonly hint', () => {
+describe("WorkspaceHeader", () => {
+  it("exposes the full title on hover while keeping the readonly hint", () => {
     renderWithI18n(
       <WorkspaceHeader
         currentLayout="2v"
@@ -17,10 +17,13 @@ describe('WorkspaceHeader', () => {
     );
 
     expect(
-      screen.getByRole('heading', {
-        name: 'This is a very long snapshot title that should still be available in full',
+      screen.getByRole("heading", {
+        name: "This is a very long snapshot title that should still be available in full",
       }),
-    ).toHaveAttribute('title', 'This is a very long snapshot title that should still be available in full');
-    expect(screen.getByText('Read-only Snapshot')).toBeInTheDocument();
+    ).toHaveAttribute(
+      "title",
+      "This is a very long snapshot title that should still be available in full",
+    );
+    expect(screen.getByText("Read-only Snapshot")).toBeInTheDocument();
   });
 });

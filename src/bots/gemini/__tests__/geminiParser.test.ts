@@ -1,6 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-import { parseGeminiBootstrap, parseGeminiGenerateResponse } from '../geminiParser';
+import {
+  parseGeminiBootstrap,
+  parseGeminiGenerateResponse,
+} from "../geminiParser";
 
 const bootstrapHtml = `
 <html>
@@ -42,27 +45,31 @@ const generateResponse = `)]
   ]
 ]`;
 
-describe('geminiParser', () => {
-  it('extracts bootstrap values from the Gemini homepage html', () => {
+describe("geminiParser", () => {
+  it("extracts bootstrap values from the Gemini homepage html", () => {
     expect(parseGeminiBootstrap(bootstrapHtml)).toEqual({
-      atValue: 'test-at-value',
-      blValue: 'boq_assistant-bard-web-server_20260323.09_p2',
-      buildLabel: 'AIzaSyExample',
+      atValue: "test-at-value",
+      blValue: "boq_assistant-bard-web-server_20260323.09_p2",
+      buildLabel: "AIzaSyExample",
     });
   });
 
-  it('treats SNlM0e as optional when the homepage html does not include it', () => {
+  it("treats SNlM0e as optional when the homepage html does not include it", () => {
     expect(parseGeminiBootstrap(bootstrapHtmlWithoutAtValue)).toEqual({
       atValue: undefined,
-      blValue: 'boq_assistant-bard-web-server_20260323.09_p2',
-      buildLabel: 'AIzaSyExample',
+      blValue: "boq_assistant-bard-web-server_20260323.09_p2",
+      buildLabel: "AIzaSyExample",
     });
   });
 
-  it('extracts answer text and context ids from the irregular generate response', () => {
+  it("extracts answer text and context ids from the irregular generate response", () => {
     expect(parseGeminiGenerateResponse(generateResponse)).toEqual({
-      text: '你好！很高兴见到你。',
-      contextIds: ['c_ee3272ee1c983e63', 'r_4fd2efc4adb247cc', 'rc_36a0d4a418f48c91'],
+      text: "你好！很高兴见到你。",
+      contextIds: [
+        "c_ee3272ee1c983e63",
+        "r_4fd2efc4adb247cc",
+        "rc_36a0d4a418f48c91",
+      ],
     });
   });
 });

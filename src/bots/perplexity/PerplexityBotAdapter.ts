@@ -1,24 +1,31 @@
-import type { BotDefinition, BotModel, BotResponse, SendMessageInput } from '../../types/bot';
-import { BaseBotAdapter } from '../BaseBotAdapter';
-import { perplexityDefinition } from '../definitions';
-import { createPerplexityClient } from './perplexityClient';
-import type { PerplexityClient, PerplexityConversationState } from './types';
+import type {
+  BotDefinition,
+  BotModel,
+  BotResponse,
+  SendMessageInput,
+} from "../../types/bot";
+import { BaseBotAdapter } from "../BaseBotAdapter";
+import { perplexityDefinition } from "../definitions";
+import { createPerplexityClient } from "./perplexityClient";
+import type { PerplexityClient, PerplexityConversationState } from "./types";
 
 interface PerplexityBotAdapterOptions {
   client?: PerplexityClient;
   now?: () => string;
 }
 
-function isPerplexityConversationState(value: unknown): value is PerplexityConversationState {
-  if (!value || typeof value !== 'object') {
+function isPerplexityConversationState(
+  value: unknown,
+): value is PerplexityConversationState {
+  if (!value || typeof value !== "object") {
     return false;
   }
 
   const candidate = value as PerplexityConversationState;
 
   return (
-    typeof candidate.lastBackendUuid === 'undefined' ||
-    typeof candidate.lastBackendUuid === 'string'
+    typeof candidate.lastBackendUuid === "undefined" ||
+    typeof candidate.lastBackendUuid === "string"
   );
 }
 
@@ -64,7 +71,7 @@ export class PerplexityBotAdapter extends BaseBotAdapter {
       modelId: input.modelId,
       content: result.text,
       createdAt: this.now(),
-      status: 'done',
+      status: "done",
     };
   }
 

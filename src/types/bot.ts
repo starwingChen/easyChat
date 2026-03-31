@@ -1,4 +1,4 @@
-import type { Locale } from './app';
+import type { Locale } from "./app";
 
 export interface BotModel {
   id: string;
@@ -16,7 +16,7 @@ export interface ApiBotConfigValue {
   modelName: string;
 }
 
-export type BotMessageAction = 'open-api-config';
+export type BotMessageAction = "open-api-config";
 
 export interface ApiActionLink {
   action: BotMessageAction;
@@ -27,7 +27,7 @@ export interface BotDefinition {
   name: string;
   brand: string;
   themeColor: string;
-  accessMode: 'session' | 'api';
+  accessMode: "session" | "api";
   apiConfig?: ApiConfigDefinition;
   models: BotModel[];
   defaultModel: string;
@@ -49,7 +49,7 @@ export interface BotResponse {
   modelId: string;
   content: string;
   createdAt: string;
-  status: 'done';
+  status: "done";
 }
 
 export class BotUserFacingError extends Error {
@@ -57,10 +57,15 @@ export class BotUserFacingError extends Error {
 
   constructor(message: string) {
     super(message);
-    this.name = 'BotUserFacingError';
+    this.name = "BotUserFacingError";
   }
 }
 
-export function isBotUserFacingError(error: unknown): error is Error & { userFacing: true } {
-  return error instanceof Error && (error as { userFacing?: unknown }).userFacing === true;
+export function isBotUserFacingError(
+  error: unknown,
+): error is Error & { userFacing: true } {
+  return (
+    error instanceof Error &&
+    (error as { userFacing?: unknown }).userFacing === true
+  );
 }

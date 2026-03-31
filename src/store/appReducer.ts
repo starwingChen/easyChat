@@ -1,25 +1,37 @@
-import { getSnapshotBrowseableBotIds } from '../features/history/historyService';
-import type { AppState } from '../types/app';
-import { ensureBotsForLayout, replaceBotAtIndex } from '../features/layout/layoutService';
-import type { AppAction } from './actions';
+import { getSnapshotBrowseableBotIds } from "../features/history/historyService";
+import type { AppState } from "../types/app";
+import {
+  ensureBotsForLayout,
+  replaceBotAtIndex,
+} from "../features/layout/layoutService";
+import type { AppAction } from "./actions";
 
-function normalizeHistoryBotIds(activeBotIds: string[], availableBotIds: string[]): string[] {
+function normalizeHistoryBotIds(
+  activeBotIds: string[],
+  availableBotIds: string[],
+): string[] {
   const availableBotIdSet = new Set(availableBotIds);
 
-  return Array.from(new Set(activeBotIds)).filter((botId) => availableBotIdSet.has(botId));
+  return Array.from(new Set(activeBotIds)).filter((botId) =>
+    availableBotIdSet.has(botId),
+  );
 }
 
 export function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
-    case 'hydrate': {
-      const allBotIds = action.payload.allBotIds ?? state.activeSession.activeBotIds;
+    case "hydrate": {
+      const allBotIds =
+        action.payload.allBotIds ?? state.activeSession.activeBotIds;
       const baseActiveSession = action.payload.activeSession
         ? {
             ...state.activeSession,
             ...action.payload.activeSession,
           }
         : state.activeSession;
-      const layout = action.payload.activeSession?.layout ?? action.payload.layout ?? state.activeSession.layout;
+      const layout =
+        action.payload.activeSession?.layout ??
+        action.payload.layout ??
+        state.activeSession.layout;
       const selectedModels = {
         ...state.activeSession.selectedModels,
         ...action.payload.selectedModels,
@@ -30,8 +42,10 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         locale: action.payload.locale ?? state.locale,
         currentView: action.payload.currentView ?? state.currentView,
-        historySnapshots: action.payload.historySnapshots ?? state.historySnapshots,
-        historyViewPreferences: action.payload.historyViewPreferences ?? state.historyViewPreferences,
+        historySnapshots:
+          action.payload.historySnapshots ?? state.historySnapshots,
+        historyViewPreferences:
+          action.payload.historyViewPreferences ?? state.historyViewPreferences,
         sidebar: action.payload.sidebar ?? state.sidebar,
         activeSession: {
           ...baseActiveSession,
@@ -39,25 +53,29 @@ export function appReducer(state: AppState, action: AppAction): AppState {
           selectedModels,
           activeBotIds: ensureBotsForLayout({
             layout,
-            activeBotIds: action.payload.activeSession?.activeBotIds ?? state.activeSession.activeBotIds,
+            activeBotIds:
+              action.payload.activeSession?.activeBotIds ??
+              state.activeSession.activeBotIds,
             allBotIds,
           }),
         },
       };
     }
-    case 'set-view':
+    case "set-view":
       return {
         ...state,
         currentView: action.payload,
       };
-    case 'set-locale':
+    case "set-locale":
       return {
         ...state,
         locale: action.payload,
       };
-    case 'set-layout':
-      if (state.currentView.mode === 'history') {
-        const snapshot = state.historySnapshots.find((item) => item.id === state.currentView.sessionId);
+    case "set-layout":
+      if (state.currentView.mode === "history") {
+        const snapshot = state.historySnapshots.find(
+          (item) => item.id === state.currentView.sessionId,
+        );
 
         if (!snapshot) {
           return state;
@@ -93,29 +111,32 @@ export function appReducer(state: AppState, action: AppAction): AppState {
           }),
         },
       };
-    case 'toggle-sidebar':
+    case "toggle-sidebar":
       return {
         ...state,
         sidebar: {
           isOpen: !state.sidebar.isOpen,
         },
       };
-    case 'replace-active-session':
+    case "replace-active-session":
       return {
         ...state,
         activeSession: action.payload,
-        currentView: { mode: 'active', sessionId: action.payload.id },
+        currentView: { mode: "active", sessionId: action.payload.id },
       };
-    case 'append-active-messages':
+    case "append-active-messages":
       return {
         ...state,
         activeSession: {
           ...state.activeSession,
-          messages: [...state.activeSession.messages, ...action.payload.messages],
+          messages: [
+            ...state.activeSession.messages,
+            ...action.payload.messages,
+          ],
           updatedAt: action.payload.updatedAt,
         },
       };
-    case 'replace-active-message': {
+    case "replace-active-message": {
       const hasTargetMessage = state.activeSession.messages.some(
         (message) => message.id === action.payload.message.id,
       );
@@ -129,15 +150,19 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         activeSession: {
           ...state.activeSession,
           messages: state.activeSession.messages.map((message) =>
-            message.id === action.payload.message.id ? action.payload.message : message,
+            message.id === action.payload.message.id
+              ? action.payload.message
+              : message,
           ),
           updatedAt: action.payload.updatedAt,
         },
       };
     }
-    case 'replace-bot':
-      if (state.currentView.mode === 'history') {
-        const snapshot = state.historySnapshots.find((item) => item.id === state.currentView.sessionId);
+    case "replace-bot":
+      if (state.currentView.mode === "history") {
+        const snapshot = state.historySnapshots.find(
+          (item) => item.id === state.currentView.sessionId,
+        );
 
         if (!snapshot) {
           return state;
@@ -147,7 +172,10 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         const currentPreference = state.historyViewPreferences[snapshot.id];
         const layout = currentPreference?.layout ?? snapshot.layout;
         const nextActiveBotIds = replaceBotAtIndex(
-          normalizeHistoryBotIds(currentPreference?.activeBotIds ?? snapshot.activeBotIds, browseableBotIds),
+          normalizeHistoryBotIds(
+            currentPreference?.activeBotIds ?? snapshot.activeBotIds,
+            browseableBotIds,
+          ),
           action.payload.index,
           action.payload.botId,
         );
@@ -158,7 +186,10 @@ export function appReducer(state: AppState, action: AppAction): AppState {
             ...state.historyViewPreferences,
             [snapshot.id]: {
               layout,
-              activeBotIds: normalizeHistoryBotIds(nextActiveBotIds, browseableBotIds),
+              activeBotIds: normalizeHistoryBotIds(
+                nextActiveBotIds,
+                browseableBotIds,
+              ),
             },
           },
         };
@@ -175,7 +206,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
           ),
         },
       };
-    case 'set-selected-model':
+    case "set-selected-model":
       return {
         ...state,
         activeSession: {
@@ -186,7 +217,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
           },
         },
       };
-    case 'touch-active-session':
+    case "touch-active-session":
       return {
         ...state,
         activeSession: {
@@ -194,26 +225,28 @@ export function appReducer(state: AppState, action: AppAction): AppState {
           updatedAt: action.payload.updatedAt,
         },
       };
-    case 'push-history-snapshot':
+    case "push-history-snapshot":
       return {
         ...state,
         historySnapshots: [action.payload, ...state.historySnapshots],
       };
-    case 'delete-history-snapshot': {
+    case "delete-history-snapshot": {
       const historySnapshots = state.historySnapshots.filter(
         (snapshot) => snapshot.id !== action.payload.snapshotId,
       );
       const isDeletingCurrentHistory =
-        state.currentView.mode === 'history' &&
+        state.currentView.mode === "history" &&
         state.currentView.sessionId === action.payload.snapshotId;
 
       return {
         ...state,
         currentView: isDeletingCurrentHistory
-          ? { mode: 'active', sessionId: state.activeSession.id }
+          ? { mode: "active", sessionId: state.activeSession.id }
           : state.currentView,
         historyViewPreferences: Object.fromEntries(
-          Object.entries(state.historyViewPreferences).filter(([snapshotId]) => snapshotId !== action.payload.snapshotId),
+          Object.entries(state.historyViewPreferences).filter(
+            ([snapshotId]) => snapshotId !== action.payload.snapshotId,
+          ),
         ),
         historySnapshots,
       };

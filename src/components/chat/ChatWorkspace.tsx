@@ -1,11 +1,18 @@
-import { Fragment, type ReactElement } from 'react';
-import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from 'react-resizable-panels';
+import { Fragment, type ReactElement } from "react";
+import {
+  Group as PanelGroup,
+  Panel,
+  Separator as PanelResizeHandle,
+} from "react-resizable-panels";
 
-import type { BotRegistry } from '../../bots/botRegistry';
-import { useI18n } from '../../i18n';
-import type { ChatSession, SessionSnapshot } from '../../types/session';
-import { panelPresets, type PanelTree } from '../../features/layout/panelPresets';
-import { ChatPanel } from './ChatPanel';
+import type { BotRegistry } from "../../bots/botRegistry";
+import { useI18n } from "../../i18n";
+import type { ChatSession, SessionSnapshot } from "../../types/session";
+import {
+  panelPresets,
+  type PanelTree,
+} from "../../features/layout/panelPresets";
+import { ChatPanel } from "./ChatPanel";
 
 interface ChatWorkspaceProps {
   availableBotIds: string[];
@@ -16,20 +23,25 @@ interface ChatWorkspaceProps {
   onCancelLoading?: (messageId: string) => void;
   onRetryFailed?: (messageId: string) => void;
   onModelChange: (botId: string, modelId: string) => void;
-  onSaveApiConfig?: (botId: string, config: { apiKey: string; modelName: string }) => void;
+  onSaveApiConfig?: (
+    botId: string,
+    config: { apiKey: string; modelName: string },
+  ) => void;
   visibleBotIds: string[];
 }
 
-function ResizeHandle({ direction }: { direction: 'horizontal' | 'vertical' }) {
+function ResizeHandle({ direction }: { direction: "horizontal" | "vertical" }) {
   return (
     <PanelResizeHandle
       className={`group relative flex items-center justify-center ${
-        direction === 'horizontal' ? 'w-3 cursor-col-resize' : 'h-3 cursor-row-resize'
+        direction === "horizontal"
+          ? "w-3 cursor-col-resize"
+          : "h-3 cursor-row-resize"
       }`}
     >
       <div
         className={`rounded-full bg-slate-300 transition group-hover:bg-blue-500 ${
-          direction === 'horizontal' ? 'h-8 w-1' : 'h-1 w-8'
+          direction === "horizontal" ? "h-8 w-1" : "h-1 w-8"
         }`}
       />
     </PanelResizeHandle>
@@ -49,16 +61,23 @@ function renderTree(
   props: ChatWorkspaceProps,
   emptySnapshotPanelLabel: string,
 ): ReactElement {
-  if (tree.type === 'panel') {
+  if (tree.type === "panel") {
     const botId = props.visibleBotIds[tree.index];
 
     if (!botId) {
-      return <EmptySnapshotPanel key={`empty-panel-${tree.index}`} label={emptySnapshotPanelLabel} />;
+      return (
+        <EmptySnapshotPanel
+          key={`empty-panel-${tree.index}`}
+          label={emptySnapshotPanelLabel}
+        />
+      );
     }
 
     const botAdapter = props.botRegistry.getBot(botId);
     const botDefinition = botAdapter.definition;
-    const allBotDefinitions = props.botRegistry.getAllBots().map((bot) => bot.definition);
+    const allBotDefinitions = props.botRegistry
+      .getAllBots()
+      .map((bot) => bot.definition);
 
     return (
       <ChatPanel
@@ -76,17 +95,27 @@ function renderTree(
         onModelChange={(modelId) => props.onModelChange(botId, modelId)}
         onRetryFailed={props.onRetryFailed}
         onSaveApiConfig={(config) => props.onSaveApiConfig?.(botId, config)}
-        selectedModelId={props.currentSession.selectedModels[botId] ?? botDefinition.defaultModel}
+        selectedModelId={
+          props.currentSession.selectedModels[botId] ??
+          botDefinition.defaultModel
+        }
       />
     );
   }
 
   return (
-    <PanelGroup key={`${tree.direction}-${tree.children.length}`} orientation={tree.direction}>
+    <PanelGroup
+      key={`${tree.direction}-${tree.children.length}`}
+      orientation={tree.direction}
+    >
       {tree.children.map((child, index) => (
         <Fragment key={`${tree.direction}-${index}`}>
-          <Panel minSize={18}>{renderTree(child, props, emptySnapshotPanelLabel)}</Panel>
-          {index < tree.children.length - 1 ? <ResizeHandle direction={tree.direction} /> : null}
+          <Panel minSize={18}>
+            {renderTree(child, props, emptySnapshotPanelLabel)}
+          </Panel>
+          {index < tree.children.length - 1 ? (
+            <ResizeHandle direction={tree.direction} />
+          ) : null}
         </Fragment>
       ))}
     </PanelGroup>
@@ -99,7 +128,7 @@ export function ChatWorkspace(props: ChatWorkspaceProps) {
 
   return (
     <div className="min-h-0 flex-1 p-3">
-      {renderTree(preset, props, t('chat.emptySnapshotPanel'))}
+      {renderTree(preset, props, t("chat.emptySnapshotPanel"))}
     </div>
   );
 }

@@ -4,7 +4,7 @@ import type {
   BotModel,
   BotResponse,
   SendMessageInput,
-} from '../types/bot';
+} from "../types/bot";
 
 export abstract class BaseBotAdapter {
   abstract readonly definition: BotDefinition;

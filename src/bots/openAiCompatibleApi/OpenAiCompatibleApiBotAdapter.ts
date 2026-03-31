@@ -1,7 +1,11 @@
-import { createAppTranslator } from '../../i18n';
-import type { ApiBotConfigValue, BotResponse, SendMessageInput } from '../../types/bot';
-import { BaseBotAdapter } from '../BaseBotAdapter';
-import { sendOpenAiCompatiblePrompt } from './openAiCompatibleApiClient';
+import { createAppTranslator } from "../../i18n";
+import type {
+  ApiBotConfigValue,
+  BotResponse,
+  SendMessageInput,
+} from "../../types/bot";
+import { BaseBotAdapter } from "../BaseBotAdapter";
+import { sendOpenAiCompatiblePrompt } from "./openAiCompatibleApiClient";
 import {
   isOpenAiCompatibleApiClientError,
   isOpenAiCompatibleApiConfigValue,
@@ -10,7 +14,7 @@ import {
   type OpenAiCompatibleApiProvider,
   type OpenAiCompatibleApiState,
   type SendOpenAiCompatiblePrompt,
-} from './types';
+} from "./types";
 
 export interface OpenAiCompatibleApiBotAdapterOptions {
   now?: () => string;
@@ -60,7 +64,10 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
       throw new Error(t(this.provider.errorMessageIds.missingConfig));
     }
 
-    const nextMessages = [...this.messages, { role: 'user' as const, content: input.content }];
+    const nextMessages = [
+      ...this.messages,
+      { role: "user" as const, content: input.content },
+    ];
     let result;
 
     try {
@@ -83,7 +90,10 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
 
     const timestamp = this.now();
 
-    this.messages = [...nextMessages, { role: 'assistant', content: result.text }];
+    this.messages = [
+      ...nextMessages,
+      { role: "assistant", content: result.text },
+    ];
 
     return {
       id: `${this.definition.id}-${timestamp}`,
@@ -91,7 +101,7 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
       modelId: this.config.modelName,
       content: result.text,
       createdAt: timestamp,
-      status: 'done',
+      status: "done",
     };
   }
 
@@ -120,7 +130,9 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
     const candidate = state as Partial<OpenAiCompatibleApiState>;
     this.config = normalizeConfig(state);
     this.messages = Array.isArray(candidate.messages)
-      ? candidate.messages.filter(isOpenAiCompatibleApiMessage).map((message) => ({ ...message }))
+      ? candidate.messages
+          .filter(isOpenAiCompatibleApiMessage)
+          .map((message) => ({ ...message }))
       : [];
   }
 }

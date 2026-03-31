@@ -1,4 +1,4 @@
-import { ofetch } from 'ofetch';
+import { ofetch } from "ofetch";
 
 import type {
   CopilotClient,
@@ -9,18 +9,22 @@ import type {
   CopilotSendMessageInput,
   CopilotSendMessageResult,
   CopilotStreamEvent,
-} from './types';
+} from "./types";
 
-const COPILOT_CONVERSATIONS_URL = 'https://copilot.microsoft.com/c/api/conversations';
-const COPILOT_CHAT_URL = 'wss://copilot.microsoft.com/c/api/chat';
-const COPILOT_API_VERSION = '2';
+const COPILOT_CONVERSATIONS_URL =
+  "https://copilot.microsoft.com/c/api/conversations";
+const COPILOT_CHAT_URL = "wss://copilot.microsoft.com/c/api/chat";
+const COPILOT_API_VERSION = "2";
 
 interface PostConversationOptions {
   credentials: RequestCredentials;
   signal?: AbortSignal;
 }
 
-type PostConversation = (body: Record<string, never>, options: PostConversationOptions) => Promise<unknown>;
+type PostConversation = (
+  body: Record<string, never>,
+  options: PostConversationOptions,
+) => Promise<unknown>;
 type CreateWebSocket = (url: string) => WebSocket;
 
 interface CopilotClientOptions {
@@ -38,49 +42,62 @@ export class CopilotClientError extends Error {
 
   constructor(code: CopilotClientErrorCode, message: string) {
     super(message);
-    this.name = 'CopilotClientError';
+    this.name = "CopilotClientError";
     this.code = code;
   }
 }
 
 function isConversationResponse(value: unknown): value is ConversationResponse {
-  return !!value && typeof value === 'object' && typeof (value as ConversationResponse).id === 'string';
+  return (
+    !!value &&
+    typeof value === "object" &&
+    typeof (value as ConversationResponse).id === "string"
+  );
 }
 
 function isDoneEvent(value: unknown): value is CopilotDoneEvent {
   return (
     !!value &&
-    typeof value === 'object' &&
-    (value as CopilotDoneEvent).event === 'done' &&
-    (typeof (value as CopilotDoneEvent).messageId === 'string' ||
-      typeof (value as CopilotDoneEvent).messageId === 'undefined') &&
-    (typeof (value as CopilotDoneEvent).id === 'string' ||
-      typeof (value as CopilotDoneEvent).id === 'undefined')
+    typeof value === "object" &&
+    (value as CopilotDoneEvent).event === "done" &&
+    (typeof (value as CopilotDoneEvent).messageId === "string" ||
+      typeof (value as CopilotDoneEvent).messageId === "undefined") &&
+    (typeof (value as CopilotDoneEvent).id === "string" ||
+      typeof (value as CopilotDoneEvent).id === "undefined")
   );
 }
 
 function isChallengeEvent(value: unknown): value is CopilotChallengeEvent {
   return (
     !!value &&
-    typeof value === 'object' &&
-    (value as CopilotChallengeEvent).event === 'challenge' &&
-    (typeof (value as CopilotChallengeEvent).id === 'string' ||
-      typeof (value as CopilotChallengeEvent).id === 'undefined')
+    typeof value === "object" &&
+    (value as CopilotChallengeEvent).event === "challenge" &&
+    (typeof (value as CopilotChallengeEvent).id === "string" ||
+      typeof (value as CopilotChallengeEvent).id === "undefined")
   );
 }
 
-function isAppendTextEvent(value: unknown): value is Extract<CopilotStreamEvent, { event: 'appendText' }> {
+function isAppendTextEvent(
+  value: unknown,
+): value is Extract<CopilotStreamEvent, { event: "appendText" }> {
   return (
     !!value &&
-    typeof value === 'object' &&
-    (value as CopilotStreamEvent).event === 'appendText' &&
-    typeof (value as Extract<CopilotStreamEvent, { event: 'appendText' }>).text === 'string' &&
-    (typeof (value as Extract<CopilotStreamEvent, { event: 'appendText' }>).messageId === 'string' ||
-      typeof (value as Extract<CopilotStreamEvent, { event: 'appendText' }>).messageId === 'undefined') &&
-    (typeof (value as Extract<CopilotStreamEvent, { event: 'appendText' }>).partId === 'string' ||
-      typeof (value as Extract<CopilotStreamEvent, { event: 'appendText' }>).partId === 'undefined') &&
-    (typeof (value as Extract<CopilotStreamEvent, { event: 'appendText' }>).id === 'string' ||
-      typeof (value as Extract<CopilotStreamEvent, { event: 'appendText' }>).id === 'undefined')
+    typeof value === "object" &&
+    (value as CopilotStreamEvent).event === "appendText" &&
+    typeof (value as Extract<CopilotStreamEvent, { event: "appendText" }>)
+      .text === "string" &&
+    (typeof (value as Extract<CopilotStreamEvent, { event: "appendText" }>)
+      .messageId === "string" ||
+      typeof (value as Extract<CopilotStreamEvent, { event: "appendText" }>)
+        .messageId === "undefined") &&
+    (typeof (value as Extract<CopilotStreamEvent, { event: "appendText" }>)
+      .partId === "string" ||
+      typeof (value as Extract<CopilotStreamEvent, { event: "appendText" }>)
+        .partId === "undefined") &&
+    (typeof (value as Extract<CopilotStreamEvent, { event: "appendText" }>)
+      .id === "string" ||
+      typeof (value as Extract<CopilotStreamEvent, { event: "appendText" }>)
+        .id === "undefined")
   );
 }
 
@@ -90,7 +107,10 @@ function parseCopilotEvent(data: string): CopilotStreamEvent | null {
   try {
     parsed = JSON.parse(data);
   } catch {
-    throw new CopilotClientError('socketProtocolError', 'Copilot returned an invalid websocket event payload.');
+    throw new CopilotClientError(
+      "socketProtocolError",
+      "Copilot returned an invalid websocket event payload.",
+    );
   }
 
   if (isAppendTextEvent(parsed)) {
@@ -109,8 +129,8 @@ function parseCopilotEvent(data: string): CopilotStreamEvent | null {
 }
 
 function createAbortError(): Error {
-  const error = new Error('This operation was aborted.');
-  error.name = 'AbortError';
+  const error = new Error("This operation was aborted.");
+  error.name = "AbortError";
 
   return error;
 }
@@ -120,7 +140,7 @@ async function postConversation(
   options: PostConversationOptions,
 ): Promise<unknown> {
   return ofetch(COPILOT_CONVERSATIONS_URL, {
-    method: 'POST',
+    method: "POST",
     body,
     credentials: options.credentials,
     signal: options.signal,
@@ -133,48 +153,61 @@ function createWebSocket(url: string): WebSocket {
 
 function buildSocketUrl(clientSessionId: string): string {
   const url = new URL(COPILOT_CHAT_URL);
-  url.searchParams.set('api-version', COPILOT_API_VERSION);
-  url.searchParams.set('clientSessionId', clientSessionId);
+  url.searchParams.set("api-version", COPILOT_API_VERSION);
+  url.searchParams.set("clientSessionId", clientSessionId);
 
   return url.toString();
 }
 
 function buildSendPayload(input: { conversationId: string; prompt: string }) {
   return {
-    event: 'send',
+    event: "send",
     conversationId: input.conversationId,
     content: [
       {
-        type: 'text',
+        type: "text",
         text: input.prompt,
       },
     ],
-    mode: 'smart',
+    mode: "smart",
     context: {},
   };
 }
 
-export function createCopilotClient(options: CopilotClientOptions = {}): CopilotClient {
-  const createConversationRequest = options.postConversation ?? postConversation;
+export function createCopilotClient(
+  options: CopilotClientOptions = {},
+): CopilotClient {
+  const createConversationRequest =
+    options.postConversation ?? postConversation;
   const openWebSocket = options.createWebSocket ?? createWebSocket;
-  const nextClientSessionId = options.createClientSessionId ?? (() => crypto.randomUUID());
+  const nextClientSessionId =
+    options.createClientSessionId ?? (() => crypto.randomUUID());
 
   return {
     async createConversation(signal): Promise<CopilotCreateConversationResult> {
       let response: unknown;
 
       try {
-        response = await createConversationRequest({}, { credentials: 'include', signal });
+        response = await createConversationRequest(
+          {},
+          { credentials: "include", signal },
+        );
       } catch (error) {
         if (signal?.aborted) {
           throw createAbortError();
         }
 
-        throw new CopilotClientError('createConversationFailed', 'Copilot conversation creation failed.');
+        throw new CopilotClientError(
+          "createConversationFailed",
+          "Copilot conversation creation failed.",
+        );
       }
 
       if (!isConversationResponse(response)) {
-        throw new CopilotClientError('createConversationFailed', 'Copilot conversation creation failed.');
+        throw new CopilotClientError(
+          "createConversationFailed",
+          "Copilot conversation creation failed.",
+        );
       }
 
       return {
@@ -182,20 +215,22 @@ export function createCopilotClient(options: CopilotClientOptions = {}): Copilot
       };
     },
 
-    sendMessage(input: CopilotSendMessageInput): Promise<CopilotSendMessageResult> {
+    sendMessage(
+      input: CopilotSendMessageInput,
+    ): Promise<CopilotSendMessageResult> {
       const clientSessionId = nextClientSessionId();
       const socket = openWebSocket(buildSocketUrl(clientSessionId));
 
       return new Promise((resolve, reject) => {
-        let text = '';
+        let text = "";
         let isSettled = false;
 
         const cleanup = () => {
-          socket.removeEventListener('open', handleOpen);
-          socket.removeEventListener('message', handleMessage);
-          socket.removeEventListener('close', handleClose);
-          socket.removeEventListener('error', handleError);
-          input.signal?.removeEventListener('abort', handleAbort);
+          socket.removeEventListener("open", handleOpen);
+          socket.removeEventListener("message", handleMessage);
+          socket.removeEventListener("close", handleClose);
+          socket.removeEventListener("error", handleError);
+          input.signal?.removeEventListener("abort", handleAbort);
         };
 
         const settle = (callback: () => void) => {
@@ -218,7 +253,12 @@ export function createCopilotClient(options: CopilotClientOptions = {}): Copilot
           try {
             socket.send(JSON.stringify(buildSendPayload(input)));
           } catch {
-            fail(new CopilotClientError('socketOpenFailed', 'Copilot websocket failed to send the request.'));
+            fail(
+              new CopilotClientError(
+                "socketOpenFailed",
+                "Copilot websocket failed to send the request.",
+              ),
+            );
           }
         };
 
@@ -232,18 +272,28 @@ export function createCopilotClient(options: CopilotClientOptions = {}): Copilot
 
           input.onEvent?.(parsedEvent);
 
-          if (parsedEvent.event === 'appendText') {
+          if (parsedEvent.event === "appendText") {
             text += parsedEvent.text;
             return;
           }
 
-          if (parsedEvent.event === 'challenge') {
-            fail(new CopilotClientError('authRequired', 'Copilot requires browser verification.'));
+          if (parsedEvent.event === "challenge") {
+            fail(
+              new CopilotClientError(
+                "authRequired",
+                "Copilot requires browser verification.",
+              ),
+            );
             return;
           }
 
           if (!text) {
-            fail(new CopilotClientError('emptyResponse', 'Copilot returned an empty response.'));
+            fail(
+              new CopilotClientError(
+                "emptyResponse",
+                "Copilot returned an empty response.",
+              ),
+            );
             return;
           }
 
@@ -262,11 +312,21 @@ export function createCopilotClient(options: CopilotClientOptions = {}): Copilot
             return;
           }
 
-          fail(new CopilotClientError('socketClosedBeforeDone', 'Copilot socket closed before done event.'));
+          fail(
+            new CopilotClientError(
+              "socketClosedBeforeDone",
+              "Copilot socket closed before done event.",
+            ),
+          );
         };
 
         const handleError = () => {
-          fail(new CopilotClientError('socketOpenFailed', 'Copilot websocket connection failed.'));
+          fail(
+            new CopilotClientError(
+              "socketOpenFailed",
+              "Copilot websocket connection failed.",
+            ),
+          );
         };
 
         const handleAbort = () => {
@@ -279,11 +339,11 @@ export function createCopilotClient(options: CopilotClientOptions = {}): Copilot
           fail(createAbortError());
         };
 
-        socket.addEventListener('open', handleOpen);
-        socket.addEventListener('message', handleMessage);
-        socket.addEventListener('close', handleClose);
-        socket.addEventListener('error', handleError);
-        input.signal?.addEventListener('abort', handleAbort, { once: true });
+        socket.addEventListener("open", handleOpen);
+        socket.addEventListener("message", handleMessage);
+        socket.addEventListener("close", handleClose);
+        socket.addEventListener("error", handleError);
+        input.signal?.addEventListener("abort", handleAbort, { once: true });
 
         if (input.signal?.aborted) {
           handleAbort();

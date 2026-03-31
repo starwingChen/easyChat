@@ -1,9 +1,13 @@
-import type { HistoryViewPreference, Locale, ViewState } from '../types/app';
-import type { ChatSession, LayoutType, SessionSnapshot } from '../types/session';
+import type { HistoryViewPreference, Locale, ViewState } from "../types/app";
+import type {
+  ChatSession,
+  LayoutType,
+  SessionSnapshot,
+} from "../types/session";
 
 export type AppAction =
   | {
-      type: 'hydrate';
+      type: "hydrate";
       payload: Partial<{
         locale: Locale;
         historySnapshots: SessionSnapshot[];
@@ -19,67 +23,67 @@ export type AppAction =
       }>;
     }
   | {
-      type: 'set-view';
+      type: "set-view";
       payload: ViewState;
     }
   | {
-      type: 'set-locale';
+      type: "set-locale";
       payload: Locale;
     }
   | {
-      type: 'set-layout';
+      type: "set-layout";
       payload: {
         layout: LayoutType;
         allBotIds: string[];
       };
     }
   | {
-      type: 'toggle-sidebar';
+      type: "toggle-sidebar";
     }
   | {
-      type: 'replace-active-session';
+      type: "replace-active-session";
       payload: ChatSession;
     }
   | {
-      type: 'append-active-messages';
+      type: "append-active-messages";
       payload: {
-        messages: ChatSession['messages'];
+        messages: ChatSession["messages"];
         updatedAt: string;
       };
     }
   | {
-      type: 'replace-active-message';
+      type: "replace-active-message";
       payload: {
-        message: ChatSession['messages'][number];
+        message: ChatSession["messages"][number];
         updatedAt: string;
       };
     }
   | {
-      type: 'replace-bot';
+      type: "replace-bot";
       payload: {
         index: number;
         botId: string;
       };
     }
   | {
-      type: 'set-selected-model';
+      type: "set-selected-model";
       payload: {
         botId: string;
         modelId: string;
       };
     }
   | {
-      type: 'touch-active-session';
+      type: "touch-active-session";
       payload: {
         updatedAt: string;
       };
     }
   | {
-      type: 'push-history-snapshot';
+      type: "push-history-snapshot";
       payload: SessionSnapshot;
     }
   | {
-      type: 'delete-history-snapshot';
+      type: "delete-history-snapshot";
       payload: {
         snapshotId: string;
       };

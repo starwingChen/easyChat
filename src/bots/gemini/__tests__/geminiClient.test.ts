@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from "vitest";
 
-import { createGeminiClient } from '../geminiClient';
+import { createGeminiClient } from "../geminiClient";
 
 const bootstrapHtml = `
 <html>
@@ -29,57 +29,61 @@ const generateResponse = `)]
   ]
 ]`;
 
-describe('geminiClient', () => {
-  it('fetches bootstrap params from the Gemini homepage', async () => {
+describe("geminiClient", () => {
+  it("fetches bootstrap params from the Gemini homepage", async () => {
     const fetchPage = vi.fn(async () => bootstrapHtml);
     const client = createGeminiClient({ fetchPage });
 
     await expect(client.fetchRequestParams()).resolves.toEqual({
-      atValue: 'test-at-value',
-      blValue: 'boq_assistant-bard-web-server_20260323.09_p2',
-      buildLabel: 'AIzaSyExample',
+      atValue: "test-at-value",
+      blValue: "boq_assistant-bard-web-server_20260323.09_p2",
+      buildLabel: "AIzaSyExample",
     });
-    expect(fetchPage).toHaveBeenCalledWith('https://gemini.google.com/');
+    expect(fetchPage).toHaveBeenCalledWith("https://gemini.google.com/");
   });
 
-  it('posts the generate request with query params and a serialized prompt payload', async () => {
+  it("posts the generate request with query params and a serialized prompt payload", async () => {
     const fetchPage = vi.fn().mockResolvedValue(generateResponse);
     const client = createGeminiClient({
       fetchPage,
-      createRequestId: () => '123456',
+      createRequestId: () => "123456",
     });
 
     const result = await client.generate({
-      prompt: 'hello',
+      prompt: "hello",
       requestParams: {
-        atValue: 'test-at-value',
-        blValue: 'boq_assistant-bard-web-server_20260323.09_p2',
-        buildLabel: 'AIzaSyExample',
+        atValue: "test-at-value",
+        blValue: "boq_assistant-bard-web-server_20260323.09_p2",
+        buildLabel: "AIzaSyExample",
       },
-      contextIds: ['conv-1', 'resp-1', 'choice-1'],
+      contextIds: ["conv-1", "resp-1", "choice-1"],
     });
 
     expect(fetchPage).toHaveBeenNthCalledWith(
       1,
-      'https://gemini.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate',
+      "https://gemini.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate",
       expect.objectContaining({
-        method: 'POST',
+        method: "POST",
         query: {
-          bl: 'boq_assistant-bard-web-server_20260323.09_p2',
-          _reqid: '123456',
-          rt: 'c',
+          bl: "boq_assistant-bard-web-server_20260323.09_p2",
+          _reqid: "123456",
+          rt: "c",
         },
       }),
     );
 
     const [, options] = fetchPage.mock.calls[0];
     expect(options.body).toBeInstanceOf(URLSearchParams);
-    expect(options.body.get('at')).toBe('test-at-value');
-    expect(options.body.get('f.req')).toContain('hello');
-    expect(options.body.get('f.req')).toContain('conv-1');
+    expect(options.body.get("at")).toBe("test-at-value");
+    expect(options.body.get("f.req")).toContain("hello");
+    expect(options.body.get("f.req")).toContain("conv-1");
     expect(result).toEqual({
-      text: '你好！很高兴见到你。',
-      contextIds: ['c_ee3272ee1c983e63', 'r_4fd2efc4adb247cc', 'rc_36a0d4a418f48c91'],
+      text: "你好！很高兴见到你。",
+      contextIds: [
+        "c_ee3272ee1c983e63",
+        "r_4fd2efc4adb247cc",
+        "rc_36a0d4a418f48c91",
+      ],
     });
   });
 });

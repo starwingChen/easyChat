@@ -1,31 +1,41 @@
-import type { BotDefinition, BotModel, BotResponse, SendMessageInput } from '../../types/bot';
-import { BaseBotAdapter } from '../BaseBotAdapter';
-import { geminiDefinition } from '../definitions';
-import { EMPTY_CONTEXT_IDS } from './constants';
-import { createGeminiClient } from './geminiClient';
-import type { GeminiClient, GeminiConversationContext } from './types';
+import type {
+  BotDefinition,
+  BotModel,
+  BotResponse,
+  SendMessageInput,
+} from "../../types/bot";
+import { BaseBotAdapter } from "../BaseBotAdapter";
+import { geminiDefinition } from "../definitions";
+import { EMPTY_CONTEXT_IDS } from "./constants";
+import { createGeminiClient } from "./geminiClient";
+import type { GeminiClient, GeminiConversationContext } from "./types";
 
 interface GeminiBotAdapterOptions {
   client?: GeminiClient;
   now?: () => string;
 }
 
-function isGeminiConversationContext(value: unknown): value is GeminiConversationContext {
-  if (!value || typeof value !== 'object') {
+function isGeminiConversationContext(
+  value: unknown,
+): value is GeminiConversationContext {
+  if (!value || typeof value !== "object") {
     return false;
   }
 
   const candidate = value as Partial<GeminiConversationContext>;
-  const requestParams = candidate.requestParams as Partial<GeminiConversationContext['requestParams']> | undefined;
+  const requestParams = candidate.requestParams as
+    | Partial<GeminiConversationContext["requestParams"]>
+    | undefined;
 
   return (
     Array.isArray(candidate.contextIds) &&
     candidate.contextIds.length === 3 &&
-    candidate.contextIds.every((id) => typeof id === 'string') &&
+    candidate.contextIds.every((id) => typeof id === "string") &&
     !!requestParams &&
-    (typeof requestParams.atValue === 'string' || typeof requestParams.atValue === 'undefined') &&
-    typeof requestParams.blValue === 'string' &&
-    typeof requestParams.buildLabel === 'string'
+    (typeof requestParams.atValue === "string" ||
+      typeof requestParams.atValue === "undefined") &&
+    typeof requestParams.blValue === "string" &&
+    typeof requestParams.buildLabel === "string"
   );
 }
 
@@ -80,7 +90,7 @@ export class GeminiBotAdapter extends BaseBotAdapter {
       modelId: input.modelId,
       content: result.text,
       createdAt: this.now(),
-      status: 'done',
+      status: "done",
     };
   }
 

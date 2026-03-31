@@ -1,9 +1,9 @@
-import { ofetch } from 'ofetch';
+import { ofetch } from "ofetch";
 
-import { parsePerplexityAskResponse } from './perplexityParser';
-import type { PerplexityAskInput, PerplexityClient } from './types';
+import { parsePerplexityAskResponse } from "./perplexityParser";
+import type { PerplexityAskInput, PerplexityClient } from "./types";
 
-const PERPLEXITY_ASK_URL = 'https://www.perplexity.ai/rest/sse/perplexity_ask';
+const PERPLEXITY_ASK_URL = "https://www.perplexity.ai/rest/sse/perplexity_ask";
 
 type NativeFetcher = (request: string, init?: RequestInit) => Promise<Response>;
 
@@ -13,12 +13,12 @@ interface PerplexityClientOptions {
 
 function buildRequestBody(input: PerplexityAskInput): string {
   const params: Record<string, unknown> = {
-    search_focus: 'internet',
-    sources: ['web'],
-    mode: 'copilot',
-    model_preference: 'pplx_pro',
+    search_focus: "internet",
+    sources: ["web"],
+    mode: "copilot",
+    model_preference: "pplx_pro",
     supported_block_use_cases: [],
-    version: '2.18',
+    version: "2.18",
   };
 
   if (input.lastBackendUuid) {
@@ -31,16 +31,18 @@ function buildRequestBody(input: PerplexityAskInput): string {
   });
 }
 
-export function createPerplexityClient(options: PerplexityClientOptions = {}): PerplexityClient {
+export function createPerplexityClient(
+  options: PerplexityClientOptions = {},
+): PerplexityClient {
   const fetchNative = options.fetchNative ?? ofetch.native;
 
   return {
     async ask(input) {
       const response = await fetchNative(PERPLEXITY_ASK_URL, {
-        method: 'POST',
+        method: "POST",
         signal: input.signal,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: buildRequestBody(input),
       });

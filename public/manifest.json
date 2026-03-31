@@ -3,7 +3,13 @@
   "name": "EasyChat",
   "description": "Compare multiple AI assistants in one Chrome side panel.",
   "version": "0.1.0",
-  "permissions": ["sidePanel", "storage", "tabs", "declarativeNetRequest", "cookies"],
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "tabs",
+    "declarativeNetRequest",
+    "cookies"
+  ],
   "host_permissions": [
     "https://gemini.google.com/*",
     "https://chatgpt.com/*",

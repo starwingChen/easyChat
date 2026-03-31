@@ -1,9 +1,9 @@
-import { IntlProvider } from 'react-intl';
-import type { PropsWithChildren } from 'react';
+import { IntlProvider } from "react-intl";
+import type { PropsWithChildren } from "react";
 
-import type { Locale } from '../types/app';
-import { getMessages } from './intl';
-import { defaultLocale } from './messages/types';
+import type { Locale } from "../types/app";
+import { getMessages } from "./intl";
+import { defaultLocale } from "./messages/types";
 
 interface AppI18nProviderProps extends PropsWithChildren {
   locale: Locale;
@@ -11,7 +11,12 @@ interface AppI18nProviderProps extends PropsWithChildren {
 
 export function AppI18nProvider({ children, locale }: AppI18nProviderProps) {
   return (
-    <IntlProvider defaultLocale={defaultLocale} locale={locale} messages={getMessages(locale)} onError={() => undefined}>
+    <IntlProvider
+      defaultLocale={defaultLocale}
+      locale={locale}
+      messages={getMessages(locale)}
+      onError={() => undefined}
+    >
       {children}
     </IntlProvider>
   );

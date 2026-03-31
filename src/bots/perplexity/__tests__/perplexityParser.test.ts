@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-import { parsePerplexityAskResponse } from '../perplexityParser';
+import { parsePerplexityAskResponse } from "../perplexityParser";
 
 const completedStream = `
 event: message
@@ -21,31 +21,33 @@ event: end_of_stream
 data: {}
 `;
 
-describe('perplexityParser', () => {
-  it('extracts final answer text and the latest backend uuid from a completed SSE stream', () => {
+describe("perplexityParser", () => {
+  it("extracts final answer text and the latest backend uuid from a completed SSE stream", () => {
     expect(parsePerplexityAskResponse(completedStream)).toEqual({
-      text: '你好！有什么我可以帮你的吗？',
-      lastBackendUuid: 'backend-2',
+      text: "你好！有什么我可以帮你的吗？",
+      lastBackendUuid: "backend-2",
     });
   });
 
-  it('falls back to joining markdown chunks when the final block has no answer field', () => {
+  it("falls back to joining markdown chunks when the final block has no answer field", () => {
     expect(parsePerplexityAskResponse(chunkOnlyCompletedStream)).toEqual({
-      text: '第一段第二段',
-      lastBackendUuid: 'backend-9',
+      text: "第一段第二段",
+      lastBackendUuid: "backend-9",
     });
   });
 
-  it('throws when the SSE payload contains malformed JSON', () => {
+  it("throws when the SSE payload contains malformed JSON", () => {
     const malformedStream = `
 event: message
 data: {"backend_uuid":"backend-1"
 `;
 
-    expect(() => parsePerplexityAskResponse(malformedStream)).toThrow(/failed to parse perplexity sse payload/i);
+    expect(() => parsePerplexityAskResponse(malformedStream)).toThrow(
+      /failed to parse perplexity sse payload/i,
+    );
   });
 
-  it('throws when the stream completes without a usable answer block', () => {
+  it("throws when the stream completes without a usable answer block", () => {
     const noAnswerStream = `
 event: message
 data: {"backend_uuid":"backend-1","text_completed":false,"blocks":[{"intended_usage":"plan","plan_block":{"progress":"DONE","final":true}}]}
@@ -54,6 +56,8 @@ event: end_of_stream
 data: {}
 `;
 
-    expect(() => parsePerplexityAskResponse(noAnswerStream)).toThrow(/no assistant response was found/i);
+    expect(() => parsePerplexityAskResponse(noAnswerStream)).toThrow(
+      /no assistant response was found/i,
+    );
   });
 });

@@ -1,16 +1,16 @@
-import { render, type RenderOptions } from '@testing-library/react';
-import type { PropsWithChildren, ReactElement } from 'react';
+import { render, type RenderOptions } from "@testing-library/react";
+import type { PropsWithChildren, ReactElement } from "react";
 
-import type { Locale } from '../types/app';
-import { AppI18nProvider } from '../i18n';
+import type { Locale } from "../types/app";
+import { AppI18nProvider } from "../i18n";
 
-interface RenderWithI18nOptions extends Omit<RenderOptions, 'wrapper'> {
+interface RenderWithI18nOptions extends Omit<RenderOptions, "wrapper"> {
   locale?: Locale;
 }
 
 export function renderWithI18n(
   ui: ReactElement,
-  { locale = 'en-US', ...options }: RenderWithI18nOptions = {},
+  { locale = "en-US", ...options }: RenderWithI18nOptions = {},
 ) {
   function Wrapper({ children }: PropsWithChildren) {
     return <AppI18nProvider locale={locale}>{children}</AppI18nProvider>;
