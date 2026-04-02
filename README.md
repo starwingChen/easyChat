@@ -8,8 +8,17 @@
 
 </div>
 
+<div align="center">
+
 [![作者][作者-image]][作者-url]
 [![许可证][许可证-image]][许可证-url]
+
+[作者-image]: https://img.shields.io/badge/author-starwingChen-blue.svg
+[作者-url]: https://github.com/starwingChen
+[许可证-image]: https://img.shields.io/github/license/starwingChen/easyChat?color=blue
+[许可证-url]: https://github.com/starwingChen/easyChat/blob/master/LICENSE
+
+</div>
 
 ## ✨ 特点
 
