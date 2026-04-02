@@ -1,14 +1,20 @@
-import type {
-  BotDefinition,
-  BotModel,
-  BotResponse,
-  SendMessageInput,
+import { createAppTranslator } from '../../i18n';
+import {
+  BotUserFacingError,
+  type BotDefinition,
+  type BotModel,
+  type BotResponse,
+  type SendMessageInput,
 } from '../../types/bot';
 import { BaseBotAdapter } from '../BaseBotAdapter';
 import { geminiDefinition } from '../definitions';
 import { EMPTY_CONTEXT_IDS } from './constants';
 import { createGeminiClient } from './geminiClient';
-import type { GeminiClient, GeminiConversationContext } from './types';
+import {
+  isGeminiClientError,
+  type GeminiClient,
+  type GeminiConversationContext,
+} from './types';
 
 interface GeminiBotAdapterOptions {
   client?: GeminiClient;
@@ -61,37 +67,47 @@ export class GeminiBotAdapter extends BaseBotAdapter {
   }
 
   async sendMessage(input: SendMessageInput): Promise<BotResponse> {
-    if (!this.conversationContext) {
-      this.conversationContext = {
-        requestParams: await this.client.fetchRequestParams(),
-        contextIds: [...EMPTY_CONTEXT_IDS],
-      };
-    }
+    const t = createAppTranslator(input.locale);
 
-    const activeContext = this.conversationContext;
-    const revision = this.conversationRevision;
-    const result = await this.client.generate({
-      prompt: input.content,
-      requestParams: activeContext.requestParams,
-      contextIds: activeContext.contextIds,
-      signal: input.signal,
-    });
+    try {
+      if (!this.conversationContext) {
+        this.conversationContext = {
+          requestParams: await this.client.fetchRequestParams(),
+          contextIds: [...EMPTY_CONTEXT_IDS],
+        };
+      }
 
-    if (revision === this.conversationRevision) {
-      this.conversationContext = {
+      const activeContext = this.conversationContext;
+      const revision = this.conversationRevision;
+      const result = await this.client.generate({
+        prompt: input.content,
         requestParams: activeContext.requestParams,
-        contextIds: result.contextIds,
-      };
-    }
+        contextIds: activeContext.contextIds,
+        signal: input.signal,
+      });
 
-    return {
-      id: `${this.definition.id}-${this.now()}`,
-      botId: this.definition.id,
-      modelId: input.modelId,
-      content: result.text,
-      createdAt: this.now(),
-      status: 'done',
-    };
+      if (revision === this.conversationRevision) {
+        this.conversationContext = {
+          requestParams: activeContext.requestParams,
+          contextIds: result.contextIds,
+        };
+      }
+
+      return {
+        id: `${this.definition.id}-${this.now()}`,
+        botId: this.definition.id,
+        modelId: input.modelId,
+        content: result.text,
+        createdAt: this.now(),
+        status: 'done',
+      };
+    } catch (error) {
+      if (isGeminiClientError(error) && error.code === 'regionUnsupported') {
+        throw new BotUserFacingError(t('bot.error.gemini.regionUnsupported'));
+      }
+
+      throw error;
+    }
   }
 
   resetConversation(): void {

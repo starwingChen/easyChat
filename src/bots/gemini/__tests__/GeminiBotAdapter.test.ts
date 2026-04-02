@@ -224,4 +224,31 @@ describe('GeminiBotAdapter', () => {
       contextIds: ['', '', ''],
     });
   });
+
+  it('surfaces regionUnsupported as a user-facing localized error', async () => {
+    const fetchRequestParams = vi.fn(async () => createRequestParams());
+    const generate = vi
+      .fn<GeminiClient['generate']>()
+      .mockRejectedValue(Object.assign(new Error('regionUnsupported'), { code: 'regionUnsupported' }));
+
+    const adapter = new GeminiBotAdapter({
+      client: {
+        fetchRequestParams,
+        generate,
+      },
+    });
+
+    await expect(
+      adapter.sendMessage({
+        sessionId: 'session-1',
+        content: 'hello',
+        locale: 'zh-CN',
+        modelId: 'gemini-1.5-pro',
+        targetBotIds: ['gemini'],
+      })
+    ).rejects.toMatchObject({
+      userFacing: true,
+      message: 'Gemini 不支持该地区使用。',
+    });
+  });
 });

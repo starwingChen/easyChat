@@ -185,4 +185,18 @@ describe('chatgptClient', () => {
       parent_message_id: 'generated-parent-id',
     });
   });
+
+  it('maps a 403 auth session response to a structured regionUnsupported error', async () => {
+    const client = createChatGPTClient({
+      fetchJson: vi.fn().mockRejectedValue({
+        status: 403,
+        message: 'Forbidden',
+      }),
+      fetchNative: vi.fn(),
+    });
+
+    await expect(client.getAccessToken()).rejects.toMatchObject({
+      code: 'regionUnsupported',
+    });
+  });
 });

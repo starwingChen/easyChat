@@ -9,7 +9,10 @@ import {
 import { BaseBotAdapter } from '../BaseBotAdapter';
 import { chatgptDefinition } from '../definitions';
 import { createChatGPTClient } from './chatgptClient';
-import { isChatGPTAuthRequiredError } from './chatgptErrors';
+import {
+  isChatGPTAuthRequiredError,
+  isChatGPTClientError,
+} from './chatgptErrors';
 import type { ChatGPTClient, ChatGPTConversationState } from './types';
 
 interface ChatGPTBotAdapterOptions {
@@ -106,6 +109,10 @@ export class ChatGPTBotAdapter extends BaseBotAdapter {
     } catch (error) {
       if (isAuthenticationError(error) || isChatGPTAuthRequiredError(error)) {
         this.accessToken = undefined;
+      }
+
+      if (isChatGPTClientError(error) && error.code === 'regionUnsupported') {
+        throw new BotUserFacingError(t('bot.error.chatgpt.regionUnsupported'));
       }
 
       if (isChatGPTAuthRequiredError(error)) {

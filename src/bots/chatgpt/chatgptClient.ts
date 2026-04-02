@@ -5,6 +5,7 @@ import {
   parseChatGPTRequirements,
   parseChatGPTSession,
 } from './chatgptParser';
+import { ChatGPTClientError } from './chatgptErrors';
 import { createChatGPTSentinel } from './chatgptSentinel';
 import type {
   ChatGPTClient,
@@ -111,6 +112,32 @@ function createAuthorizationError(status: number): Error {
   return new Error(`ChatGPT authentication failed (${status})`);
 }
 
+function getErrorStatusCode(error: unknown): number | undefined {
+  if (!error || typeof error !== 'object') {
+    return undefined;
+  }
+
+  const candidate = error as {
+    status?: unknown;
+    statusCode?: unknown;
+    response?: { status?: unknown };
+  };
+
+  if (typeof candidate.status === 'number') {
+    return candidate.status;
+  }
+
+  if (typeof candidate.statusCode === 'number') {
+    return candidate.statusCode;
+  }
+
+  if (typeof candidate.response?.status === 'number') {
+    return candidate.response.status;
+  }
+
+  return undefined;
+}
+
 export function createChatGPTClient(
   options: ChatGPTClientOptions = {}
 ): ChatGPTClient {
@@ -123,9 +150,19 @@ export function createChatGPTClient(
   const sentinel = options.sentinel ?? createChatGPTSentinel();
 
   async function getAccessToken(): Promise<string> {
-    const session = await fetchJson(`${CHATGPT_BASE_URL}/api/auth/session`, {
-      credentials: 'include',
-    });
+    let session;
+
+    try {
+      session = await fetchJson(`${CHATGPT_BASE_URL}/api/auth/session`, {
+        credentials: 'include',
+      });
+    } catch (error) {
+      if (getErrorStatusCode(error) === 403) {
+        throw new ChatGPTClientError('regionUnsupported');
+      }
+
+      throw error;
+    }
 
     return parseChatGPTSession(session);
   }

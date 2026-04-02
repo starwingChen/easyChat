@@ -68,6 +68,10 @@ const enUSMessages = {
     'Copilot requires a browser verification first. Please visit [https://copilot.microsoft.com](https://copilot.microsoft.com) first and send any message.',
   'bot.error.chatgpt.authRequired':
     'ChatGPT is not logged in. Please visit [https://chatgpt.com](https://chatgpt.com) and sign in first.',
+  'bot.error.chatgpt.regionUnsupported':
+    'ChatGPT is not available in your region.',
+  'bot.error.gemini.regionUnsupported':
+    'Gemini is not available in your region.',
   'bot.error.chatgptApi.missingConfig':
     'ChatGPT - API is not configured yet. Please [configure API](action://open-api-config) first.',
   'bot.error.chatgptApi.auth':

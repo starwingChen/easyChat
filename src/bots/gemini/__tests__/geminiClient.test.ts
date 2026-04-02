@@ -29,6 +29,16 @@ const generateResponse = `)]
   ]
 ]`;
 
+const regionUnavailableResponse = `)]}'
+
+121
+[["wrb.fr",null,null,null,null,[9,null,[["type.googleapis.com/assistant.boq.bard.application.BardErrorInfo",[1060]]]]]]
+57
+[["di",193],["af.httprm",193,"6599874813400492976",64]]
+25
+[["e",4,null,null,216]]
+`;
+
 describe('geminiClient', () => {
   it('fetches bootstrap params from the Gemini homepage', async () => {
     const fetchPage = vi.fn(async () => bootstrapHtml);
@@ -84,6 +94,28 @@ describe('geminiClient', () => {
         'r_4fd2efc4adb247cc',
         'rc_36a0d4a418f48c91',
       ],
+    });
+  });
+
+  it('maps the BardErrorInfo 1060 response to a structured regionUnsupported error', async () => {
+    const fetchPage = vi.fn().mockResolvedValue(regionUnavailableResponse);
+    const client = createGeminiClient({
+      fetchPage,
+      createRequestId: () => '123456',
+    });
+
+    await expect(
+      client.generate({
+        prompt: 'hello',
+        requestParams: {
+          atValue: 'test-at-value',
+          blValue: 'boq_assistant-bard-web-server_20260323.09_p2',
+          buildLabel: 'AIzaSyExample',
+        },
+        contextIds: ['conv-1', 'resp-1', 'choice-1'],
+      })
+    ).rejects.toMatchObject({
+      code: 'regionUnsupported',
     });
   });
 });

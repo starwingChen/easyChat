@@ -1,4 +1,11 @@
-import type { GeminiGenerateResult, GeminiRequestParams } from './types';
+import {
+  createGeminiClientError,
+  type GeminiGenerateResult,
+  type GeminiRequestParams,
+} from './types';
+
+const GEMINI_REGION_UNSUPPORTED_PATTERN =
+  /type\.googleapis\.com\/assistant\.boq\.bard\.application\.BardErrorInfo"\s*,\s*\[\s*1060\s*\]/;
 
 function extractValue(source: string, key: string): string {
   const match = source.match(new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`));
@@ -86,6 +93,10 @@ export function parseGeminiGenerateResponse(
   }
 
   if (!text || !contextIds) {
+    if (GEMINI_REGION_UNSUPPORTED_PATTERN.test(responseText)) {
+      throw createGeminiClientError('regionUnsupported');
+    }
+
     throw new Error('Failed to parse Gemini generate response');
   }
 
