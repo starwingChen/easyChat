@@ -1,9 +1,13 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { renderWithI18n } from '../../../test/renderWithI18n';
 import { SessionSidebar } from '../SessionSidebar';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('SessionSidebar', () => {
   it('lets the user switch between active and history sessions', async () => {
@@ -73,6 +77,32 @@ describe('SessionSidebar', () => {
     expect(
       screen.getByRole('button', { name: '切换中英文' })
     ).toBeInTheDocument();
+  });
+
+  it('opens the feedback page from the bottom feedback trigger', async () => {
+    const user = userEvent.setup();
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+
+    renderWithI18n(
+      <SessionSidebar
+        currentView={{ mode: 'active', sessionId: 'session-active' }}
+        historySnapshots={[]}
+        onCreateSession={vi.fn()}
+        onDeleteHistory={vi.fn()}
+        onSelectView={vi.fn()}
+        onToggleSidebar={vi.fn()}
+        onToggleLocale={vi.fn()}
+      />,
+      { locale: 'zh-CN' }
+    );
+
+    await user.click(screen.getByRole('button', { name: '打开反馈页面' }));
+
+    expect(openSpy).toHaveBeenCalledWith(
+      'https://github.com/starwingChen/easyChat',
+      '_blank',
+      'noopener,noreferrer'
+    );
   });
 
   it('shows a delete action for history sessions and requires confirmation', async () => {

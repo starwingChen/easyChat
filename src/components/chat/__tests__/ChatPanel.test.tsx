@@ -176,6 +176,67 @@ describe('ChatPanel', () => {
     });
   });
 
+  it('masks the api key by default and lets the user toggle visibility', async () => {
+    const user = userEvent.setup();
+    const deepseekApiBot = {
+      id: 'deepseek-api',
+      name: 'DeepSeek - API',
+      brand: 'DeepSeek',
+      themeColor: '#2563eb',
+      accessMode: 'api' as const,
+      defaultModel: 'deepseek-chat',
+      apiConfig: {
+        apiKeyLabel: 'API Key',
+        modelNameLabel: 'Model',
+      },
+      capabilities: [],
+    };
+
+    renderWithI18n(
+      <ChatPanel
+        allBotDefinitions={[deepseekApiBot]}
+        availableBotIds={['deepseek-api']}
+        botDefinition={deepseekApiBot}
+        configuredModelName="Unset"
+        initialApiConfig={{
+          apiKey: 'sk-demo-secret',
+          modelName: 'deepseek-chat',
+        }}
+        inUseBotIds={['deepseek-api']}
+        isReadonly={false}
+        messages={[
+          {
+            id: 'assistant-1',
+            sessionId: 'session-1',
+            role: 'assistant',
+            botId: 'deepseek-api',
+            modelId: 'deepseek-chat',
+            content:
+              'DeepSeek - API 尚未配置。请先[配置 API](action://open-api-config)。',
+            createdAt: '2026-03-28T00:00:00.000Z',
+            status: 'error',
+          },
+        ]}
+        onBotChange={vi.fn()}
+        onModelChange={vi.fn()}
+        onSaveApiConfig={vi.fn()}
+        selectedModelId="deepseek-chat"
+      />
+    );
+
+    await user.click(screen.getByRole('link', { name: '配置 API' }));
+
+    const apiKeyInput = screen.getByLabelText('API Key');
+    expect(apiKeyInput).toHaveAttribute('type', 'password');
+    expect(apiKeyInput).toHaveValue('sk-demo-secret');
+
+    await user.click(screen.getByRole('button', { name: 'Show API key' }));
+    expect(apiKeyInput).toHaveAttribute('type', 'text');
+
+    await user.click(screen.getByRole('button', { name: 'Hide API key' }));
+    expect(apiKeyInput).toHaveAttribute('type', 'password');
+  });
+
   it('shows empty state, lets users add, pick, and delete saved api models', async () => {
     const user = userEvent.setup();
     const deepseekApiBot = {

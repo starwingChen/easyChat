@@ -1,4 +1,4 @@
-import { Settings2, X } from 'lucide-react';
+import { Eye, EyeOff, Settings2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { useI18n } from '../../i18n';
@@ -48,6 +48,7 @@ export function ChatPanelHeader({
   selectedModelId,
 }: ChatPanelHeaderProps) {
   const [apiKey, setApiKey] = useState('');
+  const [isApiKeyVisible, setIsApiKeyVisible] = useState(false);
   const [modelName, setModelName] = useState('');
   const { t } = useI18n();
 
@@ -57,6 +58,7 @@ export function ChatPanelHeader({
     }
 
     setApiKey(initialApiConfig?.apiKey ?? '');
+    setIsApiKeyVisible(false);
     setModelName(initialApiConfig?.modelName ?? '');
   }, [isConfigOpen]);
 
@@ -163,14 +165,33 @@ export function ChatPanelHeader({
                 <span className="mb-1.5 block">
                   {botDefinition.apiConfig.apiKeyLabel || t('config.apiKey')}
                 </span>
-                <input
-                  aria-label={
-                    botDefinition.apiConfig.apiKeyLabel || t('config.apiKey')
-                  }
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-blue-400"
-                  onChange={(event) => setApiKey(event.target.value)}
-                  value={apiKey}
-                />
+                <div className="flex items-center gap-2 rounded-xl border border-slate-200 pr-2 transition focus-within:border-blue-400">
+                  <input
+                    aria-label={
+                      botDefinition.apiConfig.apiKeyLabel || t('config.apiKey')
+                    }
+                    className="w-full rounded-xl border-0 bg-transparent px-3 py-2.5 outline-none"
+                    onChange={(event) => setApiKey(event.target.value)}
+                    type={isApiKeyVisible ? 'text' : 'password'}
+                    value={apiKey}
+                  />
+                  <button
+                    aria-label={
+                      isApiKeyVisible
+                        ? t('config.apiKey.hide')
+                        : t('config.apiKey.show')
+                    }
+                    className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                    onClick={() => setIsApiKeyVisible((current) => !current)}
+                    type="button"
+                  >
+                    {isApiKeyVisible ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </label>
               <ApiModelPicker
                 label={
