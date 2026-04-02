@@ -4,35 +4,41 @@
 
 # EasyChat
 
-**让 AI 对话变得更简单 —— 在侧边栏中与顶级模型并行聊天，免费，本地，定制化** ✨
+**Make AI chat simpler — side-by-side chats with top models, free, local, and customizable** ✨
 
 </div>
 
 <div align="center">
 
-[![作者][作者-image]][作者-url]
-[![许可证][许可证-image]][许可证-url]
+[![Author][author-image]][author-url]
+[![License][license-image]][license-url]
 
-[作者-image]: https://img.shields.io/badge/author-starwingChen-blue.svg
-[作者-url]: https://github.com/starwingChen
-[许可证-image]: https://img.shields.io/github/license/starwingChen/easyChat?color=blue
-[许可证-url]: https://github.com/starwingChen/easyChat/blob/master/LICENSE
+[author-image]: https://img.shields.io/badge/author-starwingChen-blue.svg
+[author-url]: https://github.com/starwingChen
+[license-image]: https://img.shields.io/github/license/starwingChen/easyChat?color=blue
+[license-url]: https://github.com/starwingChen/easyChat/blob/master/LICENSE
 
 </div>
 
-## ✨ 特点
+<div align="center">
 
-- ⌨️ **支持快捷键**，`Alt`+`J` 随时呼出 / 收起
-- 🔑 **模拟 web 请求**，无「免费次数」套路，用量全在你自己的账号上
-- 🔌 **可使用 API key 调用模型**，让对话更可控
-- ⚡ **多模型并排展示**，对比回答快人一步
-- ↔️ **面板可拖拽**，怎么顺手怎么来
-- 📜 **支持历史会话**，一键查看过往消息
-- 🌐 **中 / 英** 界面随时切换
-- 📦 **≲1MB**，轻到离谱
-- 🤖 ChatGPT、Gemini、DeepSeek、Copilot、Perplexity… **持续更新中**
+[简体中文](README.zh.md) | [English](README.md)
 
-## 🖼️ 截图
+</div>
+
+## ✨ Features
+
+- ⌨️ **Keyboard shortcut**: `Alt`+`J` to show / hide anytime
+- 🔑 **Web-style requests**: no “free tier” tricks — usage stays on your own account
+- 🔌 **API keys supported** for more control over model calls
+- ⚡ **Multiple models side by side** for faster comparison
+- ↔️ **Draggable panel** — arrange it however you like
+- 📜 **Conversation history** — browse past messages in one click
+- 🌐 **Chinese / English** UI toggle anytime
+- 📦 **≲1MB** — extremely lightweight
+- 🤖 ChatGPT, Gemini, DeepSeek, Copilot, Perplexity… **more coming**
+
+## 🖼️ Screenshots
 
 <p align="center">
 <img src="./assets/snapshot-3.png" height="500">
@@ -40,16 +46,16 @@
 <img src="./assets/snapshot-2.png" height="500">
 </p>
 
-## 📦 本地安装
+## 📦 Local install
 
-- 克隆源代码
-- 运行 `npm install`
-- 运行 `npm build`
-- 将 `dist` 文件夹加载到浏览器中
-- 欢迎提交 pr 😀
+- Clone the source
+- Run `npm install`
+- Run `npm build`
+- Load the `dist` folder in your browser
+- Pull requests welcome 😀
 
 <div align="center">
 
-_简单好用，给常在网页里「问一句」的你。_
+_Simple and handy — for anyone who often asks “just one thing” on the web._
 
 </div>
