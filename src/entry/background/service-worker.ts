@@ -1,5 +1,6 @@
 const OPEN_WINDOW_IDS_STORAGE_KEY = 'easy-chat:side-panel-open-window-ids';
 const COPILOT_AUTH_MESSAGE_TYPE = 'prepare-copilot-auth';
+const CLOSE_SIDE_PANEL_WINDOW_MESSAGE_TYPE = 'close-side-panel-window';
 const COPILOT_COOKIE_RULE_ID = 1001;
 const COPILOT_COOKIE_NAME = '__Host-copilot-anon';
 const COPILOT_URL = 'https://copilot.microsoft.com';
@@ -80,6 +81,13 @@ function setWindowTracked(windowId: number, isOpen: boolean): void {
   }
 
   persistOpenWindowIds();
+}
+
+function requestSidePanelWindowClose(windowId: number): void {
+  chrome.runtime?.sendMessage?.({
+    type: CLOSE_SIDE_PANEL_WINDOW_MESSAGE_TYPE,
+    windowId,
+  })?.catch?.(() => undefined);
 }
 
 function readCopilotAnonCookie(): Promise<string | null> {
@@ -200,10 +208,6 @@ chrome.sidePanel?.onOpened?.addListener((info) => {
   setWindowTracked(info.windowId, true);
 });
 
-chrome.sidePanel?.onClosed?.addListener((info) => {
-  setWindowTracked(info.windowId, false);
-});
-
 chrome.commands.onCommand.addListener((command) => {
   if (command !== 'open-side-panel' || !chrome.sidePanel?.open) {
     return;
@@ -216,8 +220,9 @@ chrome.commands.onCommand.addListener((command) => {
 
     const windowId = currentWindow.id;
 
-    if (openWindowIds.has(windowId) && chrome.sidePanel?.close) {
-      chrome.sidePanel.close({ windowId }).catch(() => undefined);
+    if (openWindowIds.has(windowId)) {
+      setWindowTracked(windowId, false);
+      requestSidePanelWindowClose(windowId);
       return;
     }
 

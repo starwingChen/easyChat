@@ -22,6 +22,7 @@ describe('background service worker', () => {
   > = [];
   const open = vi.fn(async () => undefined);
   const close = vi.fn(async () => undefined);
+  const runtimeSendMessage = vi.fn(async () => undefined);
   const setPanelBehavior = vi.fn(async () => undefined);
   let gestureActive = false;
   const getLastFocused = vi.fn(
@@ -189,6 +190,7 @@ describe('background service worker', () => {
     onClosedListeners.length = 0;
     open.mockReset().mockResolvedValue(undefined);
     close.mockReset().mockResolvedValue(undefined);
+    runtimeSendMessage.mockReset().mockResolvedValue(undefined);
     setPanelBehavior.mockReset().mockResolvedValue(undefined);
     open.mockImplementation(async () => {
       if (!gestureActive) {
@@ -262,6 +264,7 @@ describe('background service worker', () => {
             ) => boolean | void
           ) => onMessageListeners.push(listener),
         },
+        sendMessage: runtimeSendMessage,
       },
       commands: {
         onCommand: {
@@ -315,8 +318,16 @@ describe('background service worker', () => {
     triggerCommand('open-side-panel');
     await flushMicrotasks();
 
-    expect(close).toHaveBeenCalledWith({ windowId: 7 });
+    expect(runtimeSendMessage).toHaveBeenCalledWith({
+      type: 'close-side-panel-window',
+      windowId: 7,
+    });
+    expect(close).not.toHaveBeenCalled();
     expect(open).not.toHaveBeenCalled();
+    expect(storageSessionRemove).toHaveBeenCalledWith(
+      'easy-chat:side-panel-open-window-ids',
+      expect.any(Function)
+    );
   });
 
   it('opens the side panel when it is not tracked as open', async () => {
@@ -344,8 +355,16 @@ describe('background service worker', () => {
     triggerCommand('open-side-panel');
     await flushMicrotasks();
 
-    expect(close).toHaveBeenCalledWith({ windowId: 7 });
+    expect(runtimeSendMessage).toHaveBeenCalledWith({
+      type: 'close-side-panel-window',
+      windowId: 7,
+    });
+    expect(close).not.toHaveBeenCalled();
     expect(open).not.toHaveBeenCalled();
+  });
+
+  it('does not register a sidePanel.onClosed listener', () => {
+    expect(onClosedListeners).toHaveLength(0);
   });
 
   it('opens the side panel before the command user gesture ends', async () => {
