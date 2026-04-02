@@ -18,6 +18,8 @@ export type OpenAiCompatibleApiErrorCode =
 
 export interface OpenAiCompatibleApiClientError extends Error {
   code: OpenAiCompatibleApiErrorCode;
+  isOpenAiCompatibleApiClientError: true;
+  userFacingMessage?: string;
 }
 
 export interface OpenAiCompatibleApiState extends ApiBotConfigValue {
@@ -50,9 +52,17 @@ export type SendOpenAiCompatiblePrompt = (
 ) => Promise<OpenAiCompatibleApiPromptResult>;
 
 export function createOpenAiCompatibleApiClientError(
-  code: OpenAiCompatibleApiErrorCode
+  code: OpenAiCompatibleApiErrorCode,
+  options: {
+    message?: string;
+    userFacingMessage?: string;
+  } = {}
 ): OpenAiCompatibleApiClientError {
-  return Object.assign(new Error(code), { code });
+  return Object.assign(new Error(options.message ?? code), {
+    code,
+    isOpenAiCompatibleApiClientError: true as const,
+    userFacingMessage: options.userFacingMessage,
+  });
 }
 
 export function isOpenAiCompatibleApiClientError(
@@ -61,8 +71,9 @@ export function isOpenAiCompatibleApiClientError(
   return (
     !!error &&
     typeof error === 'object' &&
-    'code' in error &&
-    typeof (error as OpenAiCompatibleApiClientError).code === 'string'
+    'isOpenAiCompatibleApiClientError' in error &&
+    (error as OpenAiCompatibleApiClientError)
+      .isOpenAiCompatibleApiClientError === true
   );
 }
 

@@ -35,6 +35,7 @@ function extractMessageText(content: unknown): string {
 }
 
 function mapOpenAiCompatibleError(error: unknown) {
+  const userFacingMessage = extractUserFacingMessage(error);
   const message = error instanceof Error ? error.message : String(error);
 
   if (/\b(401|403)\b|auth|unauthorized|invalid api key/i.test(message)) {
@@ -45,7 +46,39 @@ function mapOpenAiCompatibleError(error: unknown) {
     return createOpenAiCompatibleApiClientError('quota');
   }
 
-  return createOpenAiCompatibleApiClientError('unavailable');
+  return createOpenAiCompatibleApiClientError('unavailable', {
+    userFacingMessage,
+  });
+}
+
+function extractUserFacingMessage(error: unknown): string | undefined {
+  if (!error || typeof error !== 'object') {
+    return undefined;
+  }
+
+  const candidate = error as {
+    error?: { message?: unknown };
+    message?: unknown;
+    status?: unknown;
+  };
+  const nestedMessage = candidate.error?.message;
+
+  if (typeof nestedMessage === 'string' && nestedMessage.trim()) {
+    return nestedMessage.trim();
+  }
+
+  if (
+    typeof candidate.status === 'number' &&
+    typeof candidate.message === 'string'
+  ) {
+    const normalized = candidate.message.replace(/^\d{3}\s+/, '').trim();
+
+    if (normalized) {
+      return normalized;
+    }
+  }
+
+  return undefined;
 }
 
 export const sendOpenAiCompatiblePrompt: SendOpenAiCompatiblePrompt = async (
@@ -57,6 +90,7 @@ export const sendOpenAiCompatiblePrompt: SendOpenAiCompatiblePrompt = async (
     baseURL: config.baseURL,
     apiKey: config.apiKey,
     dangerouslyAllowBrowser: true,
+    maxRetries: 0,
   });
 
   try {

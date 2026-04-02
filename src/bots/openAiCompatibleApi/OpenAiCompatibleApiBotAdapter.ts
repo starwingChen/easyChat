@@ -1,8 +1,9 @@
 import { createAppTranslator } from '../../i18n';
-import type {
-  ApiBotConfigValue,
-  BotResponse,
-  SendMessageInput,
+import {
+  BotUserFacingError,
+  type ApiBotConfigValue,
+  type BotResponse,
+  type SendMessageInput,
 } from '../../types/bot';
 import { BaseBotAdapter } from '../BaseBotAdapter';
 import { sendOpenAiCompatiblePrompt } from './openAiCompatibleApiClient';
@@ -81,7 +82,7 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
     const t = createAppTranslator(input.locale);
 
     if (!this.config?.apiKey || !this.config?.modelName) {
-      throw new Error(t(this.provider.errorMessageIds.missingConfig));
+      throw new BotUserFacingError(t(this.provider.errorMessageIds.missingConfig));
     }
 
     const nextMessages = [
@@ -102,7 +103,9 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
       );
     } catch (error) {
       if (isOpenAiCompatibleApiClientError(error)) {
-        throw new Error(t(this.provider.errorMessageIds[error.code]));
+        throw new BotUserFacingError(
+          error.userFacingMessage ?? t(this.provider.errorMessageIds[error.code])
+        );
       }
 
       throw error;

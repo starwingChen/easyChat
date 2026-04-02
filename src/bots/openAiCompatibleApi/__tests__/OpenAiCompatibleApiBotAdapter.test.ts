@@ -6,6 +6,7 @@ import type {
   OpenAiCompatibleApiProvider,
   SendOpenAiCompatiblePrompt,
 } from '../types';
+import { createOpenAiCompatibleApiClientError } from '../types';
 
 const providerDefinition: BotDefinition = {
   id: 'qwen-api',
@@ -168,7 +169,7 @@ describe('OpenAiCompatibleApiBotAdapter', () => {
   it('maps structured client errors through provider message ids', async () => {
     const sendPrompt = vi
       .fn<SendOpenAiCompatiblePrompt>()
-      .mockRejectedValue({ code: 'quota' });
+      .mockRejectedValue(createOpenAiCompatibleApiClientError('quota'));
     const adapter = new TestOpenAiCompatibleApiBotAdapter({ sendPrompt });
 
     adapter.setApiConfig({
@@ -178,8 +179,31 @@ describe('OpenAiCompatibleApiBotAdapter', () => {
 
     await expect(
       adapter.sendMessage(createInput({ locale: 'en-US' }))
-    ).rejects.toThrow(
-      'Qwen - API quota is exhausted or requests are too frequent. Check the account status.'
-    );
+    ).rejects.toMatchObject({
+      message:
+        'Qwen - API quota is exhausted or requests are too frequent. Check the account status.',
+      userFacing: true,
+    });
+  });
+
+  it('rethrows provider error messages as user-facing bot errors', async () => {
+    const sendPrompt = vi
+      .fn<SendOpenAiCompatiblePrompt>()
+      .mockRejectedValue(
+        createOpenAiCompatibleApiClientError('unavailable', {
+          userFacingMessage: 'Model Not Exist',
+        })
+      );
+    const adapter = new TestOpenAiCompatibleApiBotAdapter({ sendPrompt });
+
+    adapter.setApiConfig({
+      apiKey: 'sk-demo',
+      modelName: 'missing-model',
+    });
+
+    await expect(adapter.sendMessage(createInput())).rejects.toMatchObject({
+      message: 'Model Not Exist',
+      userFacing: true,
+    });
   });
 });

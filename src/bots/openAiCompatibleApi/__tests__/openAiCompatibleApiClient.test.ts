@@ -46,6 +46,7 @@ describe('openAiCompatibleApiClient', () => {
       baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
       apiKey: 'sk-demo',
       dangerouslyAllowBrowser: true,
+      maxRetries: 0,
     });
     expect(openAiMocks.createMock).toHaveBeenCalledWith(
       {
@@ -57,6 +58,28 @@ describe('openAiCompatibleApiClient', () => {
       }
     );
     expect(result).toEqual({ text: 'Qwen reply' });
+  });
+
+  it('disables sdk-level retries so sessionService remains the single retry owner', async () => {
+    openAiMocks.createMock.mockResolvedValue({
+      choices: [{ message: { content: 'DeepSeek reply' } }],
+    });
+
+    await sendOpenAiCompatiblePrompt(
+      {
+        baseURL: 'https://api.deepseek.com',
+        apiKey: 'sk-demo',
+        modelName: 'deepseek-chat',
+      },
+      [{ role: 'user', content: 'hello' }]
+    );
+
+    expect(openAiMocks.openAiConstructor).toHaveBeenCalledWith({
+      baseURL: 'https://api.deepseek.com',
+      apiKey: 'sk-demo',
+      dangerouslyAllowBrowser: true,
+      maxRetries: 0,
+    });
   });
 
   it('extracts text from content parts', async () => {
@@ -99,6 +122,64 @@ describe('openAiCompatibleApiClient', () => {
         [{ role: 'user', content: 'hello' }]
       )
     ).rejects.toMatchObject({ code: 'auth' });
+  });
+
+  it('preserves structured provider error messages for invalid requests', async () => {
+    openAiMocks.createMock.mockRejectedValue(
+      Object.assign(new Error('400 Model Not Exist'), {
+        status: 400,
+        error: {
+          message: 'Model Not Exist',
+          type: 'invalid_request_error',
+          param: null,
+          code: 'invalid_request_error',
+        },
+      })
+    );
+
+    await expect(
+      sendOpenAiCompatiblePrompt(
+        {
+          baseURL: 'https://api.deepseek.com',
+          apiKey: 'sk-demo',
+          modelName: 'missing-model',
+        },
+        [{ role: 'user', content: 'hello' }]
+      )
+    ).rejects.toMatchObject({
+      code: 'unavailable',
+      userFacingMessage: 'Model Not Exist',
+    });
+  });
+
+  it('does not mistake sdk errors with top-level code for internal client errors', async () => {
+    openAiMocks.createMock.mockRejectedValue(
+      Object.assign(new Error('400 Model Not Exist'), {
+        status: 400,
+        code: 'invalid_request_error',
+        type: 'invalid_request_error',
+        error: {
+          message: 'Model Not Exist',
+          type: 'invalid_request_error',
+          param: null,
+          code: 'invalid_request_error',
+        },
+      })
+    );
+
+    await expect(
+      sendOpenAiCompatiblePrompt(
+        {
+          baseURL: 'https://api.deepseek.com',
+          apiKey: 'sk-demo',
+          modelName: 'missing-model',
+        },
+        [{ role: 'user', content: 'hello' }]
+      )
+    ).rejects.toMatchObject({
+      code: 'unavailable',
+      userFacingMessage: 'Model Not Exist',
+    });
   });
 
   it('returns emptyResponse when the sdk payload has no usable text', async () => {

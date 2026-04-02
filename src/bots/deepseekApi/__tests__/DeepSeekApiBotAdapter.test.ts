@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { DeepSeekApiBotAdapter } from '../DeepSeekApiBotAdapter';
-import type { SendOpenAiCompatiblePrompt } from '../../openAiCompatibleApi/types';
+import {
+  createOpenAiCompatibleApiClientError,
+  type SendOpenAiCompatiblePrompt,
+} from '../../openAiCompatibleApi/types';
 
 describe('DeepSeekApiBotAdapter', () => {
   it('throws a configuration error with an action link when api key is missing', async () => {
@@ -159,7 +162,7 @@ describe('DeepSeekApiBotAdapter', () => {
   it('translates structured client errors using the request locale', async () => {
     const sendPrompt = vi
       .fn<SendOpenAiCompatiblePrompt>()
-      .mockRejectedValue({ code: 'quota' });
+      .mockRejectedValue(createOpenAiCompatibleApiClientError('quota'));
     const adapter = new DeepSeekApiBotAdapter({ sendPrompt });
 
     adapter.setApiConfig({
