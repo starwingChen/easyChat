@@ -15,7 +15,11 @@
     "https://chatgpt.com/*",
     "https://copilot.microsoft.com/*",
     "wss://copilot.microsoft.com/*",
-    "https://www.perplexity.ai/*"
+    "https://www.perplexity.ai/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.openai.com/*",
+    "https://api.deepseek.com/*",
+    "https://dashscope.aliyuncs.com/*"
   ],
   "declarative_net_request": {
     "rule_resources": [
