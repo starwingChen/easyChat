@@ -42,6 +42,7 @@ const enUSMessages = {
   'chat.inUse': 'In Use',
   'chat.api': 'API',
   'chat.configure': 'Configure',
+  'chat.focusBotSingleLayout': 'Switch to current bot',
   'layout.1': 'Single',
   'layout.2v': 'Split Vertical',
   'layout.2h': 'Split Horizontal',

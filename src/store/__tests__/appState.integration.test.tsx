@@ -49,6 +49,7 @@ function StateProbe() {
     visibleBotIds,
     createNewSession,
     setLayout,
+    focusBotInSingleLayout,
     saveApiConfig,
     addSavedApiModel,
     removeSavedApiModel,
@@ -72,6 +73,9 @@ function StateProbe() {
     <div>
       <button onClick={() => setLayout('1')} type="button">
         Set 1
+      </button>
+      <button onClick={() => focusBotInSingleLayout('perplexity')} type="button">
+        Focus Perplexity
       </button>
       <button onClick={createNewSession} type="button">
         New Session
@@ -259,6 +263,31 @@ describe('AppStateContext', () => {
     expect(readProbe()).toEqual(
       expect.objectContaining({
         sidebarOpen: false,
+      })
+    );
+  });
+
+  it('focuses a bot into the single layout while preserving the remaining active bot order', async () => {
+    const user = userEvent.setup();
+    localeMocks.loadPersistedPreferences.mockResolvedValue(null);
+
+    render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>
+    );
+
+    await waitFor(() => {
+      expect(localeMocks.persistPreferences).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Focus Perplexity' }));
+
+    expect(readProbe()).toEqual(
+      expect.objectContaining({
+        layout: '1',
+        activeBotIds: ['perplexity', 'chatgpt', 'gemini', 'copilot'],
+        visibleBotIds: ['perplexity'],
       })
     );
   });

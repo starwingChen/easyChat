@@ -1,8 +1,10 @@
-import { Eye, EyeOff, Settings2, X } from 'lucide-react';
+import * as Tooltip from '@radix-ui/react-tooltip';
+import { Eye, EyeOff, Focus, Settings2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { useI18n } from '../../i18n';
 import type { ApiBotConfigValue, BotDefinition } from '../../types/bot';
+import type { LayoutType } from '../../types/session';
 import { Dropdown } from '../common/Dropdown';
 import { ApiModelPicker } from './ApiModelPicker';
 
@@ -12,6 +14,7 @@ interface ChatPanelHeaderProps {
   botDefinition: BotDefinition;
   botsInConversation: string[];
   configuredModelName: string | null;
+  currentLayout: LayoutType;
   initialApiConfig: ApiBotConfigValue | null;
   inUseBotIds: string[];
   isConfigOpen: boolean;
@@ -19,6 +22,7 @@ interface ChatPanelHeaderProps {
   onAddSavedApiModel?: (modelName: string) => void | Promise<void>;
   onBotChange: (botId: string) => void;
   onCloseApiConfig: () => void;
+  onFocusBotInSingleLayout?: () => void;
   onModelChange: (modelId: string) => void;
   onOpenApiConfig: () => void;
   onRemoveSavedApiModel?: (modelName: string) => void | Promise<void>;
@@ -33,6 +37,7 @@ export function ChatPanelHeader({
   botDefinition,
   botsInConversation,
   configuredModelName,
+  currentLayout,
   initialApiConfig,
   inUseBotIds,
   isConfigOpen,
@@ -40,6 +45,7 @@ export function ChatPanelHeader({
   onAddSavedApiModel,
   onBotChange,
   onCloseApiConfig,
+  onFocusBotInSingleLayout,
   onModelChange: _onModelChange,
   onOpenApiConfig,
   onRemoveSavedApiModel,
@@ -99,26 +105,45 @@ export function ChatPanelHeader({
       ? configuredModelName && configuredModelName.trim().length > 0
         ? configuredModelName
         : t('config.unset')
-      : selectedModel?.label ?? selectedModelId;
+      : (selectedModel?.label ?? selectedModelId);
 
   return (
     <>
-      <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/70 px-3 py-2">
-        {isReadonly ? (
+      <div className="flex items-center justify-between flex-wrap border-b border-slate-200 bg-slate-50/70 px-3 py-2">
+        <div className="flex min-w-0 items-center gap-2">
           <Dropdown
             ariaLabel={t('chat.selectBot')}
             onChange={onBotChange}
             options={botOptions}
             value={botDefinition.id}
           />
-        ) : (
-          <Dropdown
-            ariaLabel={t('chat.selectBot')}
-            onChange={onBotChange}
-            options={botOptions}
-            value={botDefinition.id}
-          />
-        )}
+          {!isReadonly && currentLayout !== '1' ? (
+            <Tooltip.Provider delayDuration={0}>
+              <Tooltip.Root>
+                <Tooltip.Trigger asChild>
+                  <button
+                    aria-label={t('chat.focusBotSingleLayout')}
+                    className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
+                    onClick={onFocusBotInSingleLayout}
+                    type="button"
+                  >
+                    <Focus className="h-4 w-4" />
+                  </button>
+                </Tooltip.Trigger>
+                <Tooltip.Portal>
+                  <Tooltip.Content
+                    className="z-50 rounded-md bg-slate-900 px-2 py-1 text-xs text-white shadow-lg"
+                    side="top"
+                    sideOffset={6}
+                  >
+                    {t('chat.focusBotSingleLayout')}
+                    <Tooltip.Arrow className="fill-slate-900" />
+                  </Tooltip.Content>
+                </Tooltip.Portal>
+              </Tooltip.Root>
+            </Tooltip.Provider>
+          ) : null}
+        </div>
         <div className="flex items-center gap-2">
           {!isReadonly && botDefinition.accessMode === 'api' ? (
             <>

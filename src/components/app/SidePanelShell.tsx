@@ -32,6 +32,7 @@ export function SidePanelShell() {
     setLayout,
     toggleSidebar,
     replaceBot,
+    focusBotInSingleLayout,
     setModel,
     addSavedApiModel,
     removeSavedApiModel,
@@ -169,6 +170,7 @@ export function SidePanelShell() {
           currentSession={currentSession}
           isReadonly={isReadonly}
           onBotChange={replaceBot}
+          onFocusBotInSingleLayout={focusBotInSingleLayout}
           onCancelLoading={cancelReply}
           onRetryFailed={retryReply}
           onModelChange={setModel}

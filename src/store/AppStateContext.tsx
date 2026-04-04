@@ -86,6 +86,7 @@ interface AppStateContextValue {
   setLayout: (layout: AppState['activeSession']['layout']) => void;
   toggleSidebar: () => void;
   replaceBot: (index: number, botId: string) => void;
+  focusBotInSingleLayout: (botId: string) => void;
   setModel: (botId: string, modelId: string) => void;
   addSavedApiModel: (botId: string, modelName: string) => Promise<void>;
   removeSavedApiModel: (botId: string, modelName: string) => Promise<void>;
@@ -314,6 +315,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     },
     replaceBot(index, botId) {
       dispatch({ type: 'replace-bot', payload: { index, botId } });
+    },
+    focusBotInSingleLayout(botId) {
+      dispatch({
+        type: 'focus-bot-single-layout',
+        payload: { botId },
+      });
     },
     setModel(botId, modelId) {
       dispatch({ type: 'set-selected-model', payload: { botId, modelId } });

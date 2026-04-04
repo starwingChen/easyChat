@@ -6,6 +6,7 @@ import type {
   BotMessageAction,
 } from '../../types/bot';
 import type { ChatMessage } from '../../types/message';
+import type { LayoutType } from '../../types/session';
 import { ChatPanelHeader } from './ChatPanelHeader';
 import { MessageList } from './MessageList';
 
@@ -14,12 +15,14 @@ interface ChatPanelProps {
   availableBotIds: string[];
   botDefinition: BotDefinition;
   configuredModelName: string | null;
+  currentLayout: LayoutType;
   initialApiConfig: ApiBotConfigValue | null;
   inUseBotIds: string[];
   isReadonly: boolean;
   messages: ChatMessage[];
   onAddSavedApiModel?: (modelName: string) => void | Promise<void>;
   onBotChange: (botId: string) => void;
+  onFocusBotInSingleLayout?: () => void;
   onCancelLoading?: (messageId: string) => void;
   onRetryFailed?: (messageId: string) => void;
   onModelChange: (modelId: string) => void;
@@ -47,12 +50,14 @@ export function ChatPanel({
   availableBotIds,
   botDefinition,
   configuredModelName,
+  currentLayout,
   initialApiConfig,
   inUseBotIds,
   isReadonly,
   messages,
   onAddSavedApiModel,
   onBotChange,
+  onFocusBotInSingleLayout,
   onCancelLoading,
   onRetryFailed,
   onModelChange,
@@ -89,6 +94,7 @@ export function ChatPanel({
         botDefinition={botDefinition}
         botsInConversation={botsInConversation}
         configuredModelName={configuredModelName}
+        currentLayout={currentLayout}
         initialApiConfig={initialApiConfig}
         inUseBotIds={inUseBotIds}
         isConfigOpen={isConfigOpen}
@@ -96,6 +102,7 @@ export function ChatPanel({
         onAddSavedApiModel={onAddSavedApiModel}
         onBotChange={onBotChange}
         onCloseApiConfig={() => setIsConfigOpen(false)}
+        onFocusBotInSingleLayout={onFocusBotInSingleLayout}
         onModelChange={onModelChange}
         onOpenApiConfig={() => setIsConfigOpen(true)}
         onRemoveSavedApiModel={onRemoveSavedApiModel}

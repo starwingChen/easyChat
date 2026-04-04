@@ -58,6 +58,7 @@ describe('ChatPanel', () => {
           ],
         }}
         configuredModelName={null}
+        currentLayout="2v"
         initialApiConfig={null}
         inUseBotIds={['chatgpt']}
         isReadonly={true}
@@ -134,6 +135,7 @@ describe('ChatPanel', () => {
         availableBotIds={['deepseek-api']}
         botDefinition={deepseekApiBot}
         configuredModelName="Unset"
+        currentLayout="2v"
         initialApiConfig={{
           apiKey: 'sk-demo',
           modelName: 'deepseek-chat',
@@ -176,6 +178,107 @@ describe('ChatPanel', () => {
     });
   });
 
+  it('renders a focus action with tooltip for editable multi-panel layouts and notifies when clicked', async () => {
+    const user = userEvent.setup();
+    const onFocusBotInSingleLayout = vi.fn();
+
+    renderWithI18n(
+      <ChatPanel
+        allBotDefinitions={[
+          {
+            id: 'chatgpt',
+            name: 'ChatGPT',
+            brand: 'OpenAI',
+            themeColor: '#22c55e',
+            accessMode: 'session',
+            defaultModel: 'gpt-4o',
+            capabilities: [],
+            models: [{ id: 'gpt-4o', label: 'GPT-4o', isDefault: true }],
+          },
+        ]}
+        availableBotIds={['chatgpt']}
+        botDefinition={{
+          id: 'chatgpt',
+          name: 'ChatGPT',
+          brand: 'OpenAI',
+          themeColor: '#22c55e',
+          accessMode: 'session',
+          defaultModel: 'gpt-4o',
+          capabilities: [],
+          models: [{ id: 'gpt-4o', label: 'GPT-4o', isDefault: true }],
+        }}
+        configuredModelName={null}
+        currentLayout="2v"
+        initialApiConfig={null}
+        inUseBotIds={['chatgpt']}
+        isReadonly={false}
+        messages={[]}
+        onBotChange={vi.fn()}
+        onFocusBotInSingleLayout={onFocusBotInSingleLayout}
+        onModelChange={vi.fn()}
+        selectedModelId="gpt-4o"
+      />,
+      { locale: 'zh-CN' }
+    );
+
+    const focusButton = screen.getByRole('button', { name: '切换到当前机器人' });
+
+    await user.hover(focusButton);
+
+    expect(
+      screen.getByRole('tooltip', { hidden: true })
+    ).toHaveTextContent('切换到当前机器人');
+
+    await user.click(focusButton);
+
+    expect(onFocusBotInSingleLayout).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides the focus action in single-panel layouts', () => {
+    renderWithI18n(
+      <ChatPanel
+        allBotDefinitions={[
+          {
+            id: 'chatgpt',
+            name: 'ChatGPT',
+            brand: 'OpenAI',
+            themeColor: '#22c55e',
+            accessMode: 'session',
+            defaultModel: 'gpt-4o',
+            capabilities: [],
+            models: [{ id: 'gpt-4o', label: 'GPT-4o', isDefault: true }],
+          },
+        ]}
+        availableBotIds={['chatgpt']}
+        botDefinition={{
+          id: 'chatgpt',
+          name: 'ChatGPT',
+          brand: 'OpenAI',
+          themeColor: '#22c55e',
+          accessMode: 'session',
+          defaultModel: 'gpt-4o',
+          capabilities: [],
+          models: [{ id: 'gpt-4o', label: 'GPT-4o', isDefault: true }],
+        }}
+        configuredModelName={null}
+        currentLayout="1"
+        initialApiConfig={null}
+        inUseBotIds={['chatgpt']}
+        isReadonly={false}
+        messages={[]}
+        onBotChange={vi.fn()}
+        onFocusBotInSingleLayout={vi.fn()}
+        onModelChange={vi.fn()}
+        selectedModelId="gpt-4o"
+      />,
+      { locale: 'zh-CN' }
+    );
+
+    expect(
+      screen.queryByRole('button', { name: '切换到当前机器人' })
+    ).not.toBeInTheDocument();
+  });
+
   it('masks the api key by default and lets the user toggle visibility', async () => {
     const user = userEvent.setup();
     const deepseekApiBot = {
@@ -198,6 +301,7 @@ describe('ChatPanel', () => {
         availableBotIds={['deepseek-api']}
         botDefinition={deepseekApiBot}
         configuredModelName="Unset"
+        currentLayout="2v"
         initialApiConfig={{
           apiKey: 'sk-demo-secret',
           modelName: 'deepseek-chat',
@@ -262,6 +366,7 @@ describe('ChatPanel', () => {
           availableBotIds={['deepseek-api']}
           botDefinition={deepseekApiBot}
           configuredModelName="Unset"
+          currentLayout="2v"
           initialApiConfig={{
             apiKey: 'sk-demo',
             modelName: 'deepseek-chat',
@@ -362,6 +467,7 @@ describe('ChatPanel', () => {
           availableBotIds={['deepseek-api']}
           botDefinition={deepseekApiBot}
           configuredModelName={savedConfig.modelName}
+          currentLayout="2v"
           initialApiConfig={{ ...savedConfig }}
           inUseBotIds={['deepseek-api']}
           isReadonly={false}
@@ -445,6 +551,7 @@ describe('ChatPanel', () => {
         availableBotIds={['chatgpt', 'gemini']}
         botDefinition={chatgptBot}
         configuredModelName={null}
+        currentLayout="2v"
         initialApiConfig={null}
         inUseBotIds={['chatgpt']}
         isReadonly={false}

@@ -20,6 +20,7 @@ interface ChatWorkspaceProps {
   currentSession: ChatSession | SessionSnapshot;
   isReadonly: boolean;
   onBotChange: (index: number, botId: string) => void;
+  onFocusBotInSingleLayout?: (botId: string) => void;
   onCancelLoading?: (messageId: string) => void;
   onRetryFailed?: (messageId: string) => void;
   onModelChange: (botId: string, modelId: string) => void;
@@ -90,6 +91,7 @@ function renderTree(
         availableBotIds={props.availableBotIds}
         botDefinition={botDefinition}
         configuredModelName={botAdapter.getApiConfig()?.modelName ?? null}
+        currentLayout={props.currentSession.layout}
         initialApiConfig={botAdapter.getApiConfig()}
         inUseBotIds={props.visibleBotIds}
         isReadonly={props.isReadonly}
@@ -99,6 +101,9 @@ function renderTree(
           props.onAddSavedApiModel?.(botId, modelName)
         }
         onBotChange={(nextBotId) => props.onBotChange(tree.index, nextBotId)}
+        onFocusBotInSingleLayout={() =>
+          props.onFocusBotInSingleLayout?.(botId)
+        }
         onCancelLoading={props.onCancelLoading}
         onModelChange={(modelId) => props.onModelChange(botId, modelId)}
         onRemoveSavedApiModel={(modelName) =>

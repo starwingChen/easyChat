@@ -61,3 +61,12 @@ export function replaceBotAtIndex(
   nextBotIds[index] = botId;
   return Array.from(new Set(nextBotIds));
 }
+
+export function focusBotInSingleLayout(
+  activeBotIds: string[],
+  botId: string
+): string[] {
+  const nextBotIds = activeBotIds.filter((activeBotId) => activeBotId !== botId);
+
+  return [botId, ...nextBotIds];
+}

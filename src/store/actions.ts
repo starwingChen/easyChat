@@ -66,6 +66,12 @@ export type AppAction =
       };
     }
   | {
+      type: 'focus-bot-single-layout';
+      payload: {
+        botId: string;
+      };
+    }
+  | {
       type: 'set-selected-model';
       payload: {
         botId: string;

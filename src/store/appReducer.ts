@@ -5,6 +5,7 @@ import {
 import type { AppState } from '../types/app';
 import {
   ensureBotsForLayout,
+  focusBotInSingleLayout,
   replaceBotAtIndex,
 } from '../features/layout/layoutService';
 import type { AppAction } from './actions';
@@ -194,6 +195,22 @@ export function appReducer(state: AppState, action: AppAction): AppState {
           activeBotIds: replaceBotAtIndex(
             state.activeSession.activeBotIds,
             action.payload.index,
+            action.payload.botId
+          ),
+        },
+      };
+    case 'focus-bot-single-layout':
+      if (state.currentView.mode === 'history') {
+        return state;
+      }
+
+      return {
+        ...state,
+        activeSession: {
+          ...state.activeSession,
+          layout: '1',
+          activeBotIds: focusBotInSingleLayout(
+            state.activeSession.activeBotIds,
             action.payload.botId
           ),
         },

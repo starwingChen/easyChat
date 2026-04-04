@@ -41,6 +41,7 @@ const zhCNMessages = {
   'chat.inUse': '使用中',
   'chat.api': 'API',
   'chat.configure': '配置',
+  'chat.focusBotSingleLayout': '切换到当前机器人',
   'layout.1': '单栏',
   'layout.2v': '上下',
   'layout.2h': '左右',

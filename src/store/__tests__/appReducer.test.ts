@@ -145,6 +145,29 @@ describe('appReducer', () => {
     ]);
   });
 
+  it('focuses the requested active bot into the single layout without discarding the other active bots', () => {
+    const state = createState({
+      activeSession: createSession({
+        layout: '3',
+        activeBotIds: ['chatgpt', 'gemini', 'perplexity'],
+      }),
+    });
+
+    const next = appReducer(state, {
+      type: 'focus-bot-single-layout',
+      payload: {
+        botId: 'perplexity',
+      },
+    });
+
+    expect(next.activeSession.layout).toBe('1');
+    expect(next.activeSession.activeBotIds).toEqual([
+      'perplexity',
+      'chatgpt',
+      'gemini',
+    ]);
+  });
+
   it('stores history-specific browsing layout without mutating the snapshot', () => {
     const snapshot = createSnapshot({
       id: 'hist-1',
