@@ -79,5 +79,7 @@
 <div align="center">
 
 _简单好用，给常在网页里「问一句」的你。_
-> 友链：[linux.do](https://linux.do/)
+
 </div>
+
+> 友链：[linux.do](https://linux.do/)
