@@ -40,6 +40,10 @@
 - 📦 **≲1MB**，轻到离谱
 - 🤖 ChatGPT、Gemini、DeepSeek、Copilot、Perplexity… **持续更新中**
 
+## 🎬 GIF演示
+
+<img src="./assets/demo.gif">
+
 ## 🖼️ 截图
 
 <p align="center">

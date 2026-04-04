@@ -40,6 +40,10 @@
 - 📦 **≲1MB** — extremely lightweight
 - 🤖 ChatGPT, Gemini, DeepSeek, Copilot, Perplexity… **more coming**
 
+## 🎬 GIF Demo
+
+<img src="./assets/demo.gif">
+
 ## 🖼️ Screenshots
 
 <p align="center">
