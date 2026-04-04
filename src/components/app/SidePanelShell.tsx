@@ -81,7 +81,7 @@ export function SidePanelShell() {
         />
       ) : (
         <>
-          <aside className="flex w-14 shrink-0 flex-col overflow-x-hidden border-r border-slate-200 bg-slate-50/80 py-4">
+          <aside className="flex w-[57px] shrink-0 flex-col overflow-x-hidden border-r border-slate-200 bg-slate-50/80 py-4">
             <div className="flex min-h-0 flex-1 flex-col px-2">
               <div className="flex flex-col items-center gap-2">
                 <CollapsedSidebarItem

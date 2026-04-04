@@ -3,6 +3,12 @@
   "name": "EasyChat",
   "description": "Compare multiple AI assistants in one Chrome side panel.",
   "version": "1.0.0",
+  "icons": {
+    "16": "icon.png",
+    "32": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
   "permissions": [
     "sidePanel",
     "storage",
@@ -35,7 +41,13 @@
     "type": "module"
   },
   "action": {
-    "default_title": "Open EasyChat"
+    "default_title": "Open EasyChat",
+    "default_icon": {
+      "16": "icon.png",
+      "32": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
   },
   "side_panel": {
     "default_path": "index.html"
