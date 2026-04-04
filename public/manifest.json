@@ -18,7 +18,7 @@
     "https://www.perplexity.ai/*",
     "https://generativelanguage.googleapis.com/*",
     "https://api.openai.com/*",
-    "https://api.deepseek.com/*",
+    "https://*.deepseek.com/*",
     "https://dashscope.aliyuncs.com/*"
   ],
   "declarative_net_request": {
@@ -41,13 +41,12 @@
     "default_path": "index.html"
   },
   "commands": {
-    "open-side-panel": {
+    "_execute_action": {
       "suggested_key": {
         "default": "Alt+J",
         "windows": "Alt+J",
         "mac": "Alt+J"
-      },
-      "description": "Open sidebar"
+      }
     }
   }
 }

@@ -56,6 +56,7 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - `lucide-react`
 - `js-sha3`
 - Vitest + React Testing Library
+- 如果要使用 Chrome 相关的 api，请参考官方文档：https://developer.chrome.com/docs/extensions/reference/api?hl=zh-cn
 
 关键入口：
 

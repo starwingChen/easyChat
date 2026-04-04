@@ -67,35 +67,12 @@ describe('side panel App', () => {
     vi.unstubAllGlobals();
   });
 
-  it('closes the side panel window when it receives a matching close message', async () => {
+  it('does not wire runtime close listeners into the side panel root', async () => {
     render(<App />);
 
-    const listener = onMessageAddListener.mock.calls[0]?.[0] as
-      | ((message: unknown) => void)
-      | undefined;
-
-    expect(listener).toBeTypeOf('function');
-
-    listener?.({
-      type: 'close-side-panel-window',
-      windowId: 7,
-    });
-
-    expect(closeWindowSpy).toHaveBeenCalledTimes(1);
-  });
-
-  it('ignores close messages for a different window', async () => {
-    render(<App />);
-
-    const listener = onMessageAddListener.mock.calls[0]?.[0] as
-      | ((message: unknown) => void)
-      | undefined;
-
-    listener?.({
-      type: 'close-side-panel-window',
-      windowId: 8,
-    });
-
+    expect(onMessageAddListener).not.toHaveBeenCalled();
+    expect(onMessageRemoveListener).not.toHaveBeenCalled();
+    expect(getCurrentWindow).not.toHaveBeenCalled();
     expect(closeWindowSpy).not.toHaveBeenCalled();
   });
 });
