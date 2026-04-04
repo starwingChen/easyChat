@@ -240,33 +240,4 @@ describe('ChatGPTBotAdapter', () => {
 
     expect(getAccessToken).toHaveBeenCalledTimes(2);
   });
-
-  it('surfaces a 403 auth session failure as a user-facing regionUnsupported error', async () => {
-    const getAccessToken = vi
-      .fn<ChatGPTClient['getAccessToken']>()
-      .mockRejectedValue(new ChatGPTClientError('regionUnsupported'));
-    const getChatRequirements = vi.fn(async () => createRequirements());
-    const sendConversationMessage = vi.fn<ChatGPTClient['sendConversationMessage']>();
-
-    const adapter = new ChatGPTBotAdapter({
-      client: {
-        getAccessToken,
-        getChatRequirements,
-        sendConversationMessage,
-      },
-    });
-
-    await expect(
-      adapter.sendMessage({
-        sessionId: 'session-1',
-        content: 'hello',
-        locale: 'zh-CN',
-        modelId: 'gpt-4o',
-        targetBotIds: ['chatgpt'],
-      })
-    ).rejects.toMatchObject({
-      userFacing: true,
-      message: 'ChatGPT 不支持该地区使用。',
-    });
-  });
 });

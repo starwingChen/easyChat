@@ -71,8 +71,10 @@ const zhCNMessages = {
     'Copilot 需要完成网页访问验证。请先访问 [https://copilot.microsoft.com](https://copilot.microsoft.com) 发送任意消息',
   'bot.error.chatgpt.authRequired':
     'ChatGPT 需要登录，请前往 [https://chatgpt.com](https://chatgpt.com) 登录后再试。',
-  'bot.error.chatgpt.regionUnsupported': 'ChatGPT 不支持该地区使用。',
-  'bot.error.gemini.regionUnsupported': 'Gemini 不支持该地区使用。',
+  'bot.error.chatgpt.regionUnsupported':
+    '响应失败，请确认 ChatGPT 是否支持该地区使用',
+  'bot.error.gemini.regionUnsupported':
+    '响应失败，请确认 Gemini 是否支持该地区使用',
   'bot.error.chatgptApi.missingConfig':
     'ChatGPT - API 尚未配置。请先[配置 API](action://open-api-config)。',
   'bot.error.chatgptApi.auth':

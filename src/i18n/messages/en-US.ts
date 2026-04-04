@@ -73,9 +73,9 @@ const enUSMessages = {
   'bot.error.chatgpt.authRequired':
     'ChatGPT is not logged in. Please visit [https://chatgpt.com](https://chatgpt.com) and sign in first.',
   'bot.error.chatgpt.regionUnsupported':
-    'ChatGPT is not available in your region.',
+    'Request failed. Please confirm whether ChatGPT is supported in your region.',
   'bot.error.gemini.regionUnsupported':
-    'Gemini is not available in your region.',
+    'Request failed. Please confirm whether Gemini is supported in your region.',
   'bot.error.chatgptApi.missingConfig':
     'ChatGPT - API is not configured yet. Please [configure API](action://open-api-config) first.',
   'bot.error.chatgptApi.auth':
