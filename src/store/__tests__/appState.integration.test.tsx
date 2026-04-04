@@ -62,8 +62,10 @@ function StateProbe() {
   const loadingMessageId = state.activeSession.messages.find(
     (message) => message.status === 'loading'
   )?.id;
-  const failedMessageId = state.activeSession.messages.find(
-    (message) => message.status === 'error'
+  const retryableMessageId = state.activeSession.messages.find(
+    (message) =>
+      message.role === 'assistant' &&
+      (message.status === 'error' || message.status === 'cancelled')
   )?.id;
 
   return (
@@ -111,8 +113,8 @@ function StateProbe() {
         Cancel Reply
       </button>
       <button
-        disabled={!failedMessageId}
-        onClick={() => failedMessageId && retryReply(failedMessageId)}
+        disabled={!retryableMessageId}
+        onClick={() => retryableMessageId && retryReply(retryableMessageId)}
         type="button"
       >
         Retry Reply
@@ -581,6 +583,180 @@ describe('AppStateContext', () => {
     });
 
     expect(callCount).toBe(2);
+  });
+
+  it('retries a manually cancelled reply when requested explicitly', async () => {
+    const user = userEvent.setup();
+    localeMocks.loadPersistedPreferences.mockResolvedValue(null);
+    let callCount = 0;
+    let resolveReply: ((message: ChatMessage) => void) | undefined;
+
+    sessionMocks.resolvePendingBotReply.mockImplementation((request) => {
+      callCount += 1;
+
+      if (callCount === 1) {
+        return new Promise<ChatMessage>((resolve) => {
+          resolveReply = resolve;
+        });
+      }
+
+      return Promise.resolve({
+        id: request.messageId,
+        sessionId: request.sessionId,
+        role: 'assistant',
+        botId: request.botId,
+        modelId: request.modelId,
+        content: 'Recovered after cancel',
+        createdAt: request.createdAt,
+        status: 'done',
+        requestContent: request.content,
+        requestLocale: request.locale,
+        requestTargetBotIds: request.targetBotIds,
+      });
+    });
+
+    render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Set 1' }));
+    await user.click(screen.getByRole('button', { name: 'Send Hello' }));
+
+    await waitFor(() => {
+      expect(readProbe().messages).toContainEqual(
+        expect.objectContaining({
+          botId: 'chatgpt',
+          status: 'loading',
+        })
+      );
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Cancel Reply' }));
+
+    await waitFor(() => {
+      expect(readProbe().messages).toContainEqual(
+        expect.objectContaining({
+          botId: 'chatgpt',
+          status: 'cancelled',
+          content: '已终止这条回复',
+        })
+      );
+    });
+
+    resolveReply?.({
+      id: readProbe().messages.find(
+        (message) =>
+          message.botId === 'chatgpt' && message.status === 'cancelled'
+      )!.id,
+      sessionId: 'session-active',
+      role: 'assistant',
+      botId: 'chatgpt',
+      modelId: 'auto',
+      content: 'Late reply',
+      createdAt: new Date().toISOString(),
+      status: 'done',
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Retry Reply' }));
+
+    await waitFor(() => {
+      expect(readProbe().messages).toContainEqual(
+        expect.objectContaining({
+          botId: 'chatgpt',
+          status: 'done',
+          content: 'Recovered after cancel',
+        })
+      );
+    });
+
+    expect(callCount).toBe(2);
+  });
+
+  it('persists cancelled assistant messages instead of stale loading messages when the provider unmounts', async () => {
+    const user = userEvent.setup();
+    localeMocks.loadPersistedPreferences.mockResolvedValue(null);
+    sessionMocks.resolvePendingBotReply.mockImplementation(
+      () => new Promise<ChatMessage>(() => undefined)
+    );
+
+    const view = render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Set 1' }));
+    await user.click(screen.getByRole('button', { name: 'Send Hello' }));
+
+    await waitFor(() => {
+      expect(readProbe().messages).toContainEqual(
+        expect.objectContaining({
+          botId: 'chatgpt',
+          status: 'loading',
+        })
+      );
+    });
+
+    view.unmount();
+
+    await waitFor(() => {
+      expect(localeMocks.persistPreferences).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          activeSession: expect.objectContaining({
+            messages: expect.arrayContaining([
+              expect.objectContaining({
+                botId: 'chatgpt',
+                status: 'cancelled',
+                content: '已终止这条回复',
+              }),
+            ]),
+          }),
+        })
+      );
+    });
+  });
+
+  it('normalizes persisted loading assistant messages during hydration', async () => {
+    localeMocks.loadPersistedPreferences.mockResolvedValue({
+      ...persistedActiveState,
+      activeSession: {
+        ...persistedActiveState.activeSession,
+        messages: [
+          ...persistedActiveState.activeSession.messages.slice(0, 1),
+          {
+            id: 'gemini-loading',
+            sessionId: 'session-active',
+            role: 'assistant',
+            botId: 'gemini',
+            modelId: 'gemini-1.5-flash',
+            content: '',
+            createdAt: '2026-03-26T00:00:01.000Z',
+            status: 'loading',
+            requestContent: 'persisted prompt',
+            requestLocale: 'zh-CN',
+            requestTargetBotIds: ['gemini'],
+          },
+        ],
+      },
+    });
+
+    render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>
+    );
+
+    await waitFor(() => {
+      expect(readProbe().messages).toContainEqual(
+        expect.objectContaining({
+          id: 'gemini-loading',
+          status: 'cancelled',
+          content: '已终止这条回复',
+        })
+      );
+    });
   });
 
   it('falls back to the active session after deleting the selected history snapshot', async () => {

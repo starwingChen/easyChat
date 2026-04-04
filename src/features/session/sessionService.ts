@@ -81,6 +81,10 @@ function getReplyFailureMessage(locale: Locale): string {
   return createAppTranslator(locale)('chat.replyFailed');
 }
 
+function getReplyStoppedMessage(locale: Locale): string {
+  return createAppTranslator(locale)('chat.replyStopped');
+}
+
 function isActionableBotError(error: unknown): error is Error {
   return (
     error instanceof Error && error.message.includes('action://open-api-config')
@@ -190,7 +194,7 @@ export function createRetryReplyRequest({
   if (
     message.role !== 'assistant' ||
     !message.botId ||
-    message.status !== 'error' ||
+    (message.status !== 'error' && message.status !== 'cancelled') ||
     !message.requestContent ||
     !message.requestTargetBotIds?.length
   ) {
@@ -208,6 +212,49 @@ export function createRetryReplyRequest({
     registry,
     sessionId,
     targetBotIds: message.requestTargetBotIds,
+  };
+}
+
+export function createCancelledAssistantMessage(
+  message: ChatMessage,
+  locale: Locale
+): ChatMessage {
+  if (message.role !== 'assistant') {
+    return message;
+  }
+
+  return {
+    ...message,
+    content: message.content || getReplyStoppedMessage(locale),
+    status: 'cancelled',
+  };
+}
+
+export function normalizeInterruptedSession(
+  session: ChatSession,
+  locale: Locale
+): ChatSession {
+  let hasChanges = false;
+  const messages = session.messages.map((message) => {
+    if (message.role !== 'assistant' || message.status !== 'loading') {
+      return message;
+    }
+
+    hasChanges = true;
+
+    return createCancelledAssistantMessage(
+      message,
+      message.requestLocale ?? locale
+    );
+  });
+
+  if (!hasChanges) {
+    return session;
+  }
+
+  return {
+    ...session,
+    messages,
   };
 }
 

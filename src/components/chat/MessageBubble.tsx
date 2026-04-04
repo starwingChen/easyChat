@@ -22,7 +22,11 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const isLoading = !isUser && message.status === 'loading';
-  const isError = !isUser && message.status === 'error';
+  const isRetryable =
+    !isUser &&
+    (message.status === 'error' || message.status === 'cancelled') &&
+    !!message.requestContent &&
+    !!message.requestTargetBotIds?.length;
   const { t } = useI18n();
   const retryLabel =
     isLoading && message.retryCount && message.retryLimit
@@ -85,7 +89,7 @@ export function MessageBubble({
               <Square className="h-3.5 w-3.5 fill-current" />
             </button>
           </div>
-        ) : isError ? (
+        ) : isRetryable ? (
           <div className="flex shrink-0 items-center gap-2 px-1 pt-2 text-xs text-slate-400">
             <button
               aria-label={t('chat.retryAction')}

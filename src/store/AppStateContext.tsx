@@ -22,9 +22,11 @@ import {
 } from '../features/locale/localeService';
 import {
   BOT_REPLY_RETRY_LIMIT,
+  createCancelledAssistantMessage,
   createBroadcastDraft,
   createInitialSession,
   createRetryReplyRequest,
+  normalizeInterruptedSession,
   resolvePendingBotReply,
 } from '../features/session/sessionService';
 import { appReducer } from './appReducer';
@@ -98,9 +100,31 @@ const AppStateContext = createContext<AppStateContextValue | null>(null);
 
 export function AppStateProvider({ children }: PropsWithChildren) {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const stateRef = useRef(state);
   const pendingReplyControllers = useRef(
     new Map<string, AbortController>()
   ).current;
+
+  stateRef.current = state;
+
+  function buildPersistedPayload(appState: AppState) {
+    const normalizedActiveSession = normalizeInterruptedSession(
+      appState.activeSession,
+      appState.locale
+    );
+
+    return {
+      locale: appState.locale,
+      historySnapshots: appState.historySnapshots,
+      layout: normalizedActiveSession.layout,
+      selectedModels: normalizedActiveSession.selectedModels,
+      currentView: appState.currentView,
+      activeSession: normalizedActiveSession,
+      historyViewPreferences: appState.historyViewPreferences,
+      botStates: collectBotStates(),
+      sidebar: appState.sidebar,
+    };
+  }
 
   useEffect(() => {
     loadPersistedPreferences().then((persisted) => {
@@ -127,7 +151,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           layout: persisted.layout,
           selectedModels: persisted.selectedModels,
           currentView,
-          activeSession: persisted.activeSession,
+          activeSession: persisted.activeSession
+            ? normalizeInterruptedSession(
+                persisted.activeSession,
+                persisted.locale ?? initialLocale
+              )
+            : undefined,
           historyViewPreferences: persisted.historyViewPreferences,
           sidebar: persisted.sidebar,
           allBotIds,
@@ -141,18 +170,21 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
-    persistPreferences({
-      locale: state.locale,
-      historySnapshots: state.historySnapshots,
-      layout: state.activeSession.layout,
-      selectedModels: state.activeSession.selectedModels,
-      currentView: state.currentView,
-      activeSession: state.activeSession,
-      historyViewPreferences: state.historyViewPreferences,
-      botStates: collectBotStates(),
-      sidebar: state.sidebar,
-    }).catch(() => undefined);
+    persistPreferences(buildPersistedPayload(state)).catch(() => undefined);
   }, [state]);
+
+  useEffect(() => {
+    return () => {
+      pendingReplyControllers.forEach((controller) => {
+        controller.abort();
+      });
+      pendingReplyControllers.clear();
+
+      void persistPreferences(
+        buildPersistedPayload(stateRef.current)
+      ).catch(() => undefined);
+    };
+  }, []);
 
   const currentSession = selectCurrentSessionRecord(state);
   const currentViewBotOptions = selectCurrentViewBotOptions(state, allBotIds);
@@ -178,27 +210,26 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       dispatch({
         type: 'replace-active-message',
         payload: {
-          message: {
-            ...loadingMessage,
-            content: t('chat.replyStopped'),
-            status: 'cancelled',
-          },
+          message: createCancelledAssistantMessage(loadingMessage, state.locale),
           updatedAt: new Date().toISOString(),
         },
       });
     },
     retryReply(messageId) {
-      const failedMessage = state.activeSession.messages.find(
-        (message) => message.id === messageId && message.status === 'error'
+      const retryableMessage = state.activeSession.messages.find(
+        (message) =>
+          message.id === messageId &&
+          message.role === 'assistant' &&
+          (message.status === 'error' || message.status === 'cancelled')
       );
 
-      if (!failedMessage) {
+      if (!retryableMessage) {
         return;
       }
 
       const request = createRetryReplyRequest({
         locale: state.locale,
-        message: failedMessage,
+        message: retryableMessage,
         registry,
         sessionId: state.activeSession.id,
       });
@@ -211,7 +242,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         type: 'replace-active-message',
         payload: {
           message: {
-            ...failedMessage,
+            ...retryableMessage,
             content: '',
             status: 'loading',
             retryCount: 0,
@@ -290,74 +321,62 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     async addSavedApiModel(botId, modelName) {
       registry.getBot(botId).addSavedModel(modelName);
       const updatedAt = new Date().toISOString();
+      const activeSession = {
+        ...state.activeSession,
+        updatedAt,
+      };
 
       dispatch({
         type: 'touch-active-session',
         payload: { updatedAt },
       });
 
-      await persistPreferences({
-        locale: state.locale,
-        historySnapshots: state.historySnapshots,
-        layout: state.activeSession.layout,
-        selectedModels: state.activeSession.selectedModels,
-        currentView: state.currentView,
-        activeSession: {
-          ...state.activeSession,
-          updatedAt,
-        },
-        historyViewPreferences: state.historyViewPreferences,
-        botStates: collectBotStates(),
-        sidebar: state.sidebar,
-      }).catch(() => undefined);
+      await persistPreferences(
+        buildPersistedPayload({
+          ...state,
+          activeSession,
+        })
+      ).catch(() => undefined);
     },
     async removeSavedApiModel(botId, modelName) {
       registry.getBot(botId).removeSavedModel(modelName);
       const updatedAt = new Date().toISOString();
+      const activeSession = {
+        ...state.activeSession,
+        updatedAt,
+      };
 
       dispatch({
         type: 'touch-active-session',
         payload: { updatedAt },
       });
 
-      await persistPreferences({
-        locale: state.locale,
-        historySnapshots: state.historySnapshots,
-        layout: state.activeSession.layout,
-        selectedModels: state.activeSession.selectedModels,
-        currentView: state.currentView,
-        activeSession: {
-          ...state.activeSession,
-          updatedAt,
-        },
-        historyViewPreferences: state.historyViewPreferences,
-        botStates: collectBotStates(),
-        sidebar: state.sidebar,
-      }).catch(() => undefined);
+      await persistPreferences(
+        buildPersistedPayload({
+          ...state,
+          activeSession,
+        })
+      ).catch(() => undefined);
     },
     async saveApiConfig(botId, config) {
       registry.getBot(botId).setApiConfig(config);
       const updatedAt = new Date().toISOString();
+      const activeSession = {
+        ...state.activeSession,
+        updatedAt,
+      };
 
       dispatch({
         type: 'touch-active-session',
         payload: { updatedAt },
       });
 
-      await persistPreferences({
-        locale: state.locale,
-        historySnapshots: state.historySnapshots,
-        layout: state.activeSession.layout,
-        selectedModels: state.activeSession.selectedModels,
-        currentView: state.currentView,
-        activeSession: {
-          ...state.activeSession,
-          updatedAt,
-        },
-        historyViewPreferences: state.historyViewPreferences,
-        botStates: collectBotStates(),
-        sidebar: state.sidebar,
-      }).catch(() => undefined);
+      await persistPreferences(
+        buildPersistedPayload({
+          ...state,
+          activeSession,
+        })
+      ).catch(() => undefined);
     },
     async sendMessage(content) {
       const draft = createBroadcastDraft({

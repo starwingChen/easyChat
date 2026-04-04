@@ -128,6 +128,43 @@ describe('sessionService', () => {
     });
   });
 
+  it('rebuilds a pending request from a cancelled assistant message', () => {
+    const registry = createBotRegistry();
+    const draft = createBroadcastDraft({
+      content: 'Compare React and Vue briefly',
+      locale: 'en-US',
+      now: () => '2026-03-25T12:00:00.000Z',
+      registry,
+      session: baseSession,
+    });
+
+    const cancelledMessage = {
+      ...draft!.messages[1],
+      status: 'cancelled' as const,
+      content: 'Reply stopped',
+      requestContent: 'Compare React and Vue briefly',
+      requestLocale: 'en-US' as const,
+      requestTargetBotIds: ['chatgpt', 'gemini'],
+    };
+
+    const request = createRetryReplyRequest({
+      locale: 'zh-CN',
+      message: cancelledMessage,
+      registry,
+      sessionId: baseSession.id,
+    });
+
+    expect(request).toMatchObject({
+      botId: 'chatgpt',
+      content: 'Compare React and Vue briefly',
+      locale: 'en-US',
+      messageId: cancelledMessage.id,
+      modelId: 'chatgpt-selected-model',
+      sessionId: baseSession.id,
+      targetBotIds: ['chatgpt', 'gemini'],
+    });
+  });
+
   it('retries failed bot replies twice before succeeding', async () => {
     const successRegistry = createBotRegistry();
     let attempts = 0;
