@@ -50,7 +50,7 @@
 <b>多模型对比</b>
 <img src="./assets/snapshot-4.png" height="500">
 
-<b>Api 机器人配置</b>
+<b>支持 Api 机器人配置</b>
 <img src="./assets/snapshot-2.png" height="500">
 
 </p>

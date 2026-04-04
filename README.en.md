@@ -50,7 +50,7 @@
 <b>Side-by-side Comparison</b>
 <img src="./assets/snapshot-4.png" height="500">
 
-<b>API Bot Configuration</b>
+<b>Support API Bot Configuration</b>
 <img src="./assets/snapshot-2.png" height="500">
 
 </p>
