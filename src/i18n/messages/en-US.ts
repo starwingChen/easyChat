@@ -10,11 +10,14 @@ const enUSMessages = {
   'sidebar.confirmDelete': 'Delete',
   'sidebar.collapse': 'Collapse sidebar',
   'sidebar.expand': 'Expand sidebar',
-  'sidebar.feedback.open': 'Open feedback page',
+  'sidebar.feedback.open': 'Open GitHub page',
   'sidebar.settings.open': 'Open settings',
   'sidebar.settings.title': 'Settings',
   'sidebar.settings.close': 'Close settings',
   'sidebar.settings.language': 'Switch language',
+  'sidebar.settings.feedback': 'Feedback',
+  'sidebar.settings.feedbackSubtitle':
+    'If EasyChat feels helpful, please give it a star.',
   'sidebar.settings.shortcuts': 'Change the sidebar open/close shortcut',
   'sidebar.settings.shortcutsDefault':
     'Default shortcut: Windows uses Alt+J, macOS uses Option+J',

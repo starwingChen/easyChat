@@ -67,7 +67,7 @@ const initialState: AppState = {
   historySnapshots: [],
   historyViewPreferences: {},
   sidebar: {
-    isOpen: true,
+    isOpen: false,
   },
 };
 

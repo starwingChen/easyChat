@@ -1,5 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { Globe, Keyboard, X } from 'lucide-react';
+import { Globe, Keyboard, MessageSquareWarning, X } from 'lucide-react';
 
 import { useI18n } from '../../i18n';
 
@@ -22,6 +22,18 @@ export function SidebarSettingsDialog({
     }
 
     void chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+  }
+
+  function handleOpenFeedback() {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.open(
+      'https://github.com/starwingChen/easyChat',
+      '_blank',
+      'noopener,noreferrer'
+    );
   }
 
   return (
@@ -84,6 +96,30 @@ export function SidebarSettingsDialog({
                     type="button"
                   >
                     {t('sidebar.settings.shortcutsManage')}
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-2xl bg-white p-2 text-rose-600 shadow-sm ring-1 ring-slate-200">
+                  <MessageSquareWarning className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    {t('sidebar.settings.feedback')}
+                  </h3>
+                  <p className="mt-2 text-sm font-medium text-slate-700">
+                    {t('sidebar.settings.feedbackSubtitle')}
+                  </p>
+                  <button
+                    aria-label={t('sidebar.feedback.open')}
+                    className="mt-3 inline-flex text-sm font-medium text-blue-600 transition hover:text-blue-500"
+                    onClick={handleOpenFeedback}
+                    type="button"
+                  >
+                    {t('sidebar.feedback.open')}
                   </button>
                 </div>
               </div>

@@ -10,11 +10,12 @@ afterEach(() => {
 });
 
 describe('SidebarSettingsDialog', () => {
-  it('keeps the dialog open after toggling locale and opens the Chrome shortcuts page', async () => {
+  it('keeps the dialog open after toggling locale, opens the Chrome shortcuts page, and exposes the star entry', async () => {
     const user = userEvent.setup();
     const onToggleLocale = vi.fn();
     const onOpenChange = vi.fn();
     const createTab = vi.fn();
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
 
     vi.stubGlobal('chrome', {
       tabs: {
@@ -47,6 +48,17 @@ describe('SidebarSettingsDialog', () => {
     expect(
       screen.getByText('默认快捷键：Windows 为 Alt+J，macOS 为 Option+J')
     ).toBeInTheDocument();
+    expect(
+      screen.getByText('觉得好用可以点个 star 支持一下')
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '打开github页面' }));
+
+    expect(openSpy).toHaveBeenCalledWith(
+      'https://github.com/starwingChen/easyChat',
+      '_blank',
+      'noopener,noreferrer'
+    );
 
     await user.click(
       screen.getByRole('button', {

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChatMessage } from '../../types/message';
 
 const localeMocks = vi.hoisted(() => ({
+  getPreferredLocale: vi.fn(),
   loadPersistedPreferences: vi.fn(),
   persistPreferences: vi.fn(),
 }));
@@ -13,11 +14,18 @@ const sessionMocks = vi.hoisted(() => ({
   resolvePendingBotReply: vi.fn(),
 }));
 
-vi.mock('../../features/locale/localeService', () => ({
-  getPreferredLocale: () => 'zh-CN',
-  loadPersistedPreferences: localeMocks.loadPersistedPreferences,
-  persistPreferences: localeMocks.persistPreferences,
-}));
+vi.mock('../../features/locale/localeService', async () => {
+  const actual = await vi.importActual<
+    typeof import('../../features/locale/localeService')
+  >('../../features/locale/localeService');
+
+  return {
+    ...actual,
+    getPreferredLocale: localeMocks.getPreferredLocale,
+    loadPersistedPreferences: localeMocks.loadPersistedPreferences,
+    persistPreferences: localeMocks.persistPreferences,
+  };
+});
 
 vi.mock('../../features/session/sessionService', async () => {
   const actual = await vi.importActual<
@@ -111,12 +119,14 @@ function StateProbe() {
       </button>
       <pre data-testid="probe">
         {JSON.stringify({
+          locale: state.locale,
           currentView: state.currentView,
           activeBotIds: state.activeSession.activeBotIds,
           visibleBotIds,
           isComposerDisabled,
           layout: state.activeSession.layout,
           historyCount: state.historySnapshots.length,
+          sidebarOpen: state.sidebar.isOpen,
           deepseekApiConfig: registry.getBot('deepseek-api').getApiConfig(),
           deepseekApiState: registry.getBot('deepseek-api').getPersistedState(),
           savedModels: registry.getBot('deepseek-api').getSavedModels(),
@@ -136,12 +146,14 @@ function StateProbe() {
 
 function readProbe() {
   return JSON.parse(screen.getByTestId('probe').textContent ?? '{}') as {
+    locale: string;
     currentView: { mode: string; sessionId: string };
     activeBotIds: string[];
     visibleBotIds: string[];
     isComposerDisabled: boolean;
     layout: string;
     historyCount: number;
+    sidebarOpen: boolean;
     deepseekApiConfig: { apiKey: string; modelName: string } | null;
     deepseekApiState: {
       apiKey: string;
@@ -161,6 +173,7 @@ function readProbe() {
 
 describe('AppStateContext', () => {
   beforeEach(() => {
+    localeMocks.getPreferredLocale.mockReset().mockReturnValue('zh-CN');
     localeMocks.loadPersistedPreferences.mockReset();
     localeMocks.persistPreferences.mockReset().mockResolvedValue(undefined);
     sessionMocks.resolvePendingBotReply.mockReset();
@@ -222,8 +235,28 @@ describe('AppStateContext', () => {
         historySnapshots: expect.any(Array),
         botStates: expect.any(Object),
         sidebar: {
-          isOpen: true,
+          isOpen: false,
         },
+      })
+    );
+  });
+
+  it('uses collapsed sidebar defaults when no persisted preferences exist', async () => {
+    localeMocks.loadPersistedPreferences.mockResolvedValue(null);
+
+    render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>
+    );
+
+    await waitFor(() => {
+      expect(localeMocks.persistPreferences).toHaveBeenCalled();
+    });
+
+    expect(readProbe()).toEqual(
+      expect.objectContaining({
+        sidebarOpen: false,
       })
     );
   });
@@ -316,7 +349,9 @@ describe('AppStateContext', () => {
       );
     });
 
-    await user.click(screen.getByRole('button', { name: 'Remove Saved Model' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Remove Saved Model' })
+    );
 
     await waitFor(() => {
       expect(readProbe().savedModels).toEqual([]);

@@ -77,12 +77,12 @@ describe('SessionSidebar', () => {
     expect(
       screen.getByRole('button', { name: '切换中英文' })
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: '打开github页面' })
+    ).toBeInTheDocument();
   });
 
-  it('opens the feedback page from the bottom feedback trigger', async () => {
-    const user = userEvent.setup();
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-
+  it('does not render a feedback trigger in the sidebar footer anymore', () => {
     renderWithI18n(
       <SessionSidebar
         currentView={{ mode: 'active', sessionId: 'session-active' }}
@@ -96,13 +96,30 @@ describe('SessionSidebar', () => {
       { locale: 'zh-CN' }
     );
 
-    await user.click(screen.getByRole('button', { name: '打开反馈页面' }));
+    expect(
+      screen.queryByRole('button', { name: '打开github页面' })
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '打开配置' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(4);
+  });
 
-    expect(openSpy).toHaveBeenCalledWith(
-      'https://github.com/starwingChen/easyChat',
-      '_blank',
-      'noopener,noreferrer'
+  it('renders only the settings trigger in the sidebar footer', () => {
+    renderWithI18n(
+      <SessionSidebar
+        currentView={{ mode: 'active', sessionId: 'session-active' }}
+        historySnapshots={[]}
+        onCreateSession={vi.fn()}
+        onDeleteHistory={vi.fn()}
+        onSelectView={vi.fn()}
+        onToggleSidebar={vi.fn()}
+        onToggleLocale={vi.fn()}
+      />
     );
+
+    expect(screen.getByRole('button', { name: 'Open settings' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Open GitHub page' })
+    ).not.toBeInTheDocument();
   });
 
   it('shows a delete action for history sessions and requires confirmation', async () => {

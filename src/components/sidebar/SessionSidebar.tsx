@@ -1,6 +1,5 @@
 import {
   Bot,
-  MessageSquareWarning,
   PanelLeftClose,
   Plus,
   Settings2,
@@ -37,18 +36,6 @@ export function SessionSidebar({
   >(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { t } = useI18n();
-
-  function handleOpenFeedback() {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    window.open(
-      'https://github.com/starwingChen/easyChat',
-      '_blank',
-      'noopener,noreferrer'
-    );
-  }
 
   return (
     <>
@@ -129,18 +116,10 @@ export function SessionSidebar({
             ))}
           </div>
         </div>
-        <div className="mx-3 mb-3 grid grid-cols-2 gap-2">
-          <button
-            aria-label={t('sidebar.feedback.open')}
-            className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-3 text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
-            onClick={handleOpenFeedback}
-            type="button"
-          >
-            <MessageSquareWarning className="h-4 w-4" />
-          </button>
+        <div className="mx-3 mb-3">
           <button
             aria-label={t('sidebar.settings.open')}
-            className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-3 text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
+            className="flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-3 text-slate-600 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
             onClick={() => setIsSettingsOpen(true)}
             type="button"
           >
