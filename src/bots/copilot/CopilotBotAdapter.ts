@@ -5,6 +5,7 @@ import {
   type BotModel,
   type BotResponse,
   type SendMessageInput,
+  type StreamMessageInput,
 } from '../../types/bot';
 import { BaseBotAdapter } from '../BaseBotAdapter';
 import { copilotDefinition } from '../definitions';
@@ -102,6 +103,17 @@ export class CopilotBotAdapter extends BaseBotAdapter {
   }
 
   async sendMessage(input: SendMessageInput): Promise<BotResponse> {
+    return this.runMessageRequest(input);
+  }
+
+  async streamMessage(input: StreamMessageInput): Promise<BotResponse> {
+    return this.runMessageRequest(input, input.onEvent);
+  }
+
+  private async runMessageRequest(
+    input: SendMessageInput,
+    onEvent?: StreamMessageInput['onEvent']
+  ): Promise<BotResponse> {
     const t = createAppTranslator(input.locale);
     const revision = this.conversationRevision;
     let conversationId = this.conversationState.conversationId;
@@ -120,6 +132,16 @@ export class CopilotBotAdapter extends BaseBotAdapter {
         conversationId,
         prompt: input.content,
         signal: input.signal,
+        onEvent(event) {
+          if (event.event !== 'appendText' || !event.text) {
+            return;
+          }
+
+          onEvent?.({
+            type: 'delta',
+            text: event.text,
+          });
+        },
       });
 
       if (revision === this.conversationRevision) {

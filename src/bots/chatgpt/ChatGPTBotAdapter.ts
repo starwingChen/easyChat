@@ -5,6 +5,7 @@ import {
   type BotModel,
   type BotResponse,
   type SendMessageInput,
+  type StreamMessageInput,
 } from '../../types/bot';
 import { BaseBotAdapter } from '../BaseBotAdapter';
 import { chatgptDefinition } from '../definitions';
@@ -68,6 +69,17 @@ export class ChatGPTBotAdapter extends BaseBotAdapter {
   }
 
   async sendMessage(input: SendMessageInput): Promise<BotResponse> {
+    return this.runMessageRequest(input);
+  }
+
+  async streamMessage(input: StreamMessageInput): Promise<BotResponse> {
+    return this.runMessageRequest(input, input.onEvent);
+  }
+
+  private async runMessageRequest(
+    input: SendMessageInput,
+    onEvent?: StreamMessageInput['onEvent']
+  ): Promise<BotResponse> {
     const t = createAppTranslator(input.locale);
     const revision = this.conversationRevision;
     const activeState = { ...this.conversationState };
@@ -85,6 +97,7 @@ export class ChatGPTBotAdapter extends BaseBotAdapter {
         chatRequirementsToken: requirements.token,
         conversationId: activeState.conversationId,
         model: input.modelId,
+        onEvent,
         parentMessageId: activeState.parentMessageId,
         proofToken: requirements.proofToken,
         prompt: input.content,

@@ -3,6 +3,7 @@ import type { Locale } from './app';
 export type MessageRole = 'user' | 'assistant' | 'system';
 export type MessageStatus =
   | 'loading'
+  | 'streaming'
   | 'done'
   | 'error'
   | 'welcome'

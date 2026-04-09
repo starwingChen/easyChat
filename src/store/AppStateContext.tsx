@@ -8,7 +8,7 @@ import {
 } from 'react';
 
 import { createBotRegistry } from '../bots/botRegistry';
-import { createAppTranslator, resolveLocale } from '../i18n';
+import { resolveLocale } from '../i18n';
 import type { AppState, Locale, ViewState } from '../types/app';
 import type { ApiBotConfigValue } from '../types/bot';
 import {
@@ -45,6 +45,8 @@ const initialLocale = resolveLocale(
 );
 const initialSessionTimestamp = '2026-03-25T00:00:00.000Z';
 const allBotIds = registry.getAllBots().map((bot) => bot.definition.id);
+const STREAM_MESSAGE_FLUSH_MS = 50;
+const PERSIST_PREFERENCES_DEBOUNCE_MS = 150;
 
 function collectBotStates() {
   return Object.fromEntries(
@@ -105,26 +107,117 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   const pendingReplyControllers = useRef(
     new Map<string, AbortController>()
   ).current;
+  const pendingStreamMessages = useRef(
+    new Map<
+      string,
+      {
+        message: AppState['activeSession']['messages'][number];
+        timeoutId: ReturnType<typeof setTimeout> | null;
+      }
+    >()
+  ).current;
+  const persistTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   stateRef.current = state;
 
-  function buildPersistedPayload(appState: AppState) {
-    const normalizedActiveSession = normalizeInterruptedSession(
-      appState.activeSession,
-      appState.locale
+  function applyPendingStreamMessages(appState: AppState): AppState {
+    if (pendingStreamMessages.size === 0) {
+      return appState;
+    }
+
+    const pendingById = new Map(
+      Array.from(pendingStreamMessages.entries()).map(([messageId, entry]) => [
+        messageId,
+        entry.message,
+      ])
     );
 
     return {
-      locale: appState.locale,
-      historySnapshots: appState.historySnapshots,
+      ...appState,
+      activeSession: {
+        ...appState.activeSession,
+        messages: appState.activeSession.messages.map(
+          (message) => pendingById.get(message.id) ?? message
+        ),
+      },
+    };
+  }
+
+  function buildPersistedPayload(appState: AppState) {
+    const appStateWithPendingStreams = applyPendingStreamMessages(appState);
+    const normalizedActiveSession = normalizeInterruptedSession(
+      appStateWithPendingStreams.activeSession,
+      appStateWithPendingStreams.locale
+    );
+
+    return {
+      locale: appStateWithPendingStreams.locale,
+      historySnapshots: appStateWithPendingStreams.historySnapshots,
       layout: normalizedActiveSession.layout,
       selectedModels: normalizedActiveSession.selectedModels,
-      currentView: appState.currentView,
+      currentView: appStateWithPendingStreams.currentView,
       activeSession: normalizedActiveSession,
-      historyViewPreferences: appState.historyViewPreferences,
+      historyViewPreferences: appStateWithPendingStreams.historyViewPreferences,
       botStates: collectBotStates(),
-      sidebar: appState.sidebar,
+      sidebar: appStateWithPendingStreams.sidebar,
     };
+  }
+
+  function clearPendingStreamMessage(messageId: string) {
+    const pending = pendingStreamMessages.get(messageId);
+
+    if (!pending) {
+      return;
+    }
+
+    if (pending.timeoutId) {
+      clearTimeout(pending.timeoutId);
+    }
+
+    pendingStreamMessages.delete(messageId);
+  }
+
+  function flushPendingStreamMessage(messageId: string) {
+    const pending = pendingStreamMessages.get(messageId);
+
+    if (!pending) {
+      return;
+    }
+
+    if (pending.timeoutId) {
+      clearTimeout(pending.timeoutId);
+    }
+
+    pendingStreamMessages.delete(messageId);
+
+    dispatch({
+      type: 'replace-active-message',
+      payload: {
+        message: pending.message,
+        updatedAt: new Date().toISOString(),
+      },
+    });
+  }
+
+  function queuePendingStreamMessage(
+    message: AppState['activeSession']['messages'][number]
+  ) {
+    const existing = pendingStreamMessages.get(message.id);
+    const nextEntry = existing ?? {
+      message,
+      timeoutId: null,
+    };
+
+    nextEntry.message = message;
+    pendingStreamMessages.set(message.id, nextEntry);
+
+    if (nextEntry.timeoutId) {
+      return;
+    }
+
+    nextEntry.timeoutId = setTimeout(() => {
+      flushPendingStreamMessage(message.id);
+    }, STREAM_MESSAGE_FLUSH_MS);
   }
 
   useEffect(() => {
@@ -171,19 +264,47 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
-    persistPreferences(buildPersistedPayload(state)).catch(() => undefined);
+    if (persistTimeoutRef.current) {
+      clearTimeout(persistTimeoutRef.current);
+    }
+
+    persistTimeoutRef.current = setTimeout(() => {
+      persistTimeoutRef.current = null;
+      void persistPreferences(buildPersistedPayload(stateRef.current)).catch(
+        () => undefined
+      );
+    }, PERSIST_PREFERENCES_DEBOUNCE_MS);
+
+    return () => {
+      if (persistTimeoutRef.current) {
+        clearTimeout(persistTimeoutRef.current);
+        persistTimeoutRef.current = null;
+      }
+    };
   }, [state]);
 
   useEffect(() => {
     return () => {
+      pendingStreamMessages.forEach((entry) => {
+        if (entry.timeoutId) {
+          clearTimeout(entry.timeoutId);
+        }
+      });
+      pendingStreamMessages.clear();
+
+      if (persistTimeoutRef.current) {
+        clearTimeout(persistTimeoutRef.current);
+        persistTimeoutRef.current = null;
+      }
+
       pendingReplyControllers.forEach((controller) => {
         controller.abort();
       });
       pendingReplyControllers.clear();
 
-      void persistPreferences(
-        buildPersistedPayload(stateRef.current)
-      ).catch(() => undefined);
+      void persistPreferences(buildPersistedPayload(stateRef.current)).catch(
+        () => undefined
+      );
     };
   }, []);
 
@@ -191,7 +312,6 @@ export function AppStateProvider({ children }: PropsWithChildren) {
   const currentViewBotOptions = selectCurrentViewBotOptions(state, allBotIds);
   const hasVisibleLoadingMessages = selectHasVisibleLoadingMessages(state);
   const visibleBotIds = selectVisibleBotIds(state);
-  const t = createAppTranslator(state.locale);
 
   const value: AppStateContextValue = {
     state,
@@ -199,9 +319,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
     cancelReply(messageId) {
       pendingReplyControllers.get(messageId)?.abort();
       pendingReplyControllers.delete(messageId);
+      clearPendingStreamMessage(messageId);
 
       const loadingMessage = state.activeSession.messages.find(
-        (message) => message.id === messageId && message.status === 'loading'
+        (message) =>
+          message.id === messageId &&
+          (message.status === 'loading' || message.status === 'streaming')
       );
 
       if (!loadingMessage) {
@@ -211,7 +334,10 @@ export function AppStateProvider({ children }: PropsWithChildren) {
       dispatch({
         type: 'replace-active-message',
         payload: {
-          message: createCancelledAssistantMessage(loadingMessage, state.locale),
+          message: createCancelledAssistantMessage(
+            loadingMessage,
+            state.locale
+          ),
           updatedAt: new Date().toISOString(),
         },
       });
@@ -274,6 +400,15 @@ export function AppStateProvider({ children }: PropsWithChildren) {
               },
             });
           },
+          onStreamUpdate(streamingMessage) {
+            if (
+              pendingReplyControllers.get(request.messageId) !== abortController
+            ) {
+              return;
+            }
+
+            queuePendingStreamMessage(streamingMessage);
+          },
           signal: abortController.signal,
         });
 
@@ -284,6 +419,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         }
 
         pendingReplyControllers.delete(request.messageId);
+        clearPendingStreamMessage(request.messageId);
 
         dispatch({
           type: 'replace-active-message',
@@ -428,6 +564,16 @@ export function AppStateProvider({ children }: PropsWithChildren) {
                 },
               });
             },
+            onStreamUpdate(streamingMessage) {
+              if (
+                pendingReplyControllers.get(request.messageId) !==
+                abortController
+              ) {
+                return;
+              }
+
+              queuePendingStreamMessage(streamingMessage);
+            },
             signal: abortController.signal,
           });
 
@@ -438,6 +584,7 @@ export function AppStateProvider({ children }: PropsWithChildren) {
           }
 
           pendingReplyControllers.delete(request.messageId);
+          clearPendingStreamMessage(request.messageId);
 
           dispatch({
             type: 'replace-active-message',
@@ -467,6 +614,12 @@ export function AppStateProvider({ children }: PropsWithChildren) {
         controller.abort();
       });
       pendingReplyControllers.clear();
+      pendingStreamMessages.forEach((entry, messageId) => {
+        if (entry.timeoutId) {
+          clearTimeout(entry.timeoutId);
+        }
+        pendingStreamMessages.delete(messageId);
+      });
 
       registry.getAllBots().forEach((bot) => {
         bot.resetConversation();

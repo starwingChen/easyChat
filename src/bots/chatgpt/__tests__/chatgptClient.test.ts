@@ -2,6 +2,25 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createChatGPTClient } from '../chatgptClient';
 
+function createStreamResponse(chunks: string[], status = 200) {
+  return new Response(
+    new ReadableStream({
+      start(controller) {
+        chunks.forEach((chunk) => {
+          controller.enqueue(new TextEncoder().encode(chunk));
+        });
+        controller.close();
+      },
+    }),
+    {
+      status,
+      headers: {
+        'Content-Type': 'text/event-stream',
+      },
+    }
+  );
+}
+
 describe('chatgptClient', () => {
   it('uses ofetch-style JSON and native requests to send a ChatGPT conversation message', async () => {
     const fetchJson = vi
@@ -197,6 +216,51 @@ describe('chatgptClient', () => {
 
     await expect(client.getAccessToken()).rejects.toMatchObject({
       code: 'regionUnsupported',
+    });
+  });
+
+  it('emits incremental text updates while reading the ChatGPT SSE stream', async () => {
+    const fetchNative = vi.fn().mockResolvedValue(
+      createStreamResponse([
+        'data: {"message":{"id":"assistant-1","author":{"role":"assistant"},"content":{"content_type":"text","parts":["Hel"]}},"conversation_id":"conv-1"}\n\n',
+        'data: {"message":{"id":"assistant-1","author":{"role":"assistant"},"content":{"content_type":"text","parts":["Hello"]}},"conversation_id":"conv-1"}\n\n',
+        'data: [DONE]\n\n',
+      ])
+    );
+    const onEvent = vi.fn();
+    const client = createChatGPTClient({
+      fetchJson: vi.fn(),
+      fetchNative,
+      getDeviceId: () => 'device-1',
+      getLanguage: () => 'en-US',
+      createMessageId: () => 'generated-parent-id',
+      sentinel: {
+        createProofToken: vi.fn(async () => 'gAAAAABproof-token'),
+        createRequirementsToken: vi.fn(async () => 'gAAAAACrequirements-token'),
+      },
+    });
+
+    const result = await client.sendConversationMessage({
+      accessToken: 'access-token',
+      chatRequirementsToken: 'requirements-token',
+      model: 'gpt-4o',
+      prompt: 'hello',
+      proofToken: 'gAAAAABproof-token',
+      onEvent,
+    });
+
+    expect(onEvent).toHaveBeenNthCalledWith(1, {
+      type: 'delta',
+      text: 'Hel',
+    });
+    expect(onEvent).toHaveBeenNthCalledWith(2, {
+      type: 'delta',
+      text: 'lo',
+    });
+    expect(result).toEqual({
+      conversationId: 'conv-1',
+      messageId: 'assistant-1',
+      text: 'Hello',
     });
   });
 });

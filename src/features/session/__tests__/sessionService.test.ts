@@ -4,7 +4,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { createBotRegistry } from '../../../bots/botRegistry';
 import type { BotRegistry } from '../../../bots/botRegistry';
 import { createSession } from '../../../../test/factories/session';
-import type { BotResponse, SendMessageInput } from '../../../types/bot';
+import type {
+  BotReplyStreamEvent,
+  BotResponse,
+  SendMessageInput,
+  StreamMessageInput,
+} from '../../../types/bot';
 import {
   BOT_REPLY_RETRY_LIMIT,
   createRetryReplyRequest,
@@ -262,6 +267,153 @@ describe('sessionService', () => {
       botId: 'gemini',
       status: 'done',
       content: 'Recovered reply',
+    });
+  });
+
+  it('streams intermediate assistant content updates before returning the final reply', async () => {
+    const successRegistry = createBotRegistry();
+    const streamingRegistry: BotRegistry = {
+      ...successRegistry,
+      getBot(botId) {
+        if (botId !== 'gemini') {
+          return successRegistry.getBot(botId);
+        }
+
+        const originalBot = successRegistry.getBot(botId);
+
+        return new (class extends BaseBotAdapter {
+          readonly definition = originalBot.definition;
+
+          listModels() {
+            return originalBot.listModels();
+          }
+
+          getDefaultModel() {
+            return originalBot.getDefaultModel();
+          }
+
+          async sendMessage(_input: SendMessageInput): Promise<BotResponse> {
+            throw new Error('streamMessage should be preferred');
+          }
+
+          async streamMessage(input: StreamMessageInput): Promise<BotResponse> {
+            input.onEvent?.({
+              type: 'delta',
+              text: 'Hello',
+            } satisfies BotReplyStreamEvent);
+            input.onEvent?.({
+              type: 'delta',
+              text: ' world',
+            } satisfies BotReplyStreamEvent);
+
+            return {
+              id: 'reply-gemini-stream',
+              botId: 'gemini',
+              modelId: input.modelId,
+              content: 'Hello world',
+              createdAt: '2026-03-25T12:00:01.000Z',
+              status: 'done',
+            };
+          }
+        })();
+      },
+    };
+
+    const draft = createBroadcastDraft({
+      content: 'Say hello',
+      locale: 'en-US',
+      now: () => '2026-03-25T12:00:00.000Z',
+      registry: streamingRegistry,
+      session: baseSession,
+    });
+    const onStreamUpdate = vi.fn();
+
+    const reply = await resolvePendingBotReply({
+      ...draft!.requests[1],
+      onStreamUpdate,
+    });
+
+    expect(onStreamUpdate).toHaveBeenCalledTimes(2);
+    expect(onStreamUpdate).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        id: draft!.requests[1].messageId,
+        botId: 'gemini',
+        status: 'streaming',
+        content: 'Hello',
+      })
+    );
+    expect(onStreamUpdate).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        id: draft!.requests[1].messageId,
+        botId: 'gemini',
+        status: 'streaming',
+        content: 'Hello world',
+      })
+    );
+    expect(reply).toMatchObject({
+      botId: 'gemini',
+      status: 'done',
+      content: 'Hello world',
+    });
+  });
+
+  it('falls back to one-shot replies for bots without stream support', async () => {
+    const successRegistry = createBotRegistry();
+    const fallbackRegistry: BotRegistry = {
+      ...successRegistry,
+      getBot(botId) {
+        if (botId !== 'gemini') {
+          return successRegistry.getBot(botId);
+        }
+
+        const originalBot = successRegistry.getBot(botId);
+
+        return new (class extends BaseBotAdapter {
+          readonly definition = originalBot.definition;
+
+          listModels() {
+            return originalBot.listModels();
+          }
+
+          getDefaultModel() {
+            return originalBot.getDefaultModel();
+          }
+
+          async sendMessage(input: SendMessageInput): Promise<BotResponse> {
+            return {
+              id: 'reply-gemini-fallback',
+              botId: 'gemini',
+              modelId: input.modelId,
+              content: 'Fallback reply',
+              createdAt: '2026-03-25T12:00:01.000Z',
+              status: 'done',
+            };
+          }
+        })();
+      },
+    };
+
+    const draft = createBroadcastDraft({
+      content: 'Say hello',
+      locale: 'en-US',
+      now: () => '2026-03-25T12:00:00.000Z',
+      registry: fallbackRegistry,
+      session: baseSession,
+    });
+    const onStreamUpdate = vi.fn();
+
+    const reply = await resolvePendingBotReply({
+      ...draft!.requests[1],
+      onStreamUpdate,
+    });
+
+    expect(onStreamUpdate).not.toHaveBeenCalled();
+    expect(reply).toMatchObject({
+      botId: 'gemini',
+      status: 'done',
+      content: 'Fallback reply',
     });
   });
 

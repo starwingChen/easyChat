@@ -43,6 +43,17 @@ export interface SendMessageInput {
   signal?: AbortSignal;
 }
 
+export interface BotReplyDeltaEvent {
+  type: 'delta';
+  text: string;
+}
+
+export type BotReplyStreamEvent = BotReplyDeltaEvent;
+
+export interface StreamMessageInput extends SendMessageInput {
+  onEvent?: (event: BotReplyStreamEvent) => void;
+}
+
 export interface BotResponse {
   id: string;
   botId: string;

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -537,6 +537,155 @@ describe('AppStateContext', () => {
         })
       );
     });
+  });
+
+  it('shows streamed assistant content before the final reply completes', async () => {
+    const user = userEvent.setup();
+    localeMocks.loadPersistedPreferences.mockResolvedValue(null);
+    let resolveReply: ((message: ChatMessage) => void) | undefined;
+
+    sessionMocks.resolvePendingBotReply.mockImplementation(
+      (request) =>
+        new Promise<ChatMessage>((resolve) => {
+          request.onStreamUpdate?.({
+            id: request.messageId,
+            sessionId: request.sessionId,
+            role: 'assistant',
+            botId: request.botId,
+            modelId: request.modelId,
+            content: 'Hello world',
+            createdAt: request.createdAt,
+            status: 'streaming',
+          });
+          resolveReply = resolve;
+        })
+    );
+
+    render(
+      <AppStateProvider>
+        <StateProbe />
+      </AppStateProvider>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Set 1' }));
+    await user.click(screen.getByRole('button', { name: 'Send Hello' }));
+
+    await waitFor(() => {
+      expect(readProbe().messages).toContainEqual(
+        expect.objectContaining({
+          botId: 'chatgpt',
+          status: 'streaming',
+          content: 'Hello world',
+        })
+      );
+    });
+
+    resolveReply?.({
+      id: readProbe().messages.find(
+        (message) => message.botId === 'chatgpt'
+      )!.id,
+      sessionId: 'session-active',
+      role: 'assistant',
+      botId: 'chatgpt',
+      modelId: 'auto',
+      content: 'Hello world done',
+      createdAt: new Date().toISOString(),
+      status: 'done',
+    });
+
+    await waitFor(() => {
+      expect(readProbe().messages).toContainEqual(
+        expect.objectContaining({
+          botId: 'chatgpt',
+          status: 'done',
+          content: 'Hello world done',
+        })
+      );
+    });
+  });
+
+  it('debounces persistence while streamed updates are arriving', async () => {
+    vi.useFakeTimers();
+
+    try {
+      localeMocks.loadPersistedPreferences.mockResolvedValue(null);
+      sessionMocks.resolvePendingBotReply.mockImplementation(
+        (request) =>
+          new Promise<ChatMessage>((resolve) => {
+            setTimeout(() => {
+              request.onStreamUpdate?.({
+                id: request.messageId,
+                sessionId: request.sessionId,
+                role: 'assistant',
+                botId: request.botId,
+                modelId: request.modelId,
+                content: 'Hel',
+                createdAt: request.createdAt,
+                status: 'streaming',
+              });
+            }, 0);
+            setTimeout(() => {
+              request.onStreamUpdate?.({
+                id: request.messageId,
+                sessionId: request.sessionId,
+                role: 'assistant',
+                botId: request.botId,
+                modelId: request.modelId,
+                content: 'Hello',
+                createdAt: request.createdAt,
+                status: 'streaming',
+              });
+            }, 10);
+            setTimeout(() => {
+              resolve({
+                id: request.messageId,
+                sessionId: request.sessionId,
+                role: 'assistant',
+                botId: request.botId,
+                modelId: request.modelId,
+                content: 'Hello',
+                createdAt: request.createdAt,
+                status: 'done',
+              });
+            }, 20);
+          })
+      );
+
+      render(
+        <AppStateProvider>
+          <StateProbe />
+        </AppStateProvider>
+      );
+
+      await vi.runAllTimersAsync();
+      localeMocks.persistPreferences.mockClear();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Set 1' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Send Hello' }));
+
+      await vi.advanceTimersByTimeAsync(30);
+
+      expect(localeMocks.persistPreferences).not.toHaveBeenCalled();
+
+      await vi.advanceTimersByTimeAsync(300);
+
+      expect(localeMocks.persistPreferences.mock.calls.length).toBeLessThanOrEqual(2);
+      expect(localeMocks.persistPreferences).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          activeSession: expect.objectContaining({
+            messages: expect.arrayContaining([
+              expect.objectContaining({
+                botId: 'chatgpt',
+                status: 'done',
+                content: 'Hello',
+              }),
+            ]),
+          }),
+        })
+      );
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('retries a failed reply when requested explicitly', async () => {

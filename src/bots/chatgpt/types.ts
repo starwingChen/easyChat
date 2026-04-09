@@ -1,3 +1,5 @@
+import type { BotReplyStreamEvent } from '../../types/bot';
+
 export interface ChatGPTProofOfWork {
   required?: boolean;
   seed?: string;
@@ -26,6 +28,7 @@ export interface ChatGPTSendConversationInput {
   chatRequirementsToken: string;
   conversationId?: string;
   model: string;
+  onEvent?: (event: BotReplyStreamEvent) => void;
   parentMessageId?: string;
   proofToken?: string;
   prompt: string;

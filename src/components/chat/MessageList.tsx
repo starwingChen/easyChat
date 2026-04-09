@@ -24,6 +24,25 @@ function getLastAssistantMessage(messages: ChatMessage[]) {
   return null;
 }
 
+function getLastUserMessage(messages: ChatMessage[]) {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+
+    if (message.role === 'user') {
+      return message;
+    }
+  }
+
+  return null;
+}
+
+function isNearBottom(container: HTMLDivElement, threshold = 80): boolean {
+  return (
+    container.scrollHeight - container.clientHeight - container.scrollTop <=
+    threshold
+  );
+}
+
 export function MessageList({
   botDefinition,
   messages,
@@ -32,10 +51,30 @@ export function MessageList({
   onRetryFailed,
 }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const previousUserMessageRef = useRef<ChatMessage | null | undefined>(
+    undefined
+  );
   const previousAssistantMessageRef = useRef<ChatMessage | null | undefined>(
     undefined
   );
+  const lastUserMessage = getLastUserMessage(messages);
   const lastAssistantMessage = getLastAssistantMessage(messages);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const previousUserMessage = previousUserMessageRef.current;
+
+    previousUserMessageRef.current = lastUserMessage;
+
+    if (
+      container &&
+      previousUserMessage !== undefined &&
+      lastUserMessage !== null &&
+      previousUserMessage !== lastUserMessage
+    ) {
+      container.scrollTop = container.scrollHeight;
+    }
+  }, [lastUserMessage]);
 
   useLayoutEffect(() => {
     const container = containerRef.current;
@@ -47,7 +86,8 @@ export function MessageList({
       container &&
       previousAssistantMessage !== undefined &&
       lastAssistantMessage !== null &&
-      previousAssistantMessage !== lastAssistantMessage
+      previousAssistantMessage !== lastAssistantMessage &&
+      isNearBottom(container)
     ) {
       container.scrollTop = container.scrollHeight;
     }

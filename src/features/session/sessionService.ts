@@ -4,6 +4,7 @@ import { createAppTranslator } from '../../i18n';
 import type { Locale } from '../../types/app';
 import type { ChatMessage } from '../../types/message';
 import type { ChatSession } from '../../types/session';
+import type { BotResponse } from '../../types/bot';
 import { getVisibleBotIds } from '../layout/layoutService';
 
 interface BroadcastMessageInput {
@@ -24,6 +25,7 @@ export interface PendingBotReplyRequest {
   messageId: string;
   modelId: string;
   onRetry?: (message: ChatMessage) => void;
+  onStreamUpdate?: (message: ChatMessage) => void;
   registry: BotRegistry;
   sessionId: string;
   signal?: AbortSignal;
@@ -236,7 +238,10 @@ export function normalizeInterruptedSession(
 ): ChatSession {
   let hasChanges = false;
   const messages = session.messages.map((message) => {
-    if (message.role !== 'assistant' || message.status !== 'loading') {
+    if (
+      message.role !== 'assistant' ||
+      (message.status !== 'loading' && message.status !== 'streaming')
+    ) {
       return message;
     }
 
@@ -267,16 +272,39 @@ export async function resolvePendingBotReply(
     retryCount += 1
   ) {
     try {
-      const response = await request.registry
-        .getBot(request.botId)
-        .sendMessage({
-          sessionId: request.sessionId,
-          content: request.content,
-          locale: request.locale,
-          modelId: request.modelId,
-          signal: request.signal,
-          targetBotIds: request.targetBotIds,
+      const bot = request.registry.getBot(request.botId);
+      const messageInput = {
+        sessionId: request.sessionId,
+        content: request.content,
+        locale: request.locale,
+        modelId: request.modelId,
+        signal: request.signal,
+        targetBotIds: request.targetBotIds,
+      };
+      let response: BotResponse;
+
+      if (typeof bot.streamMessage === 'function') {
+        let streamedContent = '';
+
+        response = await bot.streamMessage({
+          ...messageInput,
+          onEvent(event) {
+            if (event.type !== 'delta' || !event.text) {
+              return;
+            }
+
+            streamedContent += event.text;
+            request.onStreamUpdate?.(
+              createPendingAssistantMessage(request, {
+                content: streamedContent,
+                status: 'streaming',
+              })
+            );
+          },
         });
+      } else {
+        response = await bot.sendMessage(messageInput);
+      }
 
       return createPendingAssistantMessage(request, {
         modelId: response.modelId,

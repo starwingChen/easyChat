@@ -1,3 +1,5 @@
+import type { BotReplyStreamEvent } from '../../types/bot';
+
 export interface PerplexityConversationState {
   lastBackendUuid?: string;
 }
@@ -5,6 +7,7 @@ export interface PerplexityConversationState {
 export interface PerplexityAskInput {
   prompt: string;
   lastBackendUuid?: string;
+  onEvent?: (event: BotReplyStreamEvent) => void;
   signal?: AbortSignal;
 }
 

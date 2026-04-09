@@ -2,6 +2,20 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createPerplexityClient } from '../perplexityClient';
 
+function createStreamResponse(chunks: string[], status = 200) {
+  return new Response(
+    new ReadableStream({
+      start(controller) {
+        chunks.forEach((chunk) => {
+          controller.enqueue(new TextEncoder().encode(chunk));
+        });
+        controller.close();
+      },
+    }),
+    { status }
+  );
+}
+
 describe('perplexityClient', () => {
   it('posts the documented first-turn payload without last_backend_uuid', async () => {
     const fetchNative = vi
@@ -99,5 +113,38 @@ describe('perplexityClient', () => {
     await expect(client.ask({ prompt: '你好' })).rejects.toThrow(
       /perplexity ask request failed \(503\)/i
     );
+  });
+
+  it('emits incremental text updates while reading the Perplexity SSE stream', async () => {
+    const fetchNative = vi.fn().mockResolvedValue(
+      createStreamResponse([
+        'event: message\n',
+        'data: {"backend_uuid":"backend-1","blocks":[{"intended_usage":"ask_text_0_markdown","markdown_block":{"chunks":["你"]}}]}\n\n',
+        'event: message\n',
+        'data: {"backend_uuid":"backend-1","blocks":[{"intended_usage":"ask_text_0_markdown","markdown_block":{"chunks":["你好"]}}]}\n\n',
+        'event: end_of_stream\n',
+        'data: {}\n\n',
+      ])
+    );
+    const onEvent = vi.fn();
+    const client = createPerplexityClient({ fetchNative });
+
+    const result = await client.ask({
+      prompt: '你好',
+      onEvent,
+    });
+
+    expect(onEvent).toHaveBeenNthCalledWith(1, {
+      type: 'delta',
+      text: '你',
+    });
+    expect(onEvent).toHaveBeenNthCalledWith(2, {
+      type: 'delta',
+      text: '好',
+    });
+    expect(result).toEqual({
+      text: '你好',
+      lastBackendUuid: 'backend-1',
+    });
   });
 });

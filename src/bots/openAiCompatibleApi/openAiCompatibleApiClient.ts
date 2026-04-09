@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 
+import type { BotReplyStreamEvent } from '../../types/bot';
 import {
   createOpenAiCompatibleApiClientError,
   isOpenAiCompatibleApiClientError,
@@ -32,6 +33,54 @@ function extractMessageText(content: unknown): string {
   }
 
   throw createOpenAiCompatibleApiClientError('emptyResponse');
+}
+
+function extractDeltaText(content: unknown): string {
+  if (typeof content === 'string') {
+    return content;
+  }
+
+  if (!Array.isArray(content)) {
+    return '';
+  }
+
+  return content
+    .map((part) => {
+      if (!part || typeof part !== 'object') {
+        return '';
+      }
+
+      const candidate = part as { type?: unknown; text?: unknown };
+      return candidate.type === 'text' && typeof candidate.text === 'string'
+        ? candidate.text
+        : '';
+    })
+    .join('');
+}
+
+function isAsyncIterable<T>(value: unknown): value is AsyncIterable<T> {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    Symbol.asyncIterator in value &&
+    typeof (value as { [Symbol.asyncIterator]?: unknown })[
+      Symbol.asyncIterator
+    ] === 'function'
+  );
+}
+
+function emitDelta(
+  onEvent: ((event: BotReplyStreamEvent) => void) | undefined,
+  text: string
+) {
+  if (!text) {
+    return;
+  }
+
+  onEvent?.({
+    type: 'delta',
+    text,
+  });
 }
 
 function mapOpenAiCompatibleError(error: unknown) {
@@ -84,7 +133,8 @@ function extractUserFacingMessage(error: unknown): string | undefined {
 export const sendOpenAiCompatiblePrompt: SendOpenAiCompatiblePrompt = async (
   config,
   messages,
-  signal
+  signal,
+  onEvent
 ) => {
   const client = new OpenAI({
     baseURL: config.baseURL,
@@ -94,6 +144,36 @@ export const sendOpenAiCompatiblePrompt: SendOpenAiCompatiblePrompt = async (
   });
 
   try {
+    if (onEvent) {
+      const stream = await client.chat.completions.create(
+        {
+          model: config.modelName,
+          messages,
+          stream: true,
+        },
+        { signal }
+      );
+
+      if (!isAsyncIterable(stream)) {
+        throw createOpenAiCompatibleApiClientError('emptyResponse');
+      }
+
+      let text = '';
+
+      for await (const chunk of stream) {
+        const deltaText = extractDeltaText(chunk.choices[0]?.delta?.content);
+
+        emitDelta(onEvent, deltaText);
+        text += deltaText;
+      }
+
+      if (!text) {
+        throw createOpenAiCompatibleApiClientError('emptyResponse');
+      }
+
+      return { text };
+    }
+
     const completion = await client.chat.completions.create(
       {
         model: config.modelName,

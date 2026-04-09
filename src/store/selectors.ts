@@ -138,7 +138,7 @@ export function selectHasVisibleLoadingMessages(state: AppState): boolean {
   return state.activeSession.messages.some(
     (message) =>
       message.role === 'assistant' &&
-      message.status === 'loading' &&
+      (message.status === 'loading' || message.status === 'streaming') &&
       !!message.botId &&
       visibleBotIds.includes(message.botId)
   );

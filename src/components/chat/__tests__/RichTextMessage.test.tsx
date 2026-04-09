@@ -70,4 +70,17 @@ describe('RichTextMessage', () => {
 
     expect(onAction).toHaveBeenCalledWith('open-api-config');
   });
+
+  it('renders plain streamed text without invoking markdown structures', () => {
+    const { container } = render(
+      <RichTextMessage
+        content={'| Bot | Score |\n| --- | --- |\n| ChatGPT | 95 |'}
+        renderMode="plain"
+      />
+    );
+
+    expect(container.querySelector('table')).not.toBeInTheDocument();
+    expect(container.querySelector('p')).not.toBeInTheDocument();
+    expect(container.textContent).toContain('| Bot | Score |');
+  });
 });

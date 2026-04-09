@@ -1,6 +1,9 @@
 import { ofetch } from 'ofetch';
 
-import { parsePerplexityAskResponse } from './perplexityParser';
+import {
+  parsePerplexityAskProgress,
+  parsePerplexityAskResponse,
+} from './perplexityParser';
 import type { PerplexityAskInput, PerplexityClient } from './types';
 
 const PERPLEXITY_ASK_URL = 'https://www.perplexity.ai/rest/sse/perplexity_ask';
@@ -9,6 +12,29 @@ type NativeFetcher = (request: string, init?: RequestInit) => Promise<Response>;
 
 interface PerplexityClientOptions {
   fetchNative?: NativeFetcher;
+}
+
+function emitTextDelta(
+  onEvent: PerplexityAskInput['onEvent'],
+  previousText: string,
+  nextText: string
+): string {
+  if (!onEvent || !nextText || nextText === previousText) {
+    return nextText;
+  }
+
+  const delta = nextText.startsWith(previousText)
+    ? nextText.slice(previousText.length)
+    : nextText;
+
+  if (delta) {
+    onEvent({
+      type: 'delta',
+      text: delta,
+    });
+  }
+
+  return nextText;
 }
 
 function buildRequestBody(input: PerplexityAskInput): string {
@@ -49,6 +75,36 @@ export function createPerplexityClient(
 
       if (!response.ok) {
         throw new Error(`Perplexity ask request failed (${response.status})`);
+      }
+
+      if (response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let streamText = '';
+        let emittedText = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            break;
+          }
+
+          streamText += decoder.decode(value, { stream: true });
+          const progress = parsePerplexityAskProgress(streamText);
+
+          if (progress.text) {
+            emittedText = emitTextDelta(
+              input.onEvent,
+              emittedText,
+              progress.text
+            );
+          }
+        }
+
+        streamText += decoder.decode();
+
+        return parsePerplexityAskResponse(streamText);
       }
 
       return parsePerplexityAskResponse(await response.text());

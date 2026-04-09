@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { BotDefinition, SendMessageInput } from '../../../types/bot';
+import type {
+  BotDefinition,
+  SendMessageInput,
+  StreamMessageInput,
+} from '../../../types/bot';
 import { OpenAiCompatibleApiBotAdapter } from '../OpenAiCompatibleApiBotAdapter';
 import type {
   OpenAiCompatibleApiProvider,
@@ -113,6 +117,55 @@ describe('OpenAiCompatibleApiBotAdapter', () => {
         { role: 'assistant', content: 'first reply' },
         { role: 'user', content: 'continue' },
         { role: 'assistant', content: 'second reply' },
+      ],
+      savedModels: [],
+    });
+  });
+
+  it('forwards streaming deltas and still persists the final assistant reply', async () => {
+    const sendPrompt = vi
+      .fn<SendOpenAiCompatiblePrompt>()
+      .mockImplementationOnce(async (_config, _messages, _signal, onEvent) => {
+        onEvent?.({ type: 'delta', text: 'first ' });
+        onEvent?.({ type: 'delta', text: 'reply' });
+
+        return { text: 'first reply' };
+      });
+    const adapter = new TestOpenAiCompatibleApiBotAdapter({
+      now: () => '2026-03-28T12:00:00.000Z',
+      sendPrompt,
+    });
+    const onEvent = vi.fn();
+
+    adapter.setApiConfig({
+      apiKey: 'sk-demo',
+      modelName: 'qwen-plus',
+    });
+
+    const response = await adapter.streamMessage({
+      ...(createInput() as StreamMessageInput),
+      onEvent,
+    });
+
+    expect(onEvent).toHaveBeenNthCalledWith(1, {
+      type: 'delta',
+      text: 'first ',
+    });
+    expect(onEvent).toHaveBeenNthCalledWith(2, {
+      type: 'delta',
+      text: 'reply',
+    });
+    expect(response).toMatchObject({
+      modelId: 'qwen-plus',
+      content: 'first reply',
+      status: 'done',
+    });
+    expect(adapter.getPersistedState()).toEqual({
+      apiKey: 'sk-demo',
+      modelName: 'qwen-plus',
+      messages: [
+        { role: 'user', content: 'hello' },
+        { role: 'assistant', content: 'first reply' },
       ],
       savedModels: [],
     });

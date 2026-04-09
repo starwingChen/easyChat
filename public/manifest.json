@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "EasyChat",
   "description": "Compare multiple AI assistants in one Chrome side panel.",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "icons": {
     "16": "icon.png",
     "32": "icon.png",

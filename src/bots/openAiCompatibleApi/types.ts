@@ -1,4 +1,8 @@
-import type { ApiBotConfigValue, BotDefinition } from '../../types/bot';
+import type {
+  ApiBotConfigValue,
+  BotDefinition,
+  BotReplyStreamEvent,
+} from '../../types/bot';
 import type { MessageId } from '../../i18n';
 
 export interface OpenAiCompatibleApiMessage {
@@ -48,7 +52,8 @@ export interface OpenAiCompatibleApiProvider {
 export type SendOpenAiCompatiblePrompt = (
   config: OpenAiCompatibleApiRequestConfig,
   messages: OpenAiCompatibleApiMessage[],
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onEvent?: (event: BotReplyStreamEvent) => void
 ) => Promise<OpenAiCompatibleApiPromptResult>;
 
 export function createOpenAiCompatibleApiClientError(

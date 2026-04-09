@@ -4,6 +4,7 @@ import {
   type ApiBotConfigValue,
   type BotResponse,
   type SendMessageInput,
+  type StreamMessageInput,
 } from '../../types/bot';
 import { BaseBotAdapter } from '../BaseBotAdapter';
 import { sendOpenAiCompatiblePrompt } from './openAiCompatibleApiClient';
@@ -79,6 +80,17 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
   }
 
   async sendMessage(input: SendMessageInput): Promise<BotResponse> {
+    return this.runMessageRequest(input);
+  }
+
+  async streamMessage(input: StreamMessageInput): Promise<BotResponse> {
+    return this.runMessageRequest(input, input.onEvent);
+  }
+
+  private async runMessageRequest(
+    input: SendMessageInput,
+    onEvent?: StreamMessageInput['onEvent']
+  ): Promise<BotResponse> {
     const t = createAppTranslator(input.locale);
 
     if (!this.config?.apiKey || !this.config?.modelName) {
@@ -92,15 +104,20 @@ export abstract class OpenAiCompatibleApiBotAdapter extends BaseBotAdapter {
     let result;
 
     try {
-      result = await this.sendPrompt(
-        {
-          baseURL: this.provider.baseURL,
-          apiKey: this.config.apiKey,
-          modelName: this.config.modelName,
-        },
-        nextMessages,
-        input.signal
-      );
+      const requestConfig = {
+        baseURL: this.provider.baseURL,
+        apiKey: this.config.apiKey,
+        modelName: this.config.modelName,
+      };
+
+      result = onEvent
+        ? await this.sendPrompt(
+            requestConfig,
+            nextMessages,
+            input.signal,
+            onEvent
+          )
+        : await this.sendPrompt(requestConfig, nextMessages, input.signal);
     } catch (error) {
       if (isOpenAiCompatibleApiClientError(error)) {
         throw new BotUserFacingError(

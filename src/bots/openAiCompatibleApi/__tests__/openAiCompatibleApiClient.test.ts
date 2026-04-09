@@ -109,6 +109,51 @@ describe('openAiCompatibleApiClient', () => {
     ).resolves.toEqual({ text: 'Qwen reply' });
   });
 
+  it('streams OpenAI-compatible deltas while still returning the final text', async () => {
+    openAiMocks.createMock.mockResolvedValue({
+      async *[Symbol.asyncIterator]() {
+        yield {
+          choices: [{ delta: { content: 'Qwen ' } }],
+        };
+        yield {
+          choices: [{ delta: { content: 'reply' } }],
+        };
+      },
+    });
+    const onEvent = vi.fn();
+
+    const result = await sendOpenAiCompatiblePrompt(
+      {
+        baseURL: 'https://api.deepseek.com',
+        apiKey: 'sk-demo',
+        modelName: 'deepseek-chat',
+      },
+      [{ role: 'user', content: 'hello' }],
+      undefined,
+      onEvent
+    );
+
+    expect(openAiMocks.createMock).toHaveBeenCalledWith(
+      {
+        model: 'deepseek-chat',
+        messages: [{ role: 'user', content: 'hello' }],
+        stream: true,
+      },
+      {
+        signal: undefined,
+      }
+    );
+    expect(onEvent).toHaveBeenNthCalledWith(1, {
+      type: 'delta',
+      text: 'Qwen ',
+    });
+    expect(onEvent).toHaveBeenNthCalledWith(2, {
+      type: 'delta',
+      text: 'reply',
+    });
+    expect(result).toEqual({ text: 'Qwen reply' });
+  });
+
   it('maps authentication failures to a structured auth error', async () => {
     openAiMocks.createMock.mockRejectedValue(new Error('401 invalid api key'));
 

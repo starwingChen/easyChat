@@ -63,9 +63,17 @@ function extractMessageText(
   return undefined;
 }
 
-function parseEventDataChunks(streamText: string): string[] {
-  return streamText
-    .split(/\r?\n\r?\n/)
+function parseEventDataChunks(
+  streamText: string,
+  includeTrailingIncomplete = false
+): string[] {
+  const hasCompleteBoundary = /\r?\n\r?\n$/.test(streamText);
+  const eventTexts = streamText.split(/\r?\n\r?\n/);
+  const completeEventTexts = hasCompleteBoundary || includeTrailingIncomplete
+    ? eventTexts
+    : eventTexts.slice(0, -1);
+
+  return completeEventTexts
     .map((eventText) =>
       eventText
         .split(/\r?\n/)
@@ -74,6 +82,50 @@ function parseEventDataChunks(streamText: string): string[] {
         .join('\n')
     )
     .filter(Boolean);
+}
+
+export function parseChatGPTConversationProgress(
+  streamText: string
+): Partial<ChatGPTConversationResult> {
+  let finalText = '';
+  let conversationId = '';
+  let messageId = '';
+
+  for (const chunk of parseEventDataChunks(streamText)) {
+    if (chunk === '[DONE]') {
+      break;
+    }
+
+    let payload: ChatGPTEventPayload;
+
+    try {
+      payload = JSON.parse(chunk) as ChatGPTEventPayload;
+    } catch {
+      continue;
+    }
+
+    const role = payload.message?.author?.role;
+
+    if (role !== 'assistant' && role !== 'tool') {
+      continue;
+    }
+
+    const text = extractMessageText(payload.message?.content);
+
+    if (!text) {
+      continue;
+    }
+
+    finalText = text;
+    conversationId = payload.conversation_id ?? conversationId;
+    messageId = payload.message?.id ?? messageId;
+  }
+
+  return {
+    text: finalText || undefined,
+    conversationId: conversationId || undefined,
+    messageId: messageId || undefined,
+  };
 }
 
 export function parseChatGPTSession(payload: unknown): string {
@@ -115,39 +167,14 @@ export function parseChatGPTRequirements(
 export function parseChatGPTConversationStream(
   streamText: string
 ): ChatGPTConversationResult {
-  let finalText = '';
-  let conversationId = '';
-  let messageId = '';
-
-  for (const chunk of parseEventDataChunks(streamText)) {
-    if (chunk === '[DONE]') {
-      break;
-    }
-
-    let payload: ChatGPTEventPayload;
-
-    try {
-      payload = JSON.parse(chunk) as ChatGPTEventPayload;
-    } catch {
-      continue;
-    }
-
-    const role = payload.message?.author?.role;
-
-    if (role !== 'assistant' && role !== 'tool') {
-      continue;
-    }
-
-    const text = extractMessageText(payload.message?.content);
-
-    if (!text) {
-      continue;
-    }
-
-    finalText = text;
-    conversationId = payload.conversation_id ?? conversationId;
-    messageId = payload.message?.id ?? messageId;
-  }
+  const progress = parseChatGPTConversationProgress(
+    streamText.endsWith('\n\n') || streamText.endsWith('\r\n\r\n')
+      ? streamText
+      : `${streamText}\n\n`
+  );
+  const finalText = progress.text;
+  const conversationId = progress.conversationId;
+  const messageId = progress.messageId;
 
   if (!finalText || !conversationId || !messageId) {
     throw new Error(

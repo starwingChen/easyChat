@@ -4,6 +4,7 @@ import type {
   BotModel,
   BotResponse,
   SendMessageInput,
+  StreamMessageInput,
 } from '../types/bot';
 
 export abstract class BaseBotAdapter {
@@ -12,6 +13,8 @@ export abstract class BaseBotAdapter {
   abstract listModels(): BotModel[];
 
   abstract sendMessage(input: SendMessageInput): Promise<BotResponse>;
+
+  streamMessage?(input: StreamMessageInput): Promise<BotResponse>;
 
   getDefaultModel(): string {
     return this.definition.defaultModel;

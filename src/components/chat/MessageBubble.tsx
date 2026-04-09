@@ -22,6 +22,8 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const isLoading = !isUser && message.status === 'loading';
+  const isStreaming = !isUser && message.status === 'streaming';
+  const isInProgress = isLoading || isStreaming;
   const isRetryable =
     !isUser &&
     (message.status === 'error' || message.status === 'cancelled') &&
@@ -59,7 +61,7 @@ export function MessageBubble({
               : 'rounded-tl-sm bg-slate-100 text-slate-700'
           }`}
         >
-          {isLoading ? (
+          {isLoading && !message.content ? (
             <span className="inline-flex items-center gap-2 text-slate-500">
               <span
                 aria-label={t('chat.loading')}
@@ -70,6 +72,14 @@ export function MessageBubble({
               </span>
               <span>{t('chat.loading')}</span>
             </span>
+          ) : isStreaming ? (
+            <span className="inline-flex max-w-full items-end gap-1">
+              <RichTextMessage content={message.content} renderMode="plain" />
+              <span
+                aria-hidden="true"
+                className="mb-1 inline-block h-4 w-0.5 animate-pulse rounded-full bg-current/60"
+              />
+            </span>
           ) : (
             <RichTextMessage
               content={message.content}
@@ -77,7 +87,7 @@ export function MessageBubble({
             />
           )}
         </div>
-        {isLoading ? (
+        {isInProgress ? (
           <div className="flex shrink-0 items-center gap-2 px-1 pt-2 text-xs text-slate-400">
             {retryLabel ? <span>{retryLabel}</span> : null}
             <button

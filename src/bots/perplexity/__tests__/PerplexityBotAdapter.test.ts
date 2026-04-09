@@ -175,4 +175,44 @@ describe('PerplexityBotAdapter', () => {
       signal: undefined,
     });
   });
+
+  it('forwards Perplexity streaming deltas while returning the final reply', async () => {
+    const ask = vi.fn<PerplexityClient['ask']>().mockImplementationOnce(
+      async (input) => {
+        input.onEvent?.({ type: 'delta', text: '你' });
+        input.onEvent?.({ type: 'delta', text: '好' });
+
+        return createResult('你好', 'backend-1');
+      }
+    );
+    const adapter = new PerplexityBotAdapter({
+      client: { ask },
+      now: () => '2026-03-28T13:00:00.000Z',
+    });
+    const onEvent = vi.fn();
+
+    const response = await adapter.streamMessage({
+      sessionId: 'session-1',
+      content: 'hello',
+      locale: 'zh-CN',
+      modelId: 'pplx-pro',
+      targetBotIds: ['perplexity'],
+      onEvent,
+    });
+
+    expect(onEvent).toHaveBeenNthCalledWith(1, {
+      type: 'delta',
+      text: '你',
+    });
+    expect(onEvent).toHaveBeenNthCalledWith(2, {
+      type: 'delta',
+      text: '好',
+    });
+    expect(response).toMatchObject({
+      botId: 'perplexity',
+      modelId: 'pplx-pro',
+      content: '你好',
+      status: 'done',
+    });
+  });
 });

@@ -1,6 +1,6 @@
 # EasyChat 项目开发指导
 
-Date: 2026-03-30
+Date: 2026-04-10
 
 本文件面向后续 agent 和工程师，用于在不重新通读整个仓库的前提下，快速理解 EasyChat 的产品边界、当前实现、代码落点和开发规范。
 
@@ -39,6 +39,7 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - 当前新会话默认不注入欢迎语，`createInitialSession()` 返回空消息列表
 - API 模式机器人已经形成真实调用链路、配置持久化与本地会话上下文持久化
 - `deepseek-api` 与 `qwen-api` 已统一抽象到共享的 OpenAI-compatible API bot 基座
+- 除 `gemini` Web bot 外，其余 bot 回复已支持流式展示；UI 使用打字机效果增量显示回复
 
 ## 2. 技术基线
 
@@ -112,6 +113,8 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - Provider 启动时会从 `chrome.storage.local` 或 `localStorage` hydrate
 - hydrate 时会过滤掉 `sourceSessionId` 以 `session-previous-` 开头的旧快照；若持久化的 `currentView` 指向不存在的历史快照，会回退到 active view
 - 状态变化后会自动持久化，包括 `botStates` 与 `sidebar.isOpen`
+- active session 持久化已做 debounce，避免流式回复期间每个 chunk 都触发 `chrome.storage.local.set()`
+- 流式中的 assistant 消息会先经过 provider 内存缓冲，再批量 flush 到 reducer；当前实现的 flush 周期约为 `50ms`
 
 ### 4.2 视图与布局不变量
 
@@ -124,11 +127,14 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 
 - 用户消息只创建一条，但携带 `targetBotIds`
 - 每个可见 bot 会先生成一条 `assistant/loading` 占位消息
+- 除 `gemini` Web bot 外，其余 bot 会优先走 adapter 的流式回复入口；不支持流式的 bot 会自动 fallback 到一次性回复
+- assistant 消息存在 `loading -> streaming -> done` 的正常流转；取消和失败分别进入 `cancelled / error`
 - 各 bot 回复是并发独立解析和替换的，单个 bot 失败不能中断整次广播
 - 每个 bot 回复最多重试 `BOT_REPLY_RETRY_LIMIT = 3` 次；重试进度会直接写回对应 loading message
 - 若 bot 返回带 `action://open-api-config` 的可操作错误文案，消息面板必须透传该文案，不要降级成通用“回复失败”
-- 历史快照只保留用户消息和 `assistant/done` 消息；`loading / error / cancelled` assistant 消息不会进入快照
+- 历史快照只保留用户消息和 `assistant/done` 消息；`loading / streaming / error / cancelled` assistant 消息不会进入快照
 - 历史视图必须只读，因此不能发送消息、切换 bot、打开 API 配置；布局切换也会被禁用
+- `streaming` 也属于进行中状态：输入框禁发、关闭 side panel 或创建新会话时会被中断并归一化
 
 ### 4.4 新建会话不变量
 
@@ -145,6 +151,7 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - UI 不能直接请求站点，也不能直接读取协议响应
 - 所有机器人都必须通过 `BaseBotAdapter` 暴露统一能力
 - 统一从 `botRegistry` 获取 bot，不在 UI 中直接 `new Adapter()`
+- 如机器人支持流式展示，应通过 adapter 的统一流式入口向上抛 `delta` 事件；不要把协议事件直接暴露给 UI
 - 需要持久会话上下文的 adapter，必须实现：
   - `getPersistedState()`
   - `restorePersistedState()`
@@ -176,7 +183,7 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 
 - 通过 `chatgpt.com` Web 会话工作
 - 依赖 access token、chat requirements token、sentinel proof token
-- 解析 SSE 风格对话流
+- 解析 SSE 风格对话流，并向上产出增量文本片段
 - conversation state 需要跨 Side Panel 生命周期保留
 - 认证错误后会清空 access token，下次重新获取
 
@@ -193,6 +200,7 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - 会先抓页面 bootstrap 参数，再发生成请求
 - conversation context 由 adapter 内存维护，并被 Provider 持久化
 - 当前 UI 上模型选择主要用于展示和消息元数据，不一定影响真实请求参数
+- 当前 Gemini Web bot 仍保持一次性回复，不参与流式展示链路
 
 相关文件：
 
@@ -205,6 +213,7 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - 通过 `https://www.perplexity.ai/rest/sse/perplexity_ask` 发请求
 - adapter 会维护并持久化 `lastBackendUuid`，作为后续追问上下文
 - 运行时只暴露单模型 `pplx-pro`
+- 事件流会被增量解析成打字机文本，最终 `lastBackendUuid` 在完成时写回上下文
 
 相关文件：
 
@@ -220,6 +229,7 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - adapter 会维护并持久化 `conversationId`
 - 运行时只暴露单模型 `copilot-smart`
 - 当前实现依赖 `public/rules/copilot-websocket-headers.json` 的 declarativeNetRequest 规则改写 websocket 头
+- websocket `appendText` 事件会桥接成统一流式 `delta` 事件
 
 相关文件：
 
@@ -232,10 +242,12 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - 共享 client 负责：
   - 用 OpenAI SDK 发 `chat.completions.create()`
   - 接收 provider 传入的 `baseURL`
+  - 在流式模式下用 `stream: true` 聚合 provider 返回的 delta
   - 归一化 `auth / quota / unavailable / emptyResponse` 错误
 - 共享 adapter 基座负责：
   - `apiKey + modelName` 配置校验
   - 本地 conversation messages 累积
+  - 流式 delta 转成统一回复事件
   - `getPersistedState()` / `restorePersistedState()` 持久化
   - provider 级 i18n 错误映射
 - API bot 的真实请求模型来自已保存配置里的 `modelName`，不是 `activeSession.selectedModels[botId]`
@@ -274,7 +286,7 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - `ChatPanel`: 单 bot 面板，负责拼 header 和消息列表
 - `ChatPanelHeader`: bot 选择与 API 配置弹窗入口；当前没有 session bot 的模型下拉 UI
 - `MessageList` / `MessageBubble`: 面向单 bot 的消息展示
-- `RichTextMessage`: markdown 渲染，同时拦截 `action://open-api-config`
+- `RichTextMessage`: markdown 渲染，同时拦截 `action://open-api-config`；在流式中支持轻量纯文本模式
 - `SessionSidebar`: 当前会话、历史快照、语言切换、新建会话、侧边栏折叠
 - `WorkspaceHeader`: 标题、只读提示、布局切换
 - `MessageComposer`: 输入框自动增高，`Enter` 发送，`Shift+Enter` 换行
@@ -285,7 +297,11 @@ EasyChat 是一个运行在 Chrome Side Panel 中的多 AI 对比聊天扩展。
 - 业务约束优先抽到 `features` 或 `store`，不要让组件承担状态推导
 - `ChatPanel` 只展示“当前 bot 相关消息”，过滤逻辑已在组件内封装；它依赖 `targetBotIds` 与 `botId` 做消息筛选
 - 只读能力必须由上层显式传入，不能靠组件内部猜测
-- 修改 markdown 展示时，优先改 `RichTextMessage`，不要在各气泡组件里重复处理
+- 流式中的文本展示与 markdown 完成态展示必须通过 `RichTextMessage` 的不同渲染模式统一处理，不要在各气泡组件里重复实现 markdown / plain text 逻辑
+- `MessageList` 的滚动规则是产品契约：
+  - 用户新发送消息后，所有激活 bot 面板都必须滚到底部
+  - assistant 流式增长时，仅在用户当前接近底部时才自动跟随
+  - 用户向上浏览旧内容时，不要强制把视图拉回底部
 - API 配置弹窗逻辑优先收敛在 `ChatPanelHeader`，不要把配置表单散落到其他组件
 - 项目已引入 `@radix-ui/react-dialog` 与 `@radix-ui/react-tooltip` 作为轻量无样式交互 primitives；后续新增 modal、tooltip、popover 一类浮层时，优先复用 Radix，而不是继续手写底层焦点管理、dismiss、可访问性与分层逻辑
 - Radix 只提供交互与可访问性能力，视觉样式仍应保留在本项目组件层，通过 Tailwind class 与少量本地样式控制；不要把样式职责下沉到第三方组件主题系统

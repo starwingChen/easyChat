@@ -240,4 +240,54 @@ describe('ChatGPTBotAdapter', () => {
 
     expect(getAccessToken).toHaveBeenCalledTimes(2);
   });
+
+  it('forwards ChatGPT streaming deltas while returning the final reply', async () => {
+    const getAccessToken = vi.fn(async () => 'access-token');
+    const getChatRequirements = vi.fn(async () => createRequirements());
+    const sendConversationMessage = vi
+      .fn<ChatGPTClient['sendConversationMessage']>()
+      .mockImplementationOnce(async (input) => {
+        input.onEvent?.({ type: 'delta', text: 'Hello' });
+        input.onEvent?.({ type: 'delta', text: ' world' });
+
+        return createConversationResult(
+          'Hello world',
+          'conv-1',
+          'assistant-1'
+        );
+      });
+    const adapter = new ChatGPTBotAdapter({
+      client: {
+        getAccessToken,
+        getChatRequirements,
+        sendConversationMessage,
+      },
+      now: () => '2026-03-29T12:00:00.000Z',
+    });
+    const onEvent = vi.fn();
+
+    const response = await adapter.streamMessage({
+      sessionId: 'session-1',
+      content: 'hello',
+      locale: 'zh-CN',
+      modelId: 'gpt-4o',
+      targetBotIds: ['chatgpt'],
+      onEvent,
+    });
+
+    expect(onEvent).toHaveBeenNthCalledWith(1, {
+      type: 'delta',
+      text: 'Hello',
+    });
+    expect(onEvent).toHaveBeenNthCalledWith(2, {
+      type: 'delta',
+      text: ' world',
+    });
+    expect(response).toMatchObject({
+      botId: 'chatgpt',
+      modelId: 'gpt-4o',
+      content: 'Hello world',
+      status: 'done',
+    });
+  });
 });

@@ -3,6 +3,7 @@ import type {
   BotModel,
   BotResponse,
   SendMessageInput,
+  StreamMessageInput,
 } from '../../types/bot';
 import { BaseBotAdapter } from '../BaseBotAdapter';
 import { perplexityDefinition } from '../definitions';
@@ -51,11 +52,23 @@ export class PerplexityBotAdapter extends BaseBotAdapter {
   }
 
   async sendMessage(input: SendMessageInput): Promise<BotResponse> {
+    return this.runMessageRequest(input);
+  }
+
+  async streamMessage(input: StreamMessageInput): Promise<BotResponse> {
+    return this.runMessageRequest(input, input.onEvent);
+  }
+
+  private async runMessageRequest(
+    input: SendMessageInput,
+    onEvent?: StreamMessageInput['onEvent']
+  ): Promise<BotResponse> {
     const revision = this.conversationRevision;
     const activeState = { ...this.conversationState };
     const result = await this.client.ask({
       prompt: input.content,
       lastBackendUuid: activeState.lastBackendUuid,
+      onEvent,
       signal: input.signal,
     });
 

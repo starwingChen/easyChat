@@ -15,14 +15,63 @@ interface PerplexityEventPayload {
   blocks?: unknown[];
 }
 
-function parseEventDataChunks(streamText: string): string[] {
-  return streamText.split(/\r?\n\r?\n/).flatMap((eventText) =>
+function parseEventDataChunks(
+  streamText: string,
+  includeTrailingIncomplete = false
+): string[] {
+  const hasCompleteBoundary = /\r?\n\r?\n$/.test(streamText);
+  const eventTexts = streamText.split(/\r?\n\r?\n/);
+  const completeEventTexts = hasCompleteBoundary || includeTrailingIncomplete
+    ? eventTexts
+    : eventTexts.slice(0, -1);
+
+  return completeEventTexts.flatMap((eventText) =>
     eventText
       .split(/\r?\n/)
       .filter((line) => line.startsWith('data:'))
       .map((line) => line.slice(5).trimStart())
       .filter(Boolean)
   );
+}
+
+export function parsePerplexityAskProgress(
+  streamText: string
+): Partial<PerplexityParseResult> {
+  let finalText = '';
+  let lastBackendUuid: string | undefined;
+
+  for (const chunk of parseEventDataChunks(streamText)) {
+    if (chunk === '{}' || chunk === '[DONE]') {
+      continue;
+    }
+
+    let payload: PerplexityEventPayload;
+
+    try {
+      payload = JSON.parse(chunk) as PerplexityEventPayload;
+    } catch {
+      continue;
+    }
+
+    if (typeof payload.backend_uuid === 'string' && payload.backend_uuid) {
+      lastBackendUuid = payload.backend_uuid;
+    }
+
+    const blocks = Array.isArray(payload.blocks) ? payload.blocks : [];
+
+    for (const block of blocks) {
+      const text = extractTextFromBlock(block as PerplexityBlock);
+
+      if (text) {
+        finalText = text;
+      }
+    }
+  }
+
+  return {
+    text: finalText || undefined,
+    lastBackendUuid,
+  };
 }
 
 function extractTextFromBlock(block: PerplexityBlock): string | undefined {
@@ -60,7 +109,7 @@ export function parsePerplexityAskResponse(
   let finalText = '';
   let lastBackendUuid: string | undefined;
 
-  for (const chunk of parseEventDataChunks(streamText)) {
+  for (const chunk of parseEventDataChunks(streamText, true)) {
     if (chunk === '{}' || chunk === '[DONE]') {
       continue;
     }

@@ -1,6 +1,7 @@
 import { ofetch, type FetchOptions } from 'ofetch';
 
 import {
+  parseChatGPTConversationProgress,
   parseChatGPTConversationStream,
   parseChatGPTRequirements,
   parseChatGPTSession,
@@ -138,6 +139,29 @@ function getErrorStatusCode(error: unknown): number | undefined {
   return undefined;
 }
 
+function emitTextDelta(
+  onEvent: ChatGPTSendConversationInput['onEvent'],
+  previousText: string,
+  nextText: string
+): string {
+  if (!onEvent || !nextText || nextText === previousText) {
+    return nextText;
+  }
+
+  const delta = nextText.startsWith(previousText)
+    ? nextText.slice(previousText.length)
+    : nextText;
+
+  if (delta) {
+    onEvent({
+      type: 'delta',
+      text: delta,
+    });
+  }
+
+  return nextText;
+}
+
 export function createChatGPTClient(
   options: ChatGPTClientOptions = {}
 ): ChatGPTClient {
@@ -233,6 +257,36 @@ export function createChatGPTClient(
       throw new Error(
         `ChatGPT conversation request failed (${response.status})`
       );
+    }
+
+    if (response.body) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let streamText = '';
+      let emittedText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        streamText += decoder.decode(value, { stream: true });
+        const progress = parseChatGPTConversationProgress(streamText);
+
+        if (progress.text) {
+          emittedText = emitTextDelta(
+            input.onEvent,
+            emittedText,
+            progress.text
+          );
+        }
+      }
+
+      streamText += decoder.decode();
+
+      return parseChatGPTConversationStream(streamText);
     }
 
     return parseChatGPTConversationStream(await response.text());
