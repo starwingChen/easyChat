@@ -9,13 +9,7 @@
     "48": "icon.png",
     "128": "icon.png"
   },
-  "permissions": [
-    "sidePanel",
-    "storage",
-    "tabs",
-    "declarativeNetRequest",
-    "cookies"
-  ],
+  "permissions": ["sidePanel", "storage", "declarativeNetRequest", "cookies"],
   "host_permissions": [
     "https://gemini.google.com/*",
     "https://chatgpt.com/*",
