@@ -8,7 +8,7 @@ dist
 vite.config.js
 vite.config.d.ts
 mydoc
-docs
+docs/superpowers
 .worktrees/
 package-lock.json
 .rules/custom.md
