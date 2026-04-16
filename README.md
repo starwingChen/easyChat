@@ -26,7 +26,11 @@
 
 </div>
 
-> Chrome 应用商店审核中，欢迎点个 star 追踪进度 ✨
+<div align="center">
+
+<a href="https://chromewebstore.google.com/detail/easychat/lkejjfnabnjbchpgmfbalnhdjofkkgif?utm_source=github"><img src="https://user-images.githubusercontent.com/64502893/231991498-8df6dd63-727c-41d0-916f-c90c15127de3.png" width="200" alt="Get easyChat for Chromium"></a>
+
+</div>
 
 ## ✨ 特点
 
@@ -61,14 +65,18 @@
 
 ## 📦 安装
 
-### 方式一：Release 安装
+### 方式一：前往 Chrome 商店 (推荐)
+
+[https://chromewebstore.google.com/detail/easychat/lkejjfnabnjbchpgmfbalnhdjofkkgif](https://chromewebstore.google.com/detail/easychat/lkejjfnabnjbchpgmfbalnhdjofkkgif)
+
+### 方式二：Release 安装
 
 - 前往 [Release](https://github.com/starwingChen/easyChat/releases)，在最新版本中下载 `dist.zip`
 - 解压文件
 - 前往 [chrome://extensions](chrome://extensions/)，打开开发者模式，加载解压后的文件夹
   <img src="./assets/snapshot-5.png" height="500">
 
-### 方式二：本地安装
+### 方式三：本地安装
 
 - 克隆源代码
 - 运行 `npm install`

@@ -26,7 +26,11 @@
 
 </div>
 
-> Under review in the Chrome Web Store, glad if you star it to track progress ✨
+<div align="center">
+
+<a href="https://chromewebstore.google.com/detail/easychat/lkejjfnabnjbchpgmfbalnhdjofkkgif?utm_source=github"><img src="https://user-images.githubusercontent.com/64502893/231991498-8df6dd63-727c-41d0-916f-c90c15127de3.png" width="200" alt="Get easyChat for Chromium"></a>
+
+</div>
 
 ## ✨ Features
 
@@ -61,20 +65,24 @@
 
 ## 📦 Installation
 
-### Method 1: Install from Release
+### Method 1: Chrome Web Store (Recommended)
+
+[https://chromewebstore.google.com/detail/easychat/lkejjfnabnjbchpgmfbalnhdjofkkgif](https://chromewebstore.google.com/detail/easychat/lkejjfnabnjbchpgmfbalnhdjofkkgif)
+
+### Method 2: Install from Release
 
 - Go to [Release](https://github.com/starwingChen/easyChat/releases), download `dist.zip` from the latest release
 - Unzip the file
 - Go to [chrome://extensions](chrome://extensions/), turn on Developer mode, and load the unpacked folder
   <img src="./assets/snapshot-5.png" height="500">
 
-### Method 2: Local install
+### Method 3: Local install
 
-- Clone the source
+- Clone the source code
 - Run `npm install`
 - Run `npm build`
 - Load the `dist` folder in your browser
-- Pull requests welcome 😀
+- Pull requests are welcome 😀
 
 <div align="center">
 
